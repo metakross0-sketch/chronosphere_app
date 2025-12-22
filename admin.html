@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - Управление городами и магазинами</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .city-item, .shop-item {
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-6xl mx-auto p-6">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🏪 Админ-панель</h1>
+            <p class="text-white opacity-90">Управление городами и магазинами</p>
+        </header>
+        
+        <!-- Табы -->
+        <div class="card">
+            <div class="flex gap-2 border-b pb-0">
+                <button class="tab-btn active" onclick="showTab('cities')">Города</button>
+                <button class="tab-btn" onclick="showTab('shops')">Магазины</button>
+                <button class="tab-btn" onclick="showTab('categories')">Категории</button>
+            </div>
+        </div>
+        
+        <!-- Города -->
+        <div id="cities-tab" class="tab-content">
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">➕ Добавить город</h2>
+                <form id="cityForm" onsubmit="addCity(event)">
+                    <input type="text" id="cityName" placeholder="Название города" required>
+                    <input type="number" step="0.0001" id="cityLat" placeholder="Широта (например: 57.1522)" required>
+                    <input type="number" step="0.0001" id="cityLon" placeholder="Долгота (например: 65.5272)" required>
+                    <input type="number" id="cityZoom" placeholder="Масштаб карты (10-15)" value="12">
+                    <textarea id="cityDesc" placeholder="Описание города" rows="2"></textarea>
+                    <button type="submit" class="btn btn-primary w-full">Добавить город</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">📍 Список городов</h2>
+                <div id="citiesList">Загрузка...</div>
+            </div>
+        </div>
+        
+        <!-- Магазины -->
+        <div id="shops-tab" class="tab-content hidden">
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">➕ Добавить магазин</h2>
+                <form id="shopForm" onsubmit="addShop(event)">
+                    <select id="shopCity" required>
+                        <option value="">Выберите город</option>
+                    </select>
+                    <select id="shopCategory" required>
+                        <option value="">Выберите категорию</option>
+                    </select>
+                    <input type="text" id="shopName" placeholder="Название магазина" required>
+                    <input type="text" id="shopAddress" placeholder="Адрес" required>
+                    <input type="number" step="0.0001" id="shopLat" placeholder="Широта" required>
+                    <input type="number" step="0.0001" id="shopLon" placeholder="Долгота" required>
+                    <input type="tel" id="shopPhone" placeholder="Телефон (необязательно)">
+                    <textarea id="shopDesc" placeholder="Описание" rows="3"></textarea>
+                    <input type="text" id="shopHours" placeholder="Часы работы (например: 9:00 - 21:00)">
+                    <button type="submit" class="btn btn-primary w-full">Добавить магазин</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">🏬 Список магазинов</h2>
+                <div id="shopsList">Загрузка...</div>
+            </div>
+        </div>
+        
+        <!-- Категории -->
+        <div id="categories-tab" class="tab-content hidden">
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">➕ Добавить категорию</h2>
+                <form id="categoryForm" onsubmit="addCategory(event)">
+                    <input type="text" id="categoryName" placeholder="Название категории" required>
+                    <input type="text" id="categoryIcon" placeholder="Иконка (emoji, например: 👕)" required>
+                    <input type="color" id="categoryColor" value="#3B82F6">
+                    <button type="submit" class="btn btn-primary w-full">Добавить категорию</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">🏷️ Список категорий</h2>
+                <div id="categoriesList">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = window.location.origin;
+        
+        // Показать таб
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`${tab}-tab`).classList.remove('hidden');
+            event.target.classList.add('active');
+            
+            if (tab === 'cities') loadCities();
+            if (tab === 'shops') loadShops();
+            if (tab === 'categories') loadCategories();
+        }
+        
+        // ==================== ГОРОДА ====================
+        
+        async function addCity(e) {
+            e.preventDefault();
+            
+            const cityData = {
+                name: document.getElementById('cityName').value,
+                latitude: parseFloat(document.getElementById('cityLat').value),
+                longitude: parseFloat(document.getElementById('cityLon').value),
+                zoom_level: parseInt(document.getElementById('cityZoom').value),
+                description: document.getElementById('cityDesc').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/cities`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cityData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Город успешно добавлен!');
+                    document.getElementById('cityForm').reset();
+                    loadCities();
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                alert('Ошибка добавления города');
+                console.error(error);
+            }
+        }
+        
+        async function loadCities() {
+            try {
+                const response = await fetch(`${API_BASE}/api/cities`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayCities(data.cities);
+                    updateCitySelects(data.cities);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки городов:', error);
+            }
+        }
+        
+        function displayCities(cities) {
+            const list = document.getElementById('citiesList');
+            list.innerHTML = '';
+            
+            if (cities.length === 0) {
+                list.innerHTML = '<p class="text-gray-500">Нет городов</p>';
+                return;
+            }
+            
+            cities.forEach(city => {
+                const item = document.createElement('div');
+                item.className = 'city-item';
+                item.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-lg">📍 ${city.name}</h3>
+                        <p class="text-sm text-gray-600">${city.description || ''}</p>
+                        <p class="text-xs text-gray-500">Координаты: ${city.latitude}, ${city.longitude}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn btn-danger text-sm" onclick="deleteCity(${city.id})">Удалить</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+        
+        function updateCitySelects(cities) {
+            const select = document.getElementById('shopCity');
+            select.innerHTML = '<option value="">Выберите город</option>';
+            cities.forEach(city => {
+                select.innerHTML += `<option value="${city.id}">${city.name}</option>`;
+            });
+        }
+        
+        async function deleteCity(cityId) {
+            if (!confirm('Удалить город? Все связанные магазины также будут удалены.')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/cities/${cityId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Город удален');
+                    loadCities();
+                }
+            } catch (error) {
+                alert('Ошибка удаления');
+            }
+        }
+        
+        // ==================== МАГАЗИНЫ ====================
+        
+        async function addShop(e) {
+            e.preventDefault();
+            
+            const shopData = {
+                city_id: parseInt(document.getElementById('shopCity').value),
+                category_id: parseInt(document.getElementById('shopCategory').value),
+                name: document.getElementById('shopName').value,
+                address: document.getElementById('shopAddress').value,
+                latitude: parseFloat(document.getElementById('shopLat').value),
+                longitude: parseFloat(document.getElementById('shopLon').value),
+                phone: document.getElementById('shopPhone').value,
+                description: document.getElementById('shopDesc').value,
+                working_hours: document.getElementById('shopHours').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/shops`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(shopData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Магазин успешно добавлен!');
+                    document.getElementById('shopForm').reset();
+                    loadShops();
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                alert('Ошибка добавления магазина');
+                console.error(error);
+            }
+        }
+        
+        async function loadShops() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/shops`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayShops(data.shops);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки магазинов:', error);
+            }
+        }
+        
+        function displayShops(shops) {
+            const list = document.getElementById('shopsList');
+            list.innerHTML = '';
+            
+            if (shops.length === 0) {
+                list.innerHTML = '<p class="text-gray-500">Нет магазинов</p>';
+                return;
+            }
+            
+            shops.forEach(shop => {
+                const item = document.createElement('div');
+                item.className = 'shop-item';
+                item.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-lg">🏬 ${shop.name}</h3>
+                        <p class="text-sm text-gray-600">${shop.address}</p>
+                        <p class="text-xs text-gray-500">Город: ${shop.city_name} | ${shop.category_name}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn btn-danger text-sm" onclick="deleteShop(${shop.id})">Удалить</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+        
+        async function deleteShop(shopId) {
+            if (!confirm('Удалить магазин?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/shops/${shopId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Магазин удален');
+                    loadShops();
+                }
+            } catch (error) {
+                alert('Ошибка удаления');
+            }
+        }
+        
+        // ==================== КАТЕГОРИИ ====================
+        
+        async function addCategory(e) {
+            e.preventDefault();
+            
+            const categoryData = {
+                name: document.getElementById('categoryName').value,
+                icon: document.getElementById('categoryIcon').value,
+                color: document.getElementById('categoryColor').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/categories`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(categoryData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Категория добавлена!');
+                    document.getElementById('categoryForm').reset();
+                    loadCategories();
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                alert('Ошибка добавления категории');
+            }
+        }
+        
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/categories`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayCategories(data.categories);
+                    updateCategorySelect(data.categories);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки категорий:', error);
+            }
+        }
+        
+        function displayCategories(categories) {
+            const list = document.getElementById('categoriesList');
+            list.innerHTML = '';
+            
+            if (categories.length === 0) {
+                list.innerHTML = '<p class="text-gray-500">Нет категорий</p>';
+                return;
+            }
+            
+            categories.forEach(cat => {
+                const item = document.createElement('div');
+                item.className = 'city-item';
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div style="background: ${cat.color}20; padding: 8px; border-radius: 8px; font-size: 24px;">
+                            ${cat.icon}
+                        </div>
+                        <h3 class="font-bold">${cat.name}</h3>
+                    </div>
+                    <button class="btn btn-danger text-sm" onclick="deleteCategory(${cat.id})">Удалить</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+        
+        function updateCategorySelect(categories) {
+            const select = document.getElementById('shopCategory');
+            select.innerHTML = '<option value="">Выберите категорию</option>';
+            categories.forEach(cat => {
+                select.innerHTML += `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`;
+            });
+        }
+        
+        async function deleteCategory(catId) {
+            if (!confirm('Удалить категорию?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/categories/${catId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Категория удалена');
+                    loadCategories();
+                }
+            } catch (error) {
+                alert('Ошибка удаления');
+            }
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCities();
+            loadCategories();
+            feather.replace();
+        });
+    </script>
+</body>
+</html>
