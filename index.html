@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Магазины города</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=YOUR_API_KEY&lang=ru_RU" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -234,7 +235,7 @@
     
     <script>
         // Глобальные переменные
-        const API_BASE = window.location.origin;
+        const API_BASE = 'https://chronosphere.pythonanywhere.com';
         let tg = null;
         let currentCity = null;
         let currentShop = null;
@@ -371,37 +372,65 @@
         
         // Инициализация карты
         function initMap(city) {
-            ymaps.ready(() => {
-                map = new ymaps.Map('map', {
-                    center: [city.latitude, city.longitude],
-                    zoom: city.zoom_level || 12,
-                    controls: ['zoomControl', 'geolocationControl']
+            // Создаем карту
+            map = L.map('map').setView([city.latitude, city.longitude], city.zoom_level || 12);
+            
+            // Добавляем слой OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            // Добавляем метки магазинов
+            shops.forEach(shop => {
+                // Создаем кастомную иконку с цветом категории
+                const iconHtml = `
+                    <div style="
+                        background: ${shop.category.color || '#3B82F6'};
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 50% 50% 50% 0;
+                        transform: rotate(-45deg);
+                        border: 3px solid white;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">
+                        <span style="transform: rotate(45deg); font-size: 16px;">${shop.category.icon}</span>
+                    </div>
+                `;
+                
+                const customIcon = L.divIcon({
+                    html: iconHtml,
+                    className: 'custom-marker',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 30],
+                    popupAnchor: [0, -30]
                 });
                 
-                // Добавляем метки магазинов
-                shops.forEach(shop => {
-                    const placemark = new ymaps.Placemark(
-                        [shop.latitude, shop.longitude],
-                        {
-                            balloonContentHeader: `<strong>${shop.name}</strong>`,
-                            balloonContentBody: `
-                                <p>${shop.address}</p>
-                                <p class="text-sm">${shop.category.name}</p>
-                            `,
-                            balloonContentFooter: `<button onclick="openShopById(${shop.id})" class="glass-btn px-4 py-2 mt-2">Открыть магазин</button>`,
-                            hintContent: shop.name
-                        },
-                        {
-                            preset: 'islands#blueShoppingIcon',
-                            iconColor: shop.category.color || '#3B82F6'
-                        }
-                    );
-                    
-                    placemark.events.add('click', () => {
-                        openShop(shop);
-                    });
-                    
-                    map.geoObjects.add(placemark);
+                const marker = L.marker([shop.latitude, shop.longitude], { icon: customIcon })
+                    .addTo(map);
+                
+                // Popup с информацией
+                const popupContent = `
+                    <div style="min-width: 200px;">
+                        <h3 style="margin: 0 0 8px 0; font-weight: bold;">${shop.name}</h3>
+                        <p style="margin: 4px 0; font-size: 14px;">${shop.address}</p>
+                        <p style="margin: 4px 0; font-size: 12px; color: #666;">${shop.category.name}</p>
+                        <button onclick="openShopById(${shop.id})" 
+                                style="margin-top: 8px; padding: 8px 16px; background: ${shop.category.color}; 
+                                       color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            Открыть магазин
+                        </button>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                
+                // Клик по маркеру
+                marker.on('click', () => {
+                    openShop(shop);
                 });
             });
         }
