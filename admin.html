@@ -141,6 +141,7 @@
                         <option value="">Выберите категорию</option>
                     </select>
                     <input type="text" id="shopName" placeholder="Название магазина" required>
+                    <input type="text" id="shopCustomId" placeholder="ID магазина (из главной таблицы)" required>
                     <input type="text" id="shopAddress" placeholder="Адрес" required>
                     <input type="number" step="0.0001" id="shopLat" placeholder="Широта" required>
                     <input type="number" step="0.0001" id="shopLon" placeholder="Долгота" required>
@@ -315,6 +316,7 @@
                 city_id: parseInt(document.getElementById('shopCity').value),
                 category_id: parseInt(document.getElementById('shopCategory').value),
                 name: document.getElementById('shopName').value,
+                custom_id: document.getElementById('shopCustomId').value,
                 address: document.getElementById('shopAddress').value,
                 latitude: parseFloat(document.getElementById('shopLat').value),
                 longitude: parseFloat(document.getElementById('shopLon').value),
