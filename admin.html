@@ -103,6 +103,9 @@
                 <button class="tab-btn active" onclick="showTab('cities')">Города</button>
                 <button class="tab-btn" onclick="showTab('shops')">Магазины</button>
                 <button class="tab-btn" onclick="showTab('categories')">Категории</button>
+                <button class="tab-btn" onclick="showTab('registrations')">
+                    🔔 Регистрации <span id="regCount" class="ml-1"></span>
+                </button>
             </div>
         </div>
         
@@ -169,6 +172,19 @@
             <div class="card">
                 <h2 class="text-2xl font-bold mb-4">🏷️ Список категорий</h2>
                 <div id="categoriesList">Загрузка...</div>
+            </div>
+        </div>
+        
+        <!-- Регистрации магазинов -->
+        <div id="registrations-tab" class="tab-content hidden">
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">🔔 Заявки на регистрацию магазинов</h2>
+                <div class="flex gap-2 mb-4">
+                    <button onclick="loadRegistrations('pending')" class="btn btn-primary">Ожидают модерации</button>
+                    <button onclick="loadRegistrations('approved')" class="btn bg-green-500 text-white">Одобренные</button>
+                    <button onclick="loadRegistrations('rejected')" class="btn bg-red-500 text-white">Отклоненные</button>
+                </div>
+                <div id="registrationsList">Загрузка...</div>
             </div>
         </div>
     </div>
@@ -483,11 +499,123 @@
             }
         }
         
+        // ==================== РЕГИСТРАЦИИ ====================
+        
+        async function loadRegistrations(status = 'pending') {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/registrations?status=${status}`);
+                const data = await response.json();
+                
+                const list = document.getElementById('registrationsList');
+                
+                if (data.registrations.length === 0) {
+                    list.innerHTML = '<p class="text-gray-500">Нет заявок</p>';
+                    return;
+                }
+                
+                list.innerHTML = data.registrations.map(reg => `
+                    <div class="border rounded-lg p-4 mb-3 ${status === 'pending' ? 'border-yellow-400 bg-yellow-50' : status === 'approved' ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50'}">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h3 class="font-bold text-lg mb-2">🏪 ${reg.name}</h3>
+                                <p class="text-sm"><strong>Категория:</strong> ${reg.category}</p>
+                                <p class="text-sm"><strong>Город:</strong> ${reg.city}</p>
+                                <p class="text-sm"><strong>Адрес:</strong> ${reg.address}</p>
+                                <p class="text-sm"><strong>Телефон:</strong> ${reg.phone}</p>
+                                ${reg.telegram ? `<p class="text-sm"><strong>Telegram:</strong> ${reg.telegram}</p>` : ''}
+                                ${reg.email ? `<p class="text-sm"><strong>Email:</strong> ${reg.email}</p>` : ''}
+                            </div>
+                            <div>
+                                <p class="text-sm mb-2"><strong>Координаты:</strong> ${reg.latitude}, ${reg.longitude}</p>
+                                ${reg.description ? `<p class="text-sm mb-2"><strong>Описание:</strong> ${reg.description}</p>` : ''}
+                                <a href="${reg.sheet_url}" target="_blank" class="text-blue-600 text-sm underline">
+                                    📋 Открыть Google таблицу
+                                </a>
+                                <p class="text-xs text-gray-500 mt-2">ID таблицы: ${reg.spreadsheet_id}</p>
+                                <p class="text-xs text-gray-500">Дата: ${new Date(reg.created_at).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        ${status === 'pending' ? `
+                            <div class="flex gap-2 mt-4">
+                                <button onclick="approveRegistration(${reg.id})" class="btn btn-success flex-1">
+                                    ✅ Одобрить
+                                </button>
+                                <button onclick="rejectRegistration(${reg.id})" class="btn btn-danger flex-1">
+                                    ❌ Отклонить
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+                
+                // Обновляем счетчик на кнопке
+                if (status === 'pending') {
+                    document.getElementById('regCount').textContent = data.registrations.length > 0 ? `(${data.registrations.length})` : '';
+                }
+                
+            } catch (error) {
+                console.error('Ошибка загрузки регистраций:', error);
+                document.getElementById('registrationsList').innerHTML = '<p class="text-red-500">Ошибка загрузки</p>';
+            }
+        }
+        
+        async function approveRegistration(regId) {
+            if (!confirm('Одобрить эту заявку и создать магазин?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/registrations/${regId}/approve`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ Магазин успешно создан! ID: ${data.shop_id}`);
+                    loadRegistrations('pending');
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Ошибка одобрения:', error);
+                alert('Ошибка при одобрении заявки');
+            }
+        }
+        
+        async function rejectRegistration(regId) {
+            const reason = prompt('Причина отклонения (опционально):');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/registrations/${regId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('❌ Заявка отклонена');
+                    loadRegistrations('pending');
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Ошибка отклонения:', error);
+                alert('Ошибка при отклонении заявки');
+            }
+        }
+        
         // Инициализация
         document.addEventListener('DOMContentLoaded', () => {
             loadCities();
             loadCategories();
+            loadRegistrations('pending'); // Загружаем регистрации
             feather.replace();
+            
+            // Периодически проверяем новые регистрации
+            setInterval(() => {
+                loadRegistrations('pending');
+            }, 60000); // Каждую минуту
         });
     </script>
 </body>
