@@ -114,14 +114,28 @@
             <div class="card">
                 <h2 class="text-2xl font-bold mb-4">➕ Добавить город</h2>
                 <form id="cityForm" onsubmit="addCity(event)">
-                    <input type="text" id="cityName" placeholder="Название города (например: Тюмень)" required>
-                    <div class="mb-2">
-                        <button type="button" onclick="autoFillCoords()" class="btn bg-blue-500 text-white text-sm py-2">
-                            🌍 Автоматически найти координаты
-                        </button>
+                    <div class="relative mb-3">
+                        <input 
+                            type="text" 
+                            id="citySearch" 
+                            placeholder="🔍 Начните вводить название города..." 
+                            autocomplete="off"
+                            oninput="filterCities()"
+                            onfocus="showCityDropdown()"
+                        >
+                        <div id="cityDropdown" class="hidden absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg">
+                            <div class="p-2 text-sm text-gray-500">Загрузка списка городов...</div>
+                        </div>
                     </div>
-                    <input type="number" step="0.0001" id="cityLat" placeholder="Широта (или нажмите кнопку выше)" required>
-                    <input type="number" step="0.0001" id="cityLon" placeholder="Долгота (или нажмите кнопку выше)" required>
+                    <input type="hidden" id="cityName" required>
+                    <input type="hidden" id="cityLat" required>
+                    <input type="hidden" id="cityLon" required>
+                    
+                    <div id="selectedCityInfo" class="hidden mb-3 p-3 bg-blue-50 rounded-lg">
+                        <div class="font-semibold text-blue-900" id="selectedCityName"></div>
+                        <div class="text-sm text-blue-700" id="selectedCityCoords"></div>
+                    </div>
+                    
                     <input type="number" id="cityZoom" placeholder="Масштаб карты (оставьте 12)" value="12">
                     <textarea id="cityDesc" placeholder="Описание города (необязательно)" rows="2"></textarea>
                     <button type="submit" class="btn btn-primary w-full">Добавить город</button>
@@ -129,7 +143,7 @@
             </div>
             
             <div class="card">
-                <h2 class="text-2xl font-bold mb-4">📍 Список городов</h2>
+                <h2 class="text-2xl font-bold mb-4">📍 Мои добавленные города</h2>
                 <div id="citiesList">Загрузка...</div>
             </div>
         </div>
@@ -213,37 +227,109 @@
         
         // ==================== ГОРОДА ====================
         
-        async function autoFillCoords() {
-            const cityName = document.getElementById('cityName').value;
-            if (!cityName) {
-                alert('Сначала введите название города');
+        // Список всех городов России (топ-200 по населению)
+        const RUSSIAN_CITIES = [
+            "Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань", "Нижний Новгород", "Челябинск", "Самара", "Омск", "Ростов-на-Дону",
+            "Уфа", "Красноярск", "Воронеж", "Пермь", "Волгоград", "Краснодар", "Саратов", "Тюмень", "Тольятти", "Ижевск",
+            "Барнаул", "Ульяновск", "Иркутск", "Хабаровск", "Ярославль", "Владивосток", "Махачкала", "Томск", "Оренбург", "Кемерово",
+            "Новокузнецк", "Рязань", "Набережные Челны", "Астрахань", "Пенза", "Липецк", "Киров", "Чебоксары", "Тула", "Калининград",
+            "Курск", "Улан-Удэ", "Ставрополь", "Магнитогорск", "Сочи", "Белгород", "Нижний Тагил", "Владимир", "Архангельск", "Калуга",
+            "Сургут", "Чита", "Грозный", "Смоленск", "Волжский", "Череповец", "Владикавказ", "Курган", "Вологда", "Саранск",
+            "Тамбов", "Стерлитамак", "Петрозаводск", "Кострома", "Нижневартовск", "Йошкар-Ола", "Новороссийск", "Комсомольск-на-Амуре", "Таганрог", "Сыктывкар",
+            "Братск", "Нальчик", "Дзержинск", "Шахты", "Орел", "Ангарск", "Нижнекамск", "Благовещенск", "Великий Новгород", "Псков",
+            "Энгельс", "Бийск", "Прокопьевск", "Рыбинск", "Балаково", "Армавир", "Северодвинск", "Королев", "Петропавловск-Камчатский", "Мытищи",
+            "Люберцы", "Химки", "Подольск", "Красногорск", "Одинцово", "Домодедово", "Раменское", "Жуковский", "Пушкино", "Серпухов",
+            "Коломна", "Электросталь", "Балашиха", "Реутов", "Орехово-Зуево", "Сергиев Посад", "Щелково", "Ногинск", "Климовск", "Видное",
+            "Волгодонск", "Каменск-Уральский", "Копейск", "Миасс", "Златоуст", "Озерск", "Снежинск", "Троицк", "Первоуральск", "Ревда",
+            "Новоуральск", "Верхняя Пышма", "Асбест", "Каменск-Шахтинский", "Новочеркасск", "Батайск", "Азов", "Новошахтинск", "Ейск", "Крымск",
+            "Тихорецк", "Туапсе", "Анапа", "Геленджик", "Невинномысск", "Пятигорск", "Кисловодск", "Ессентуки", "Минеральные Воды", "Буденновск",
+            "Черкесск", "Элиста", "Майкоп", "Абакан", "Кызыл", "Горно-Алтайск", "Биробиджан", "Якутск", "Магадан", "Южно-Сахалинск",
+            "Анадырь", "Салехард", "Нарьян-Мар", "Воркута", "Ухта", "Усинск", "Инта", "Печора", "Сосногорск", "Северск",
+            "Зеленогорск", "Железногорск", "Ачинск", "Минусинск", "Норильск", "Канск", "Усолье-Сибирское", "Ангарск", "Черемхово", "Тулун",
+            "Бодайбо", "Усть-Илимск", "Усть-Кут", "Алдан", "Мирный", "Нерюнгри", "Тында", "Свободный", "Зея", "Белогорск",
+            "Райчихинск", "Завитинск", "Арсеньев", "Артем", "Дальнегорск", "Находка", "Партизанск", "Спасск-Дальний", "Уссурийск", "Фокино"
+        ].sort();
+        
+        let allCitiesCache = [];
+        
+        function showCityDropdown() {
+            const dropdown = document.getElementById('cityDropdown');
+            dropdown.classList.remove('hidden');
+            if (allCitiesCache.length === 0) {
+                loadAllCities();
+            }
+        }
+        
+        function loadAllCities() {
+            const dropdown = document.getElementById('cityDropdown');
+            allCitiesCache = RUSSIAN_CITIES;
+            renderCityDropdown(allCitiesCache);
+        }
+        
+        function filterCities() {
+            const search = document.getElementById('citySearch').value.toLowerCase();
+            const filtered = RUSSIAN_CITIES.filter(city => 
+                city.toLowerCase().includes(search)
+            );
+            renderCityDropdown(filtered);
+        }
+        
+        function renderCityDropdown(cities) {
+            const dropdown = document.getElementById('cityDropdown');
+            
+            if (cities.length === 0) {
+                dropdown.innerHTML = '<div class="p-3 text-gray-500">Город не найден</div>';
                 return;
             }
             
-            const btn = event.target;
-            const originalText = btn.textContent;
-            btn.textContent = 'Ищем...';
-            btn.disabled = true;
+            dropdown.innerHTML = cities.map(city => `
+                <div class="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 transition-colors" 
+                     onclick="selectCity('${city}')">
+                    <span class="font-medium">${city}</span>
+                </div>
+            `).join('');
+        }
+        
+        async function selectCity(cityName) {
+            document.getElementById('citySearch').value = cityName;
+            document.getElementById('cityDropdown').classList.add('hidden');
+            
+            // Показываем индикатор загрузки
+            const info = document.getElementById('selectedCityInfo');
+            const nameEl = document.getElementById('selectedCityName');
+            const coordsEl = document.getElementById('selectedCityCoords');
+            
+            nameEl.textContent = cityName;
+            coordsEl.textContent = '⏳ Определяем координаты...';
+            info.classList.remove('hidden');
             
             try {
                 const response = await fetch(`${API_BASE}/api/geocode?city=${encodeURIComponent(cityName)}`);
                 const data = await response.json();
                 
                 if (data.success) {
+                    document.getElementById('cityName').value = cityName;
                     document.getElementById('cityLat').value = data.latitude.toFixed(4);
                     document.getElementById('cityLon').value = data.longitude.toFixed(4);
-                    alert(`✅ Координаты найдены:\n${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`);
+                    coordsEl.textContent = `📍 ${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`;
                 } else {
-                    alert('❌ Не удалось найти координаты. Введите вручную или попробуйте другое название.');
+                    coordsEl.textContent = '❌ Не удалось определить координаты';
+                    alert('Не удалось найти координаты города. Попробуйте другой.');
                 }
             } catch (error) {
-                alert('❌ Ошибка поиска координат. Введите вручную.');
+                coordsEl.textContent = '❌ Ошибка загрузки координат';
                 console.error(error);
-            } finally {
-                btn.textContent = originalText;
-                btn.disabled = false;
             }
         }
+        
+        // Закрытие dropdown при клике вне его
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('cityDropdown');
+            const search = document.getElementById('citySearch');
+            if (dropdown && search && !dropdown.contains(e.target) && e.target !== search) {
+                dropdown.classList.add('hidden');
+            }
+        });
         
         async function addCity(e) {
             e.preventDefault();
@@ -253,6 +339,11 @@
             const longitude = parseFloat(document.getElementById('cityLon').value);
             const cityZoom = parseInt(document.getElementById('cityZoom').value);
             const cityDesc = document.getElementById('cityDesc').value;
+            
+            if (!cityName || !latitude || !longitude) {
+                alert('❌ Сначала выберите город из списка');
+                return;
+            }
             
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
@@ -280,6 +371,8 @@
                     alert(`✅ Город "${cityName}" добавлен!`);
                     document.getElementById('cityForm').reset();
                     document.getElementById('cityZoom').value = 12;
+                    document.getElementById('selectedCityInfo').classList.add('hidden');
+                    document.getElementById('citySearch').value = '';
                     loadCities();
                 } else {
                     alert('Ошибка: ' + data.error);
