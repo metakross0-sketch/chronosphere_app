@@ -207,6 +207,7 @@
         <!-- Выбор города -->
         <div id="city-selection">
             <h1>🏪 Выберите город</h1>
+            <button id="admin-btn" style="display: none; margin-bottom: 15px;" class="city-btn">⚙️ Добавить магазин</button>
             <div id="cities-list" class="loading">
                 <div class="spinner"></div>
             </div>
@@ -385,15 +386,21 @@
         function checkAdmin() {
             const userId = tg.initDataUnsafe?.user?.id;
             if (userId === ADMIN_ID) {
-                // Показываем админ панель (можно добавить кнопку в интерфейс)
+                document.getElementById('admin-btn').style.display = 'block';
                 console.log('Пользователь - администратор');
             }
+        }
+
+        // Открытие админ панели
+        function openAdmin() {
+            window.location.href = 'admin.html';
         }
 
         // Обработчики событий
         document.getElementById('back-to-cities').onclick = backToCities;
         document.getElementById('close-modal').onclick = closeModal;
         document.getElementById('open-shop-btn').onclick = openShop;
+        document.getElementById('admin-btn').onclick = openAdmin;
 
         // Инициализация
         loadCities();
