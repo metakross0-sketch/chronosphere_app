@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #app {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .map-container {
+            height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:hover {
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .shop-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .shop-item {
+            padding: 20px;
+            background: #f8f8f8;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .shop-item h3 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .shop-item .info {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .shop-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .shop-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .edit-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f0f0f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .coordinates {
+            display: flex;
+            gap: 10px;
+        }
+
+        .coordinates .form-group {
+            flex: 1;
+        }
+
+        .help-text {
+            font-size: 13px;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>⚙️ Админ панель</h1>
+        <p class="subtitle">Управление магазинами</p>
+
+        <div id="alert-container"></div>
+
+        <!-- Табы -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('add')">Добавить магазин</button>
+            <button class="tab" onclick="switchTab('list')">Список магазинов</button>
+            <button class="tab" onclick="switchTab('sync')">Синхронизация</button>
+        </div>
+
+        <!-- Добавление магазина -->
+        <div id="tab-add" class="tab-content active">
+            <form id="add-shop-form">
+                <div class="form-group">
+                    <label>Название магазина *</label>
+                    <input type="text" id="shop-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>ID магазина *</label>
+                    <input type="text" id="shop-id" required>
+                    <div class="help-text">Уникальный идентификатор магазина</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Город *</label>
+                    <input type="text" id="city" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Ссылка на таблицу магазина *</label>
+                    <input type="url" id="spreadsheet-url" required>
+                    <div class="help-text">Google Sheets URL с каталогом магазина</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Выберите местоположение на карте *</label>
+                    <div class="help-text">Кликните на карту для установки метки</div>
+                </div>
+
+                <div id="map" class="map-container"></div>
+
+                <div class="coordinates">
+                    <div class="form-group">
+                        <label>Широта</label>
+                        <input type="number" step="0.000001" id="latitude" required readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Долгота</label>
+                        <input type="number" step="0.000001" id="longitude" required readonly>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">Создать магазин</button>
+            </form>
+        </div>
+
+        <!-- Список магазинов -->
+        <div id="tab-list" class="tab-content">
+            <div id="shops-list" class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- Синхронизация -->
+        <div id="tab-sync" class="tab-content">
+            <p style="margin-bottom: 20px; color: #666;">
+                Синхронизация загрузит новые магазины из главной таблицы Google Sheets.
+                Существующие магазины не будут изменены.
+            </p>
+            <button class="btn" onclick="syncShops()">Синхронизировать</button>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Проверка прав администратора
+        const userId = tg.initDataUnsafe?.user?.id;
+        if (userId !== CONFIG.ADMIN_ID) {
+            document.getElementById('app').innerHTML = `
+                <h1>❌ Доступ запрещен</h1>
+                <p>У вас нет прав администратора</p>
+            `;
+        }
+
+        // Инициализация карты
+        let map = null;
+        let marker = null;
+        let selectedCoords = null;
+
+        function initMap() {
+            map = L.map('map').setView(CONFIG.MAP.DEFAULT_CENTER, CONFIG.MAP.DEFAULT_ZOOM);
+            L.tileLayer(CONFIG.MAP.TILE_LAYER, {
+                attribution: CONFIG.MAP.ATTRIBUTION
+            }).addTo(map);
+
+            // Клик по карте для установки метки
+            map.on('click', function(e) {
+                selectedCoords = e.latlng;
+                
+                if (marker) {
+                    marker.setLatLng(selectedCoords);
+                } else {
+                    marker = L.marker(selectedCoords).addTo(map);
+                }
+
+                document.getElementById('latitude').value = selectedCoords.lat.toFixed(6);
+                document.getElementById('longitude').value = selectedCoords.lng.toFixed(6);
+            });
+        }
+
+        // Переключение табов
+        function switchTab(tabName) {
+            // Убираем активные классы
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // Добавляем активные классы
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            // Загружаем данные для таба списка
+            if (tabName === 'list') {
+                loadShops();
+            }
+        }
+
+        // Показ уведомлений
+        function showAlert(message, type = 'success') {
+            const container = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // Добавление магазина
+        document.getElementById('add-shop-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!selectedCoords) {
+                showAlert('Выберите местоположение на карте', 'error');
+                return;
+            }
+
+            const data = {
+                shop_id: document.getElementById('shop-id').value,
+                shop_name: document.getElementById('shop-name').value,
+                city: document.getElementById('city').value,
+                latitude: parseFloat(document.getElementById('latitude').value),
+                longitude: parseFloat(document.getElementById('longitude').value),
+                spreadsheet_url: document.getElementById('spreadsheet-url').value
+            };
+
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/admin/shops`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert('Магазин успешно добавлен!', 'success');
+                    document.getElementById('add-shop-form').reset();
+                    selectedCoords = null;
+                    if (marker) {
+                        map.removeLayer(marker);
+                        marker = null;
+                    }
+                } else {
+                    showAlert(result.error || 'Ошибка добавления магазина', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showAlert('Ошибка соединения с сервером', 'error');
+            }
+        });
+
+        // Загрузка списка магазинов
+        async function loadShops() {
+            const container = document.getElementById('shops-list');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/cities`);
+                const citiesData = await response.json();
+
+                if (!citiesData.cities || citiesData.cities.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;color:#666;">Магазинов пока нет</p>';
+                    return;
+                }
+
+                // Загружаем магазины для всех городов
+                const allShops = [];
+                for (const city of citiesData.cities) {
+                    const shopsResponse = await fetch(`${CONFIG.API_URL}/api/shops/${encodeURIComponent(city)}`);
+                    const shopsData = await shopsResponse.json();
+                    if (shopsData.shops) {
+                        allShops.push(...shopsData.shops.map(shop => ({...shop, city})));
+                    }
+                }
+
+                container.innerHTML = '';
+                container.className = 'shop-list';
+
+                allShops.forEach(shop => {
+                    const shopItem = document.createElement('div');
+                    shopItem.className = 'shop-item';
+                    shopItem.innerHTML = `
+                        <h3>${shop.name}</h3>
+                        <div class="info"><strong>ID:</strong> ${shop.shop_id}</div>
+                        <div class="info"><strong>Город:</strong> ${shop.city}</div>
+                        <div class="info"><strong>Координаты:</strong> ${shop.latitude}, ${shop.longitude}</div>
+                        <div class="shop-actions">
+                            <button class="edit-btn" onclick="editShop('${shop.shop_id}')">Редактировать</button>
+                            <button class="delete-btn" onclick="deleteShop('${shop.shop_id}')">Удалить</button>
+                        </div>
+                    `;
+                    container.appendChild(shopItem);
+                });
+
+            } catch (error) {
+                console.error('Ошибка загрузки магазинов:', error);
+                container.innerHTML = '<p style="text-align:center;color:#ef4444;">Ошибка загрузки данных</p>';
+            }
+        }
+
+        // Синхронизация магазинов
+        async function syncShops() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div>';
+
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/admin/sync`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert(`Синхронизировано магазинов: ${result.synced}`, 'success');
+                } else {
+                    showAlert(result.error || 'Ошибка синхронизации', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showAlert('Ошибка соединения с сервером', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Синхронизировать';
+            }
+        }
+
+        // Редактирование магазина (заглушка)
+        function editShop(shopId) {
+            showAlert('Функция редактирования в разработке', 'error');
+        }
+
+        // Удаление магазина (заглушка)
+        function deleteShop(shopId) {
+            if (confirm('Вы уверены, что хотите удалить этот магазин?')) {
+                showAlert('Функция удаления в разработке', 'error');
+            }
+        }
+
+        // Инициализация
+        initMap();
+    </script>
+</body>
+</html>

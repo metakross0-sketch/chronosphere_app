@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Магазины - Карта</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            overflow-x: hidden;
+        }
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Экран выбора города */
+        #city-selection {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #city-selection h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .city-btn {
+            padding: 15px 20px;
+            background: var(--tg-theme-button-color, #3B82F6);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .city-btn:active {
+            opacity: 0.7;
+        }
+
+        /* Карта */
+        #map-container {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #map {
+            flex: 1;
+            width: 100%;
+        }
+
+        #back-to-cities {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px 15px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Модальное окно с информацией о магазине */
+        #shop-modal {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            padding: 20px;
+            z-index: 2000;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        #shop-modal h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        #shop-modal .info-row {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        #open-shop-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--tg-theme-button-color, #3B82F6);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        #close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        /* Загрузка */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--tg-theme-button-color, #3B82F6);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Админ панель */
+        #admin-panel {
+            display: none;
+            padding: 20px;
+        }
+
+        #admin-panel h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--tg-theme-button-color, #3B82F6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Выбор города -->
+        <div id="city-selection">
+            <h1>🏪 Выберите город</h1>
+            <div id="cities-list" class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- Карта -->
+        <div id="map-container">
+            <button id="back-to-cities">← Назад</button>
+            <div id="map"></div>
+        </div>
+
+        <!-- Модальное окно с информацией о магазине -->
+        <div id="shop-modal">
+            <button id="close-modal">×</button>
+            <h2 id="shop-name"></h2>
+            <div class="info-row">
+                <strong>ID:</strong> <span id="shop-id"></span>
+            </div>
+            <div class="info-row">
+                <strong>Город:</strong> <span id="shop-city"></span>
+            </div>
+            <button id="open-shop-btn">🏪 Открыть магазин</button>
+        </div>
+
+        <!-- Админ панель -->
+        <div id="admin-panel">
+            <h2>⚙️ Админ панель</h2>
+            <div class="form-group">
+                <label>Название магазина:</label>
+                <input type="text" id="admin-shop-name">
+            </div>
+            <div class="form-group">
+                <label>ID магазина:</label>
+                <input type="text" id="admin-shop-id">
+            </div>
+            <div class="form-group">
+                <label>Город:</label>
+                <input type="text" id="admin-city">
+            </div>
+            <div class="form-group">
+                <label>Широта:</label>
+                <input type="number" step="0.000001" id="admin-lat">
+            </div>
+            <div class="form-group">
+                <label>Долгота:</label>
+                <input type="number" step="0.000001" id="admin-lng">
+            </div>
+            <button class="submit-btn" id="admin-submit">Создать магазин</button>
+        </div>
+    </div>
+
+    <script>
+        // API URL - замените на ваш URL API на PythonAnywhere
+        const API_URL = 'https://yourusername.pythonanywhere.com';
+        
+        // Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Переменные
+        let map = null;
+        let currentCity = null;
+        let selectedShop = null;
+        const ADMIN_ID = 7250236442;
+
+        // Получение списка городов
+        async function loadCities() {
+            try {
+                const response = await fetch(`${API_URL}/api/cities`);
+                const data = await response.json();
+                
+                const citiesList = document.getElementById('cities-list');
+                citiesList.innerHTML = '';
+
+                if (data.cities && data.cities.length > 0) {
+                    data.cities.forEach(city => {
+                        const btn = document.createElement('button');
+                        btn.className = 'city-btn';
+                        btn.textContent = city;
+                        btn.onclick = () => showCityMap(city);
+                        citiesList.appendChild(btn);
+                    });
+                } else {
+                    citiesList.innerHTML = '<p style="color: #666;">Магазинов пока нет</p>';
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки городов:', error);
+                document.getElementById('cities-list').innerHTML = 
+                    '<p style="color: red;">Ошибка загрузки данных</p>';
+            }
+        }
+
+        // Показ карты города
+        async function showCityMap(city) {
+            currentCity = city;
+            document.getElementById('city-selection').style.display = 'none';
+            document.getElementById('map-container').style.display = 'flex';
+
+            // Инициализация карты
+            if (!map) {
+                map = L.map('map').setView([55.7558, 37.6173], 13); // Москва по умолчанию
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+            }
+
+            // Загрузка магазинов города
+            try {
+                const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
+                const data = await response.json();
+
+                if (data.shops && data.shops.length > 0) {
+                    // Центрируем карту на первом магазине
+                    map.setView([data.shops[0].latitude, data.shops[0].longitude], 13);
+
+                    // Добавляем маркеры
+                    data.shops.forEach(shop => {
+                        const marker = L.marker([shop.latitude, shop.longitude]).addTo(map);
+                        marker.bindPopup(shop.name);
+                        marker.on('click', () => showShopInfo(shop));
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки магазинов:', error);
+                tg.showAlert('Ошибка загрузки магазинов');
+            }
+        }
+
+        // Показ информации о магазине
+        function showShopInfo(shop) {
+            selectedShop = shop;
+            document.getElementById('shop-name').textContent = shop.name;
+            document.getElementById('shop-id').textContent = shop.shop_id;
+            document.getElementById('shop-city').textContent = currentCity;
+            document.getElementById('shop-modal').style.display = 'block';
+        }
+
+        // Открытие приложения магазина
+        async function openShop() {
+            if (!selectedShop) return;
+
+            try {
+                // Получаем каталог магазина
+                const response = await fetch(`${API_URL}/api/shop/${selectedShop.shop_id}/catalog`);
+                const data = await response.json();
+
+                // Сохраняем данные в localStorage для использования в приложении магазина
+                localStorage.setItem('shopCatalog', JSON.stringify(data.catalog));
+                localStorage.setItem('shopInfo', JSON.stringify(selectedShop));
+
+                // Открываем приложение магазина (здесь должна быть логика открытия)
+                // Можно перенаправить на другую страницу или показать каталог
+                window.location.href = 'shop.html';
+            } catch (error) {
+                console.error('Ошибка открытия магазина:', error);
+                tg.showAlert('Ошибка загрузки данных магазина');
+            }
+        }
+
+        // Возврат к выбору городов
+        function backToCities() {
+            document.getElementById('map-container').style.display = 'none';
+            document.getElementById('city-selection').style.display = 'block';
+            currentCity = null;
+            selectedShop = null;
+        }
+
+        // Закрытие модального окна
+        function closeModal() {
+            document.getElementById('shop-modal').style.display = 'none';
+            selectedShop = null;
+        }
+
+        // Проверка прав администратора
+        function checkAdmin() {
+            const userId = tg.initDataUnsafe?.user?.id;
+            if (userId === ADMIN_ID) {
+                // Показываем админ панель (можно добавить кнопку в интерфейс)
+                console.log('Пользователь - администратор');
+            }
+        }
+
+        // Обработчики событий
+        document.getElementById('back-to-cities').onclick = backToCities;
+        document.getElementById('close-modal').onclick = closeModal;
+        document.getElementById('open-shop-btn').onclick = openShop;
+
+        // Инициализация
+        loadCities();
+        checkAdmin();
+    </script>
+</body>
+</html>
