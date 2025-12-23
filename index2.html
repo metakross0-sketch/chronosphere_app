@@ -363,19 +363,19 @@
             if (!selectedShop) return;
 
             try {
-                // Получаем каталог магазина
                 const response = await fetch(`${API_URL}/api/shop/${selectedShop.shop_id}/catalog`);
                 const data = await response.json();
 
-                // Сохраняем данные в localStorage для использования в приложении магазина
+                if (data.error) {
+                    tg.showAlert('Ошибка: ' + data.error);
+                    return;
+                }
+
                 localStorage.setItem('shopCatalog', JSON.stringify(data.catalog));
                 localStorage.setItem('shopInfo', JSON.stringify(selectedShop));
-
-                // Открываем приложение магазина (здесь должна быть логика открытия)
-                // Можно перенаправить на другую страницу или показать каталог
+                localStorage.setItem('currentCity', currentCity); // Сохраняем текущий город
                 window.location.href = 'shop.html';
             } catch (error) {
-                console.error('Ошибка открытия магазина:', error);
                 tg.showAlert('Ошибка загрузки данных магазина');
             }
         }
@@ -414,6 +414,13 @@
         // Инициализация
         if (!checkAdmin()) {
             loadCities();
+            
+            // Проверяем, нужно ли восстановить карту города
+            const savedCity = localStorage.getItem('currentCity');
+            if (savedCity) {
+                localStorage.removeItem('currentCity'); // Удаляем после чтения
+                showCityMap(savedCity);
+            }
         }
     </script>
 </body>
