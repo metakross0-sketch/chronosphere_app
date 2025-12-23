@@ -115,7 +115,13 @@
                 <h2 class="text-2xl font-bold mb-4">➕ Добавить город</h2>
                 <form id="cityForm" onsubmit="addCity(event)">
                     <input type="text" id="cityName" placeholder="Название города (например: Тюмень)" required>
-                    <p class="text-sm text-gray-500 mb-2">Координаты определятся автоматически</p>
+                    <div class="mb-2">
+                        <button type="button" onclick="autoFillCoords()" class="btn bg-blue-500 text-white text-sm py-2">
+                            🌍 Автоматически найти координаты
+                        </button>
+                    </div>
+                    <input type="number" step="0.0001" id="cityLat" placeholder="Широта (или нажмите кнопку выше)" required>
+                    <input type="number" step="0.0001" id="cityLon" placeholder="Долгота (или нажмите кнопку выше)" required>
                     <input type="number" id="cityZoom" placeholder="Масштаб карты (оставьте 12)" value="12">
                     <textarea id="cityDesc" placeholder="Описание города (необязательно)" rows="2"></textarea>
                     <button type="submit" class="btn btn-primary w-full">Добавить город</button>
@@ -207,37 +213,53 @@
         
         // ==================== ГОРОДА ====================
         
+        async function autoFillCoords() {
+            const cityName = document.getElementById('cityName').value;
+            if (!cityName) {
+                alert('Сначала введите название города');
+                return;
+            }
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Ищем...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/geocode?city=${encodeURIComponent(cityName)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('cityLat').value = data.latitude.toFixed(4);
+                    document.getElementById('cityLon').value = data.longitude.toFixed(4);
+                    alert(`✅ Координаты найдены:\n${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`);
+                } else {
+                    alert('❌ Не удалось найти координаты. Введите вручную или попробуйте другое название.');
+                }
+            } catch (error) {
+                alert('❌ Ошибка поиска координат. Введите вручную.');
+                console.error(error);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
         async function addCity(e) {
             e.preventDefault();
             
             const cityName = document.getElementById('cityName').value;
+            const latitude = parseFloat(document.getElementById('cityLat').value);
+            const longitude = parseFloat(document.getElementById('cityLon').value);
             const cityZoom = parseInt(document.getElementById('cityZoom').value);
             const cityDesc = document.getElementById('cityDesc').value;
             
-            // Показываем индикатор загрузки
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Определяем координаты...';
+            submitBtn.textContent = 'Добавляем...';
             submitBtn.disabled = true;
             
             try {
-                // Получаем координаты через наш backend
-                const geocodeResponse = await fetch(`${API_BASE}/api/geocode?city=${encodeURIComponent(cityName)}`);
-                const geocodeData = await geocodeResponse.json();
-                
-                if (!geocodeData.success) {
-                    alert('❌ Не удалось найти координаты города. Проверьте название.');
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                    return;
-                }
-                
-                const latitude = geocodeData.latitude;
-                const longitude = geocodeData.longitude;
-                
-                submitBtn.textContent = 'Добавляем город...';
-                
-                // Создаем город с полученными координатами
                 const cityData = {
                     name: cityName,
                     latitude: latitude,
@@ -255,7 +277,7 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert(`✅ Город "${cityName}" добавлен!\nКоординаты: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+                    alert(`✅ Город "${cityName}" добавлен!`);
                     document.getElementById('cityForm').reset();
                     document.getElementById('cityZoom').value = 12;
                     loadCities();
