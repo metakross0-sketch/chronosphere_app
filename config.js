@@ -1,7 +1,7 @@
 // Конфигурация приложения
 const CONFIG = {
     // URL API на PythonAnywhere - замените на ваш
-    API_URL: 'https://yourusername.pythonanywhere.com',
+    API_URL: 'https://chronosphere.pythonanywhere.com',
     
     // ID администратора
     ADMIN_ID: 7250236442,
@@ -14,3 +14,4 @@ const CONFIG = {
         ATTRIBUTION: '© OpenStreetMap contributors'
     }
 };
+
