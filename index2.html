@@ -230,7 +230,6 @@
                 <strong>Город:</strong> <span id="shop-city"></span>
             </div>
             <button id="open-shop-btn">🏪 Открыть магазин</button>
-            <button id="delete-shop-btn" style="display: none; background: #ef4444; margin-top: 10px;" class="submit-btn">🗑️ Удалить магазин</button>
         </div>
 
         <!-- Админ панель -->
@@ -275,8 +274,20 @@
         let currentCity = null;
         let selectedShop = null;
 
+        // Синхронизация магазинов из таблицы
+        async function syncShops() {
+            try {
+                await fetch(`${API_URL}/api/admin/sync`, { method: 'POST' });
+            } catch (error) {
+                console.error('Ошибка синхронизации:', error);
+            }
+        }
+
         // Получение списка городов
         async function loadCities() {
+            // Сначала синхронизируем
+            await syncShops();
+            
             try {
                 const response = await fetch(`${API_URL}/api/cities`);
                 const data = await response.json();
