@@ -354,13 +354,24 @@
             const storedShop = localStorage.getItem('shopInfo');
 
             if (storedCatalog && storedShop) {
-                catalogData = JSON.parse(storedCatalog);
-                shopInfo = JSON.parse(storedShop);
-                document.getElementById('shop-name').textContent = shopInfo.name;
-                showSections();
+                try {
+                    catalogData = JSON.parse(storedCatalog);
+                    shopInfo = JSON.parse(storedShop);
+                    document.getElementById('shop-name').textContent = shopInfo.name || 'Магазин';
+                    
+                    if (catalogData && Object.keys(catalogData).length > 0) {
+                        showSections();
+                    } else {
+                        document.getElementById('content').innerHTML = 
+                            '<div class="empty-state"><p>Каталог пуст</p></div>';
+                    }
+                } catch (error) {
+                    document.getElementById('content').innerHTML = 
+                        '<div class="empty-state"><p>Ошибка загрузки данных</p></div>';
+                }
             } else {
                 document.getElementById('content').innerHTML = 
-                    '<div class="empty-state"><p>Ошибка загрузки данных</p></div>';
+                    '<div class="empty-state"><p>Данные магазина не найдены</p></div>';
             }
         }
 
@@ -592,7 +603,7 @@
         // Возврат назад
         function goBack() {
             if (navigationPath.length === 0) {
-                // Возврат к карте
+                // Возврат к карте - currentCity уже сохранён в localStorage
                 window.location.href = 'index.html';
             } else if (navigationPath.length === 1) {
                 showSections();
