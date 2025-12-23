@@ -285,9 +285,13 @@
 
         // Получение списка городов
         async function loadCities() {
+            console.log('loadCities started');
             try {
+                console.log('Fetching cities from:', `${API_URL}/api/cities`);
                 const response = await fetch(`${API_URL}/api/cities`);
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Cities data:', data);
                 
                 const citiesList = document.getElementById('cities-list');
                 citiesList.innerHTML = '';
