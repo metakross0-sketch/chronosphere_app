@@ -114,11 +114,10 @@
             <div class="card">
                 <h2 class="text-2xl font-bold mb-4">➕ Добавить город</h2>
                 <form id="cityForm" onsubmit="addCity(event)">
-                    <input type="text" id="cityName" placeholder="Название города" required>
-                    <input type="number" step="0.0001" id="cityLat" placeholder="Широта (например: 57.1522)" required>
-                    <input type="number" step="0.0001" id="cityLon" placeholder="Долгота (например: 65.5272)" required>
-                    <input type="number" id="cityZoom" placeholder="Масштаб карты (10-15)" value="12">
-                    <textarea id="cityDesc" placeholder="Описание города" rows="2"></textarea>
+                    <input type="text" id="cityName" placeholder="Название города (например: Тюмень)" required>
+                    <p class="text-sm text-gray-500 mb-2">Координаты определятся автоматически</p>
+                    <input type="number" id="cityZoom" placeholder="Масштаб карты (оставьте 12)" value="12">
+                    <textarea id="cityDesc" placeholder="Описание города (необязательно)" rows="2"></textarea>
                     <button type="submit" class="btn btn-primary w-full">Добавить город</button>
                 </form>
             </div>
@@ -211,15 +210,47 @@
         async function addCity(e) {
             e.preventDefault();
             
-            const cityData = {
-                name: document.getElementById('cityName').value,
-                latitude: parseFloat(document.getElementById('cityLat').value),
-                longitude: parseFloat(document.getElementById('cityLon').value),
-                zoom_level: parseInt(document.getElementById('cityZoom').value),
-                description: document.getElementById('cityDesc').value
-            };
+            const cityName = document.getElementById('cityName').value;
+            const cityZoom = parseInt(document.getElementById('cityZoom').value);
+            const cityDesc = document.getElementById('cityDesc').value;
+            
+            // Показываем индикатор загрузки
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Определяем координаты...';
+            submitBtn.disabled = true;
             
             try {
+                // Используем Nominatim для геокодирования (бесплатный сервис OpenStreetMap)
+                const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName)}&limit=1`;
+                const geocodeResponse = await fetch(geocodeUrl, {
+                    headers: {
+                        'User-Agent': 'ShopsApp/1.0'
+                    }
+                });
+                const geocodeData = await geocodeResponse.json();
+                
+                if (geocodeData.length === 0) {
+                    alert('❌ Не удалось найти координаты города. Проверьте название.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+                
+                const latitude = parseFloat(geocodeData[0].lat);
+                const longitude = parseFloat(geocodeData[0].lon);
+                
+                submitBtn.textContent = 'Добавляем город...';
+                
+                // Создаем город с полученными координатами
+                const cityData = {
+                    name: cityName,
+                    latitude: latitude,
+                    longitude: longitude,
+                    zoom_level: cityZoom,
+                    description: cityDesc
+                };
+                
                 const response = await fetch(`${API_BASE}/api/admin/cities`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -229,8 +260,9 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert('Город успешно добавлен!');
+                    alert(`✅ Город "${cityName}" добавлен!\nКоординаты: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
                     document.getElementById('cityForm').reset();
+                    document.getElementById('cityZoom').value = 12;
                     loadCities();
                 } else {
                     alert('Ошибка: ' + data.error);
@@ -238,6 +270,9 @@
             } catch (error) {
                 alert('Ошибка добавления города');
                 console.error(error);
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
         }
         
