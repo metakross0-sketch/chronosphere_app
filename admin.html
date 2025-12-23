@@ -263,41 +263,25 @@
 
         <!-- Добавление магазина -->
         <div id="tab-add" class="tab-content active">
+            <div class="help-text" style="margin-bottom: 20px; font-size: 14px;">
+                <strong>Инструкция:</strong><br>
+                1. Заполните строку магазина в Google Таблице (столбцы A-F)<br>
+                2. Введите ID магазина ниже<br>
+                3. Нажмите "Синхронизировать"<br><br>
+                <strong>Столбцы таблицы:</strong><br>
+                A - Дата | B - Название | C - Ссылка на таблицу каталога | D - ID магазина | E - Ссылка 2ГИС | F - Описание
+            </div>
+
             <form id="add-shop-form">
                 <div class="form-group">
-                    <label>Название магазина *</label>
-                    <input type="text" id="shop-name" required>
+                    <label>ID магазина для синхронизации *</label>
+                    <input type="text" id="shop-id" required placeholder="Введите ID из столбца D">
+                    <div class="help-text">ID магазина из основной таблицы</div>
                 </div>
 
-                <div class="form-group">
-                    <label>ID магазина *</label>
-                    <input type="text" id="shop-id" required>
-                    <div class="help-text">Уникальный идентификатор магазина</div>
-                </div>
-
-                <div class="form-group">
-                    <label>Город *</label>
-                    <input type="text" id="city" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Ссылка на таблицу магазина *</label>
-                    <input type="url" id="spreadsheet-url" required>
-                    <div class="help-text">Google Sheets URL с каталогом магазина</div>
-                </div>
-
-                <div class="form-group">
-                    <label>Выберите местоположение на карте *</label>
-                    <div class="help-text">Кликните на карту для установки метки</div>
-                </div>
-
-                <div id="map" class="map-container"></div>
-
-                <div class="coordinates">
-                    <div class="form-group">
-                        <label>Широта</label>
-                        <input type="number" step="0.000001" id="latitude" required readonly>
-                    </div>
+                <button type="submit" class="submit-btn">🔄 Синхронизировать магазин</button>
+            </form>
+        </div>
                     <div class="form-group">
                         <label>Долгота</label>
                         <input type="number" step="0.000001" id="longitude" required readonly>
@@ -400,41 +384,26 @@
         document.getElementById('add-shop-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            if (!selectedCoords) {
-                showAlert('Выберите местоположение на карте', 'error');
+            const shopId = document.getElementById('shop-id').value;
+
+            if (!shopId) {
+                showAlert('Введите ID магазина', 'error');
                 return;
             }
 
-            const data = {
-                shop_id: document.getElementById('shop-id').value,
-                shop_name: document.getElementById('shop-name').value,
-                city: document.getElementById('city').value,
-                latitude: parseFloat(document.getElementById('latitude').value),
-                longitude: parseFloat(document.getElementById('longitude').value),
-                spreadsheet_url: document.getElementById('spreadsheet-url').value
-            };
-
             try {
-                const response = await fetch(`${CONFIG.API_URL}/api/admin/shops`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
+                const response = await fetch(`${CONFIG.API_URL}/api/admin/sync-shop/${shopId}`, {
+                    method: 'POST'
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    showAlert('Магазин успешно добавлен!', 'success');
+                    showAlert(`Магазин "${result.shop_name}" успешно синхронизирован!`, 'success');
                     document.getElementById('add-shop-form').reset();
-                    selectedCoords = null;
-                    if (marker) {
-                        map.removeLayer(marker);
-                        marker = null;
-                    }
+                    loadShops();
                 } else {
-                    showAlert(result.error || 'Ошибка добавления магазина', 'error');
+                    showAlert(result.error || 'Ошибка синхронизации магазина', 'error');
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
