@@ -304,8 +304,19 @@
             info.classList.remove('hidden');
             
             try {
+                console.log('Запрос координат для города:', cityName);
+                console.log('URL:', `${API_BASE}/api/geocode?city=${encodeURIComponent(cityName)}`);
+                
                 const response = await fetch(`${API_BASE}/api/geocode?city=${encodeURIComponent(cityName)}`);
+                
+                console.log('Статус ответа:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('Ответ сервера:', data);
                 
                 if (data.success) {
                     document.getElementById('cityName').value = cityName;
@@ -313,12 +324,13 @@
                     document.getElementById('cityLon').value = data.longitude.toFixed(4);
                     coordsEl.textContent = `📍 ${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`;
                 } else {
-                    coordsEl.textContent = '❌ Не удалось определить координаты';
-                    alert('Не удалось найти координаты города. Попробуйте другой.');
+                    coordsEl.textContent = `❌ ${data.error || 'Не удалось определить координаты'}`;
+                    alert(`Ошибка: ${data.error || 'Город не найден'}`);
                 }
             } catch (error) {
                 coordsEl.textContent = '❌ Ошибка загрузки координат';
-                console.error(error);
+                console.error('Полная ошибка:', error);
+                alert(`❌ Ошибка: ${error.message}\n\nПроверьте:\n1. Обновлен ли app.py на сервере?\n2. Доступен ли ${API_BASE}?`);
             }
         }
         
