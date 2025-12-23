@@ -285,9 +285,6 @@
 
         // Получение списка городов
         async function loadCities() {
-            // Сначала синхронизируем
-            await syncShops();
-            
             try {
                 const response = await fetch(`${API_URL}/api/cities`);
                 const data = await response.json();
