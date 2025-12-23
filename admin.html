@@ -101,14 +101,6 @@
             border-color: #667eea;
         }
 
-        .map-container {
-            height: 300px;
-            border-radius: 12px;
-            overflow: hidden;
-            margin: 20px 0;
-            border: 2px solid #e0e0e0;
-        }
-
         .btn {
             width: 100%;
             padding: 15px;
@@ -204,15 +196,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        .coordinates {
-            display: flex;
-            gap: 10px;
-        }
-
-        .coordinates .form-group {
-            flex: 1;
-        }
-
         .help-text {
             font-size: 13px;
             color: #999;
@@ -252,16 +235,7 @@
                     <div class="help-text">ID магазина из основной таблицы</div>
                 </div>
 
-                <button type="submit" class="submit-btn">🔄 Синхронизировать магазин</button>
-            </form>
-        </div>
-                    <div class="form-group">
-                        <label>Долгота</label>
-                        <input type="number" step="0.000001" id="longitude" required readonly>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn">Создать магазин</button>
+                <button type="submit" class="btn">🔄 Синхронизировать магазин</button>
             </form>
         </div>
 
@@ -275,10 +249,10 @@
         <!-- Синхронизация -->
         <div id="tab-sync" class="tab-content">
             <p style="margin-bottom: 20px; color: #666;">
-                Синхронизация загрузит новые магазины из главной таблицы Google Sheets.
-                Существующие магазины не будут изменены.
+                Синхронизация загрузит данные из главной таблицы Google Sheets.<br>
+                Магазины, удаленные из таблицы, будут автоматически удалены из приложения.
             </p>
-            <button class="btn" onclick="syncShops()">Синхронизировать</button>
+            <button class="btn" onclick="syncShops()">🔄 Синхронизировать все магазины</button>
         </div>
     </div>
 
@@ -296,32 +270,6 @@
                 <h1>❌ Доступ запрещен</h1>
                 <p>У вас нет прав администратора</p>
             `;
-        }
-
-        // Инициализация карты
-        let map = null;
-        let marker = null;
-        let selectedCoords = null;
-
-        function initMap() {
-            map = L.map('map').setView(CONFIG.MAP.DEFAULT_CENTER, CONFIG.MAP.DEFAULT_ZOOM);
-            L.tileLayer(CONFIG.MAP.TILE_LAYER, {
-                attribution: CONFIG.MAP.ATTRIBUTION
-            }).addTo(map);
-
-            // Клик по карте для установки метки
-            map.on('click', function(e) {
-                selectedCoords = e.latlng;
-                
-                if (marker) {
-                    marker.setLatLng(selectedCoords);
-                } else {
-                    marker = L.marker(selectedCoords).addTo(map);
-                }
-
-                document.getElementById('latitude').value = selectedCoords.lat.toFixed(6);
-                document.getElementById('longitude').value = selectedCoords.lng.toFixed(6);
-            });
         }
 
         // Переключение табов
@@ -419,6 +367,7 @@
                         <div class="info"><strong>ID:</strong> ${shop.shop_id}</div>
                         <div class="info"><strong>Город:</strong> ${shop.city}</div>
                         <div class="info"><strong>Координаты:</strong> ${shop.latitude}, ${shop.longitude}</div>
+                        <button class="btn" style="margin-top: 15px;" onclick="openShopOnMap('${shop.shop_id}', ${shop.latitude}, ${shop.longitude}, '${shop.name.replace(/'/g, "\\'")}')">🗺️ Открыть на карте</button>
                     `;
                     container.appendChild(shopItem);
                 });
@@ -443,7 +392,7 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    showAlert(`Синхронизировано магазинов: ${result.synced}`, 'success');
+                    showAlert(`Синхронизировано: ${result.synced}, удалено: ${result.deleted}`, 'success');
                 } else {
                     showAlert(result.error || 'Ошибка синхронизации', 'error');
                 }
@@ -456,8 +405,12 @@
             }
         }
 
-        // Инициализация
-        initMap();
+        // Открытие магазина на внешней карте
+        function openShopOnMap(shopId, lat, lng, name) {
+            // Открываем 2GIS или Google Maps
+            const url = `https://www.google.com/maps?q=${lat},${lng}`;
+            window.open(url, '_blank');
+        }
     </script>
 </body>
 </html>
