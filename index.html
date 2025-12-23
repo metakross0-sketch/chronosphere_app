@@ -355,19 +355,23 @@
 
         // Удаление магазина (только админ)
         function deleteShop() {
+            alert('Функция deleteShop вызвана!');
             console.log('deleteShop вызван', selectedShop);
             if (!selectedShop) {
                 console.log('selectedShop пустой');
+                alert('selectedShop пустой!');
                 return;
             }
             
             console.log('Отправляю DELETE запрос для:', selectedShop.shop_id);
+            alert('Отправляю DELETE для: ' + selectedShop.shop_id);
             
             fetch(`${API_URL}/api/admin/shops/${selectedShop.shop_id}`, {
                 method: 'DELETE'
             })
             .then(response => {
                 console.log('Ответ получен:', response.ok);
+                alert('Ответ: ' + response.ok);
                 if (response.ok) {
                     tg.showAlert('Магазин удален');
                     closeModal();
@@ -379,6 +383,7 @@
             })
             .catch(error => {
                 console.error('Ошибка удаления:', error);
+                alert('Ошибка: ' + error.message);
                 tg.showAlert('Ошибка удаления: ' + error.message);
             });
         }
