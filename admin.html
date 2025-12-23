@@ -164,33 +164,6 @@
             margin-bottom: 5px;
         }
 
-        .shop-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .shop-actions button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .edit-btn {
-            background: #667eea;
-            color: white;
-        }
-
-        .delete-btn {
-            background: #ef4444;
-            color: white;
-        }
-
         .alert {
             padding: 15px;
             border-radius: 12px;
@@ -446,10 +419,6 @@
                         <div class="info"><strong>ID:</strong> ${shop.shop_id}</div>
                         <div class="info"><strong>Город:</strong> ${shop.city}</div>
                         <div class="info"><strong>Координаты:</strong> ${shop.latitude}, ${shop.longitude}</div>
-                        <div class="shop-actions">
-                            <button class="edit-btn" onclick="editShop('${shop.shop_id}')">Редактировать</button>
-                            <button class="delete-btn" onclick="deleteShop('${shop.shop_id}')">Удалить</button>
-                        </div>
                     `;
                     container.appendChild(shopItem);
                 });
@@ -484,18 +453,6 @@
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Синхронизировать';
-            }
-        }
-
-        // Редактирование магазина (заглушка)
-        function editShop(shopId) {
-            showAlert('Функция редактирования в разработке', 'error');
-        }
-
-        // Удаление магазина (заглушка)
-        function deleteShop(shopId) {
-            if (confirm('Вы уверены, что хотите удалить этот магазин?')) {
-                showAlert('Функция удаления в разработке', 'error');
             }
         }
 
