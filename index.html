@@ -230,6 +230,7 @@
                 <strong>Город:</strong> <span id="shop-city"></span>
             </div>
             <button id="open-shop-btn">🏪 Открыть магазин</button>
+            <button id="delete-shop-btn" style="display: none; background: #ef4444; margin-top: 10px;" class="submit-btn">🗑️ Удалить магазин</button>
         </div>
 
         <!-- Админ панель -->
@@ -344,6 +345,37 @@
             document.getElementById('shop-id').textContent = shop.shop_id;
             document.getElementById('shop-city').textContent = currentCity;
             document.getElementById('shop-modal').style.display = 'block';
+            
+            // Показываем кнопку удаления только админу
+            const userId = tg.initDataUnsafe?.user?.id;
+            if (userId === ADMIN_ID) {
+                document.getElementById('delete-shop-btn').style.display = 'block';
+            }
+        }
+
+        // Удаление магазина (только админ)
+        async function deleteShop() {
+            if (!selectedShop) return;
+            
+            if (!confirm(`Удалить магазин "${selectedShop.name}"?`)) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/admin/shops/${selectedShop.shop_id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    tg.showAlert('Магазин удален');
+                    closeModal();
+                    backToCities();
+                    loadCities();
+                } else {
+                    tg.showAlert('Ошибка удаления магазина');
+                }
+            } catch (error) {
+                console.error('Ошибка удаления:', error);
+                tg.showAlert('Ошибка удаления магазина');
+            }
         }
 
         // Открытие приложения магазина
@@ -370,6 +402,7 @@
 
         // Возврат к выбору городов
         function backToCities() {
+        document.getElementById('delete-shop-btn').onclick = deleteShop;
             document.getElementById('map-container').style.display = 'none';
             document.getElementById('city-selection').style.display = 'block';
             currentCity = null;
