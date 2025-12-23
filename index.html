@@ -357,25 +357,27 @@
         async function deleteShop() {
             if (!selectedShop) return;
             
-            if (!confirm(`Удалить магазин "${selectedShop.name}"?`)) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/api/admin/shops/${selectedShop.shop_id}`, {
-                    method: 'DELETE'
-                });
+            tg.showConfirm(`Удалить магазин "${selectedShop.name}"?`, async (confirmed) => {
+                if (!confirmed) return;
                 
-                if (response.ok) {
-                    tg.showAlert('Магазин удален');
-                    closeModal();
-                    backToCities();
-                    loadCities();
-                } else {
+                try {
+                    const response = await fetch(`${API_URL}/api/admin/shops/${selectedShop.shop_id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        tg.showAlert('Магазин удален');
+                        closeModal();
+                        backToCities();
+                        loadCities();
+                    } else {
+                        tg.showAlert('Ошибка удаления магазина');
+                    }
+                } catch (error) {
+                    console.error('Ошибка удаления:', error);
                     tg.showAlert('Ошибка удаления магазина');
                 }
-            } catch (error) {
-                console.error('Ошибка удаления:', error);
-                tg.showAlert('Ошибка удаления магазина');
-            }
+            });
         }
 
         // Открытие приложения магазина
