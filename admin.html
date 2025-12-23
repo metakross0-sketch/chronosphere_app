@@ -221,24 +221,19 @@
             submitBtn.disabled = true;
             
             try {
-                // Используем Nominatim для геокодирования (бесплатный сервис OpenStreetMap)
-                const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName)}&limit=1`;
-                const geocodeResponse = await fetch(geocodeUrl, {
-                    headers: {
-                        'User-Agent': 'ShopsApp/1.0'
-                    }
-                });
+                // Получаем координаты через наш backend
+                const geocodeResponse = await fetch(`${API_BASE}/api/geocode?city=${encodeURIComponent(cityName)}`);
                 const geocodeData = await geocodeResponse.json();
                 
-                if (geocodeData.length === 0) {
+                if (!geocodeData.success) {
                     alert('❌ Не удалось найти координаты города. Проверьте название.');
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                     return;
                 }
                 
-                const latitude = parseFloat(geocodeData[0].lat);
-                const longitude = parseFloat(geocodeData[0].lon);
+                const latitude = geocodeData.latitude;
+                const longitude = geocodeData.longitude;
                 
                 submitBtn.textContent = 'Добавляем город...';
                 
@@ -268,7 +263,7 @@
                     alert('Ошибка: ' + data.error);
                 }
             } catch (error) {
-                alert('Ошибка добавления города');
+                alert('Ошибка добавления города: ' + error.message);
                 console.error(error);
             } finally {
                 submitBtn.textContent = originalText;
