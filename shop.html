@@ -429,10 +429,22 @@
             const models = Object.keys(catalogData[section][category]);
 
             models.forEach(model => {
-                const count = countItems(catalogData[section][category][model]);
-                const card = createCategoryCard(model, count, 
-                    () => showSubmodels(section, category, model));
-                content.appendChild(card);
+                const modelData = catalogData[section][category][model];
+                const submodels = Object.keys(modelData);
+                
+                // Если есть только одна пустая подмодель - показываем товары сразу
+                if (submodels.length === 1 && submodels[0] === "") {
+                    const products = modelData[""];
+                    const count = products.length;
+                    const card = createCategoryCard(model, count, 
+                        () => showProducts(section, category, model, ""));
+                    content.appendChild(card);
+                } else {
+                    const count = countItems(modelData);
+                    const card = createCategoryCard(model, count, 
+                        () => showSubmodels(section, category, model));
+                    content.appendChild(card);
+                }
             });
         }
 
