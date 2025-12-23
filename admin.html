@@ -1,1143 +1,781 @@
-"""
-Flask Backend для приложения с городами, картой и магазинами
-"""
-
-from flask import Flask, jsonify, request, send_from_directory
-from flask_cors import CORS
-import sqlite3
-import logging
-import os
-import uuid
-from datetime import datetime
-import gspread
-from google.oauth2.service_account import Credentials
-import requests
-
-app = Flask(__name__)
-
-# CORS: разрешаем запросы с GitHub Pages и локальных тестов
-CORS(app, resources={
-    r"/*": {
-        "origins": [
-            "https://metakross0-sketch.github.io",
-            "http://localhost:*",
-            "http://127.0.0.1:*",
-            "*"  # Fallback для других источников
-        ],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": False,
-        "max_age": 3600
-    }
-})
-
-# Настройка
-import os
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'database.db')
-UPLOAD_FOLDER = 'uploads'
-GOOGLE_SHEETS_CREDS = os.path.join(BASE_DIR, 'chronosphereapp-7400babccccd.json')
-MASTER_SPREADSHEET_ID = '13OZWPfVx5IWvKWOKzvZEwGbDeAuqmku_jGCvpSujpoQ'
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# === ФУНКЦИЯ ДЛЯ БЕЗОПАСНОЙ РАБОТЫ С БД - НЕТ БЛОКИРОВОК ===
-def get_db_connection():
-    """Создает безопасное соединение с БД"""
-    conn = sqlite3.connect(DB_PATH, timeout=30, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    conn.execute('PRAGMA journal_mode=WAL')  # Для concurrent доступа
-    return conn
-
-# ==================== GOOGLE SHEETS ====================
-
-def get_shop_spreadsheet_url_by_id(shop_custom_id):
-    """Получить ссылку на таблицу магазина из главной таблицы по ID"""
-    try:
-        scope = [
-            'https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive',
-            'https://www.googleapis.com/auth/spreadsheets'
-        ]
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - Управление городами и магазинами</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
         
-        creds = Credentials.from_service_account_file(GOOGLE_SHEETS_CREDS, scopes=scope)
-        client = gspread.authorize(creds)
-        sheet = client.open_by_key(MASTER_SPREADSHEET_ID).sheet1
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
         
-        # Читаем все строки из главной таблицы (A - дата, B - название, C - ссылка, D - ID)
-        data = sheet.get('A2:D1000')
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
         
-        for row in data:
-            if len(row) >= 4:
-                # row[0] - дата, row[1] - название, row[2] - ссылка, row[3] - ID
-                if str(row[3]).strip() == str(shop_custom_id).strip():
-                    shop_url = row[2].strip()
-                    logger.info(f"✅ Найдена таблица для магазина ID {shop_custom_id}: {shop_url}")
-                    return shop_url
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
         
-        logger.warning(f"⚠️ Магазин с ID {shop_custom_id} не найден в главной таблице")
-        return None
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
         
-    except Exception as e:
-        logger.error(f"❌ Ошибка чтения главной таблицы: {e}")
-        return None
-
-def get_google_sheets_data(spreadsheet_id, range_name='A2:J1500'):
-    """Получение данных из Google Sheets магазина"""
-    try:
-        scope = [
-            'https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive',
-            'https://www.googleapis.com/auth/spreadsheets'
-        ]
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
         
-        creds = Credentials.from_service_account_file(GOOGLE_SHEETS_CREDS, scopes=scope)
-        client = gspread.authorize(creds)
-        sheet = client.open_by_key(spreadsheet_id).sheet1
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
         
-        data = sheet.get(range_name)
-        logger.info(f"✅ Получено {len(data)} строк из таблицы {spreadsheet_id}")
-        return data
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
         
-    except Exception as e:
-        logger.error(f"❌ Ошибка чтения Google Sheets {spreadsheet_id}: {e}")
-        return []
-
-def parse_catalog_from_sheets(data):
-    """Парсинг данных из Google Sheets в структурированный каталог"""
-    catalog = {}
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .city-item, .shop-item {
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-6xl mx-auto p-6">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🏪 Админ-панель</h1>
+            <p class="text-white opacity-90">Управление городами и магазинами</p>
+        </header>
+        
+        <!-- Табы -->
+        <div class="card">
+            <div class="flex gap-2 border-b pb-0">
+                <button class="tab-btn active" onclick="showTab('cities')">Города</button>
+                <button class="tab-btn" onclick="showTab('shops')">Магазины</button>
+                <button class="tab-btn" onclick="showTab('categories')">Категории</button>
+                <button class="tab-btn" onclick="showTab('registrations')">
+                    🔔 Регистрации <span id="regCount" class="ml-1"></span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Города -->
+        <div id="cities-tab" class="tab-content">
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">➕ Добавить город</h2>
+                <form id="cityForm" onsubmit="addCity(event)">
+                    <div class="relative mb-3">
+                        <input 
+                            type="text" 
+                            id="citySearch" 
+                            placeholder="🔍 Начните вводить название города..." 
+                            autocomplete="off"
+                            oninput="filterCities()"
+                            onfocus="showCityDropdown()"
+                        >
+                        <div id="cityDropdown" class="hidden absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg">
+                            <div class="p-2 text-sm text-gray-500">Загрузка списка городов...</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="cityName" required>
+                    <input type="hidden" id="cityLat" required>
+                    <input type="hidden" id="cityLon" required>
+                    
+                    <div id="selectedCityInfo" class="hidden mb-3 p-3 bg-blue-50 rounded-lg">
+                        <div class="font-semibold text-blue-900" id="selectedCityName"></div>
+                        <div class="text-sm text-blue-700" id="selectedCityCoords"></div>
+                    </div>
+                    
+                    <input type="number" id="cityZoom" placeholder="Масштаб карты (оставьте 12)" value="12">
+                    <textarea id="cityDesc" placeholder="Описание города (необязательно)" rows="2"></textarea>
+                    <button type="submit" class="btn btn-primary w-full">Добавить город</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">📍 Мои добавленные города</h2>
+                <div id="citiesList">Загрузка...</div>
+            </div>
+        </div>
+        
+        <!-- Магазины -->
+        <div id="shops-tab" class="tab-content hidden">
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">➕ Добавить магазин</h2>
+                <form id="shopForm" onsubmit="addShop(event)">
+                    <select id="shopCity" required>
+                        <option value="">Выберите город</option>
+                    </select>
+                    <select id="shopCategory" required>
+                        <option value="">Выберите категорию</option>
+                    </select>
+                    <input type="text" id="shopName" placeholder="Название магазина" required>
+                    <input type="text" id="shopCustomId" placeholder="ID магазина (из главной таблицы)" required>
+                    <input type="text" id="shopAddress" placeholder="Адрес" required>
+                    <input type="number" step="0.0001" id="shopLat" placeholder="Широта" required>
+                    <input type="number" step="0.0001" id="shopLon" placeholder="Долгота" required>
+                    <input type="tel" id="shopPhone" placeholder="Телефон (необязательно)">
+                    <textarea id="shopDesc" placeholder="Описание" rows="3"></textarea>
+                    <input type="text" id="shopHours" placeholder="Часы работы (например: 9:00 - 21:00)">
+                    <button type="submit" class="btn btn-primary w-full">Добавить магазин</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">🏬 Список магазинов</h2>
+                <div id="shopsList">Загрузка...</div>
+            </div>
+        </div>
+        
+        <!-- Категории -->
+        <div id="categories-tab" class="tab-content hidden">
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">➕ Добавить категорию</h2>
+                <form id="categoryForm" onsubmit="addCategory(event)">
+                    <input type="text" id="categoryName" placeholder="Название категории" required>
+                    <input type="text" id="categoryIcon" placeholder="Иконка (emoji, например: 👕)" required>
+                    <input type="color" id="categoryColor" value="#3B82F6">
+                    <button type="submit" class="btn btn-primary w-full">Добавить категорию</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">🏷️ Список категорий</h2>
+                <div id="categoriesList">Загрузка...</div>
+            </div>
+        </div>
+        
+        <!-- Регистрации магазинов -->
+        <div id="registrations-tab" class="tab-content hidden">
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">🔔 Заявки на регистрацию магазинов</h2>
+                <div class="flex gap-2 mb-4">
+                    <button onclick="loadRegistrations('pending')" class="btn btn-primary">Ожидают модерации</button>
+                    <button onclick="loadRegistrations('approved')" class="btn bg-green-500 text-white">Одобренные</button>
+                    <button onclick="loadRegistrations('rejected')" class="btn bg-red-500 text-white">Отклоненные</button>
+                </div>
+                <div id="registrationsList">Загрузка...</div>
+            </div>
+        </div>
+    </div>
     
-    for row in data:
-        if len(row) < 6:  # Минимум: раздел, категория, модель, подмодель, цвет, цена
-            continue
+    <script>
+        const API_BASE = 'https://chronosphere.pythonanywhere.com';
         
-        # Извлекаем данные из строки
-        section = row[0].strip() if len(row) > 0 and row[0] else "Без раздела"
-        category = row[1].strip() if len(row) > 1 and row[1] else "Без категории"
-        model = row[2].strip() if len(row) > 2 and row[2] else "Без модели"
-        submodel = row[3].strip() if len(row) > 3 and row[3] else ""
-        color = row[4].strip() if len(row) > 4 and row[4] else ""
-        price = row[5].strip() if len(row) > 5 and row[5] else "0"
-        description = row[6].strip() if len(row) > 6 and row[6] else ""
-        sizes = row[7].strip() if len(row) > 7 and row[7] else ""
-        photo = row[8].strip() if len(row) > 8 and row[8] else ""
-        availability = row[9].strip() if len(row) > 9 and row[9] else "Да"
+        // Показать таб
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`${tab}-tab`).classList.remove('hidden');
+            event.target.classList.add('active');
+            
+            if (tab === 'cities') loadCities();
+            if (tab === 'shops') loadShops();
+            if (tab === 'categories') loadCategories();
+        }
         
-        # Строим структуру каталога
-        if section not in catalog:
-            catalog[section] = {}
+        // ==================== ГОРОДА ====================
         
-        if category not in catalog[section]:
-            catalog[section][category] = {}
+        // Список всех городов России (топ-200 по населению)
+        const RUSSIAN_CITIES = [
+            "Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань", "Нижний Новгород", "Челябинск", "Самара", "Омск", "Ростов-на-Дону",
+            "Уфа", "Красноярск", "Воронеж", "Пермь", "Волгоград", "Краснодар", "Саратов", "Тюмень", "Тольятти", "Ижевск",
+            "Барнаул", "Ульяновск", "Иркутск", "Хабаровск", "Ярославль", "Владивосток", "Махачкала", "Томск", "Оренбург", "Кемерово",
+            "Новокузнецк", "Рязань", "Набережные Челны", "Астрахань", "Пенза", "Липецк", "Киров", "Чебоксары", "Тула", "Калининград",
+            "Курск", "Улан-Удэ", "Ставрополь", "Магнитогорск", "Сочи", "Белгород", "Нижний Тагил", "Владимир", "Архангельск", "Калуга",
+            "Сургут", "Чита", "Грозный", "Смоленск", "Волжский", "Череповец", "Владикавказ", "Курган", "Вологда", "Саранск",
+            "Тамбов", "Стерлитамак", "Петрозаводск", "Кострома", "Нижневартовск", "Йошкар-Ола", "Новороссийск", "Комсомольск-на-Амуре", "Таганрог", "Сыктывкар",
+            "Братск", "Нальчик", "Дзержинск", "Шахты", "Орел", "Ангарск", "Нижнекамск", "Благовещенск", "Великий Новгород", "Псков",
+            "Энгельс", "Бийск", "Прокопьевск", "Рыбинск", "Балаково", "Армавир", "Северодвинск", "Королев", "Петропавловск-Камчатский", "Мытищи",
+            "Люберцы", "Химки", "Подольск", "Красногорск", "Одинцово", "Домодедово", "Раменское", "Жуковский", "Пушкино", "Серпухов",
+            "Коломна", "Электросталь", "Балашиха", "Реутов", "Орехово-Зуево", "Сергиев Посад", "Щелково", "Ногинск", "Климовск", "Видное",
+            "Волгодонск", "Каменск-Уральский", "Копейск", "Миасс", "Златоуст", "Озерск", "Снежинск", "Троицк", "Первоуральск", "Ревда",
+            "Новоуральск", "Верхняя Пышма", "Асбест", "Каменск-Шахтинский", "Новочеркасск", "Батайск", "Азов", "Новошахтинск", "Ейск", "Крымск",
+            "Тихорецк", "Туапсе", "Анапа", "Геленджик", "Невинномысск", "Пятигорск", "Кисловодск", "Ессентуки", "Минеральные Воды", "Буденновск",
+            "Черкесск", "Элиста", "Майкоп", "Абакан", "Кызыл", "Горно-Алтайск", "Биробиджан", "Якутск", "Магадан", "Южно-Сахалинск",
+            "Анадырь", "Салехард", "Нарьян-Мар", "Воркута", "Ухта", "Усинск", "Инта", "Печора", "Сосногорск", "Северск",
+            "Зеленогорск", "Железногорск", "Ачинск", "Минусинск", "Норильск", "Канск", "Усолье-Сибирское", "Ангарск", "Черемхово", "Тулун",
+            "Бодайбо", "Усть-Илимск", "Усть-Кут", "Алдан", "Мирный", "Нерюнгри", "Тында", "Свободный", "Зея", "Белогорск",
+            "Райчихинск", "Завитинск", "Арсеньев", "Артем", "Дальнегорск", "Находка", "Партизанск", "Спасск-Дальний", "Уссурийск", "Фокино"
+        ].sort();
         
-        if model not in catalog[section][category]:
-            catalog[section][category][model] = {}
+        let allCitiesCache = [];
         
-        if submodel not in catalog[section][category][model]:
-            catalog[section][category][model][submodel] = []
-        
-        # Добавляем товар
-        catalog[section][category][model][submodel].append({
-            'color': color,
-            'price': price,
-            'description': description,
-            'sizes': sizes,
-            'photo': photo,
-            'availability': availability
-        })
-    
-    return catalog
-
-# ==================== ГОРОДА ====================
-
-@app.route('/api/cities', methods=['GET'])
-def get_cities():
-    """Получить список всех активных городов"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT id, name, latitude, longitude, zoom_level, description
-            FROM cities
-            WHERE is_active = 1
-            ORDER BY name
-        ''')
-        
-        cities = []
-        for row in cursor.fetchall():
-            cities.append({
-                'id': row[0],
-                'name': row[1],
-                'latitude': row[2],
-                'longitude': row[3],
-                'zoom_level': row[4],
-                'description': row[5]
-            })
-        
-        conn.close()
-        return jsonify({'success': True, 'cities': cities})
-    
-    except Exception as e:
-        logger.error(f"Ошибка получения городов: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/cities/<int:city_id>', methods=['GET'])
-def get_city(city_id):
-    """Получить информацию о конкретном городе"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT id, name, latitude, longitude, zoom_level, description
-            FROM cities
-            WHERE id = ? AND is_active = 1
-        ''', (city_id,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            city = {
-                'id': row[0],
-                'name': row[1],
-                'latitude': row[2],
-                'longitude': row[3],
-                'zoom_level': row[4],
-                'description': row[5]
+        function showCityDropdown() {
+            const dropdown = document.getElementById('cityDropdown');
+            dropdown.classList.remove('hidden');
+            if (allCitiesCache.length === 0) {
+                loadAllCities();
             }
-            return jsonify({'success': True, 'city': city})
-        else:
-            return jsonify({'success': False, 'error': 'Город не найден'}), 404
-    
-    except Exception as e:
-        logger.error(f"Ошибка получения города: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ==================== МАГАЗИНЫ ====================
-
-@app.route('/api/cities/<int:city_id>/shops', methods=['GET'])
-def get_shops_by_city(city_id):
-    """Получить все магазины в городе"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        }
         
-        cursor.execute('''
-            SELECT 
-                s.id, s.name, s.address, s.latitude, s.longitude, 
-                s.phone, s.description, s.logo_url, s.working_hours,
-                sc.name as category_name, sc.icon as category_icon, sc.color as category_color
-            FROM shops s
-            LEFT JOIN shop_categories sc ON s.category_id = sc.id
-            WHERE s.city_id = ? AND s.is_active = 1
-        ''', (city_id,))
+        function loadAllCities() {
+            const dropdown = document.getElementById('cityDropdown');
+            allCitiesCache = RUSSIAN_CITIES;
+            renderCityDropdown(allCitiesCache);
+        }
         
-        shops = []
-        for row in cursor.fetchall():
-            shops.append({
-                'id': row[0],
-                'name': row[1],
-                'address': row[2],
-                'latitude': row[3],
-                'longitude': row[4],
-                'phone': row[5],
-                'description': row[6],
-                'logo_url': row[7],
-                'working_hours': row[8],
-                'category': {
-                    'name': row[9],
-                    'icon': row[10],
-                    'color': row[11]
+        function filterCities() {
+            const search = document.getElementById('citySearch').value.toLowerCase();
+            const filtered = RUSSIAN_CITIES.filter(city => 
+                city.toLowerCase().includes(search)
+            );
+            renderCityDropdown(filtered);
+        }
+        
+        function renderCityDropdown(cities) {
+            const dropdown = document.getElementById('cityDropdown');
+            
+            if (cities.length === 0) {
+                dropdown.innerHTML = '<div class="p-3 text-gray-500">Город не найден</div>';
+                return;
+            }
+            
+            dropdown.innerHTML = cities.map(city => `
+                <div class="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 transition-colors" 
+                     onclick="selectCity('${city}')">
+                    <span class="font-medium">${city}</span>
+                </div>
+            `).join('');
+        }
+        
+        async function selectCity(cityName) {
+            document.getElementById('citySearch').value = cityName;
+            document.getElementById('cityDropdown').classList.add('hidden');
+            
+            // Показываем индикатор загрузки
+            const info = document.getElementById('selectedCityInfo');
+            const nameEl = document.getElementById('selectedCityName');
+            const coordsEl = document.getElementById('selectedCityCoords');
+            
+            nameEl.textContent = cityName;
+            coordsEl.textContent = '⏳ Определяем координаты...';
+            info.classList.remove('hidden');
+            
+            try {
+                console.log('Запрос координат для города:', cityName);
+                console.log('URL:', `${API_BASE}/api/geocode?city=${encodeURIComponent(cityName)}`);
+                
+                const response = await fetch(`${API_BASE}/api/geocode?city=${encodeURIComponent(cityName)}`);
+                
+                console.log('Статус ответа:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-            })
-        
-        conn.close()
-        return jsonify({'success': True, 'shops': shops})
-    
-    except Exception as e:
-        logger.error(f"Ошибка получения магазинов: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/shops/<int:shop_id>', methods=['GET'])
-def get_shop(shop_id):
-    """Получить информацию о конкретном магазине"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT 
-                s.id, s.name, s.address, s.latitude, s.longitude, 
-                s.phone, s.description, s.logo_url, s.working_hours,
-                sc.name as category_name, sc.icon as category_icon, sc.color as category_color,
-                c.name as city_name
-            FROM shops s
-            LEFT JOIN shop_categories sc ON s.category_id = sc.id
-            LEFT JOIN cities c ON s.city_id = c.id
-            WHERE s.id = ? AND s.is_active = 1
-        ''', (shop_id,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            shop = {
-                'id': row[0],
-                'name': row[1],
-                'address': row[2],
-                'latitude': row[3],
-                'longitude': row[4],
-                'phone': row[5],
-                'description': row[6],
-                'logo_url': row[7],
-                'working_hours': row[8],
-                'category': {
-                    'name': row[9],
-                    'icon': row[10],
-                    'color': row[11]
-                },
-                'city_name': row[12]
+                
+                const data = await response.json();
+                console.log('Ответ сервера:', data);
+                
+                if (data.success) {
+                    document.getElementById('cityName').value = cityName;
+                    document.getElementById('cityLat').value = data.latitude.toFixed(4);
+                    document.getElementById('cityLon').value = data.longitude.toFixed(4);
+                    coordsEl.textContent = `📍 ${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`;
+                } else {
+                    coordsEl.textContent = `❌ ${data.error || 'Не удалось определить координаты'}`;
+                    alert(`Ошибка: ${data.error || 'Город не найден'}`);
+                }
+            } catch (error) {
+                coordsEl.textContent = '❌ Ошибка загрузки координат';
+                console.error('Полная ошибка:', error);
+                alert(`❌ Ошибка: ${error.message}\n\nПроверьте:\n1. Обновлен ли app.py на сервере?\n2. Доступен ли ${API_BASE}?`);
             }
-            return jsonify({'success': True, 'shop': shop})
-        else:
-            return jsonify({'success': False, 'error': 'Магазин не найден'}), 404
-    
-    except Exception as e:
-        logger.error(f"Ошибка получения магазина: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ==================== КАТАЛОГ МАГАЗИНА ====================
-
-@app.route('/api/shops/<int:shop_id>/catalog', methods=['GET'])
-def get_shop_catalog(shop_id):
-    """Получить структуру каталога магазина"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Получаем секции
-        cursor.execute('''
-            SELECT id, name, icon, sort_order
-            FROM catalog_sections
-            WHERE shop_id = ?
-            ORDER BY sort_order, name
-        ''', (shop_id,))
-        
-        sections = []
-        for section_row in cursor.fetchall():
-            section_id = section_row[0]
-            
-            # Получаем категории для каждой секции
-            cursor.execute('''
-                SELECT id, name, icon, sort_order
-                FROM catalog_categories
-                WHERE section_id = ?
-                ORDER BY sort_order, name
-            ''', (section_id,))
-            
-            categories = []
-            for cat_row in cursor.fetchall():
-                categories.append({
-                    'id': cat_row[0],
-                    'name': cat_row[1],
-                    'icon': cat_row[2]
-                })
-            
-            sections.append({
-                'id': section_id,
-                'name': section_row[1],
-                'icon': section_row[2],
-                'categories': categories
-            })
-        
-        conn.close()
-        return jsonify({'success': True, 'catalog': sections})
-    
-    except Exception as e:
-        logger.error(f"Ошибка получения каталога: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/shops/<int:shop_id>/google-catalog', methods=['GET'])
-def get_shop_google_catalog(shop_id):
-    """Получить каталог магазина из Google Sheets через главную таблицу"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Получаем custom_id магазина (ваш ID из главной таблицы)
-        cursor.execute('''
-            SELECT custom_id, name
-            FROM shops
-            WHERE id = ? AND is_active = 1
-        ''', (shop_id,))
-        
-        shop = cursor.fetchone()
-        conn.close()
-        
-        if not shop:
-            return jsonify({'success': False, 'error': 'Магазин не найден'}), 404
-        
-        custom_id = shop[0]
-        shop_name = shop[1]
-        
-        if not custom_id:
-            return jsonify({'success': False, 'error': 'У магазина не указан ID для поиска в главной таблице'}), 404
-        
-        # Получаем ссылку на таблицу магазина из главной таблицы
-        shop_url = get_shop_spreadsheet_url_by_id(custom_id)
-        
-        if not shop_url:
-            return jsonify({'success': False, 'error': f'Таблица для магазина ID {custom_id} не найдена в главной таблице'}), 404
-        
-        # Извлекаем spreadsheet_id из ссылки
-        import re
-        match = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', shop_url)
-        if not match:
-            return jsonify({'success': False, 'error': 'Некорректная ссылка на таблицу в главной таблице'}), 400
-        
-        spreadsheet_id = match.group(1)
-        
-        # Получаем данные из Google Sheets магазина
-        data = get_google_sheets_data(spreadsheet_id)
-        
-        if not data:
-            return jsonify({'success': False, 'error': 'Не удалось загрузить данные из таблицы магазина'}), 500
-        
-        # Парсим каталог
-        catalog = parse_catalog_from_sheets(data)
-        
-        return jsonify({
-            'success': True,
-            'shop_name': shop_name,
-            'shop_custom_id': custom_id,
-            'catalog': catalog,
-            'total_items': len(data)
-        })
-        
-    except Exception as e:
-        logger.error(f"Ошибка получения каталога из Google Sheets: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-@app.route('/api/categories/<int:category_id>/products', methods=['GET'])
-def get_products_by_category(category_id):
-    """Получить товары по категории"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Получаем модели
-        cursor.execute('''
-            SELECT id, name
-            FROM catalog_models
-            WHERE category_id = ?
-            ORDER BY sort_order, name
-        ''', (category_id,))
-        
-        models = []
-        for model_row in cursor.fetchall():
-            model_id = model_row[0]
-            
-            # Получаем подмодели
-            cursor.execute('''
-                SELECT id, name
-                FROM catalog_submodels
-                WHERE model_id = ?
-                ORDER BY sort_order, name
-            ''', (model_id,))
-            
-            submodels = []
-            for submodel_row in cursor.fetchall():
-                submodel_id = submodel_row[0]
-                
-                # Получаем товары
-                cursor.execute('''
-                    SELECT id, name, description, price, old_price, image_url, stock_quantity, is_available
-                    FROM products
-                    WHERE submodel_id = ?
-                    ORDER BY sort_order, name
-                ''', (submodel_id,))
-                
-                products = []
-                for prod_row in cursor.fetchall():
-                    products.append({
-                        'id': prod_row[0],
-                        'name': prod_row[1],
-                        'description': prod_row[2],
-                        'price': prod_row[3],
-                        'old_price': prod_row[4],
-                        'image_url': prod_row[5],
-                        'stock_quantity': prod_row[6],
-                        'is_available': prod_row[7]
-                    })
-                
-                submodels.append({
-                    'id': submodel_id,
-                    'name': submodel_row[1],
-                    'products': products
-                })
-            
-            models.append({
-                'id': model_id,
-                'name': model_row[1],
-                'submodels': submodels
-            })
-        
-        conn.close()
-        return jsonify({'success': True, 'models': models})
-    
-    except Exception as e:
-        logger.error(f"Ошибка получения товаров: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ==================== ИЗБРАННОЕ ====================
-
-@app.route('/api/favorites', methods=['POST'])
-def add_to_favorites():
-    """Добавить товар в избранное"""
-    try:
-        data = request.json
-        user_id = data.get('user_id')
-        product_id = data.get('product_id')
-        
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT OR IGNORE INTO favorites (user_id, product_id)
-            VALUES (?, ?)
-        ''', (user_id, product_id))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True})
-    
-    except Exception as e:
-        logger.error(f"Ошибка добавления в избранное: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/favorites/<int:user_id>', methods=['GET'])
-def get_favorites(user_id):
-    """Получить избранное пользователя"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT p.id, p.name, p.description, p.price, p.old_price, p.image_url
-            FROM products p
-            INNER JOIN favorites f ON p.id = f.product_id
-            WHERE f.user_id = ?
-            ORDER BY f.added_at DESC
-        ''', (user_id,))
-        
-        favorites = []
-        for row in cursor.fetchall():
-            favorites.append({
-                'id': row[0],
-                'name': row[1],
-                'description': row[2],
-                'price': row[3],
-                'old_price': row[4],
-                'image_url': row[5]
-            })
-        
-        conn.close()
-        return jsonify({'success': True, 'favorites': favorites})
-    
-    except Exception as e:
-        logger.error(f"Ошибка получения избранного: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ==================== ЧАТ ====================
-
-@app.route('/api/chat/start', methods=['POST'])
-def start_chat():
-    """Начать новый чат с магазином"""
-    try:
-        data = request.json
-        shop_id = data.get('shop_id')
-        user_id = data.get('user_id')
-        user_name = data.get('user_name')
-        
-        session_id = str(uuid.uuid4())
-        
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO shop_chats (shop_id, user_id, user_name, session_id)
-            VALUES (?, ?, ?, ?)
-        ''', (shop_id, user_id, user_name, session_id))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True, 'session_id': session_id})
-    
-    except Exception as e:
-        logger.error(f"Ошибка создания чата: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/chat/messages', methods=['POST'])
-def send_message():
-    """Отправить сообщение в чат"""
-    try:
-        data = request.json
-        session_id = data.get('session_id')
-        sender_type = data.get('sender_type')  # 'user' или 'shop'
-        sender_name = data.get('sender_name')
-        message_text = data.get('message_text')
-        
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO chat_messages (session_id, sender_type, sender_name, message_text)
-            VALUES (?, ?, ?, ?)
-        ''', (session_id, sender_type, sender_name, message_text))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True})
-    
-    except Exception as e:
-        logger.error(f"Ошибка отправки сообщения: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/chat/messages/<session_id>', methods=['GET'])
-def get_messages(session_id):
-    """Получить историю сообщений"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT sender_type, sender_name, message_text, created_at
-            FROM chat_messages
-            WHERE session_id = ?
-            ORDER BY created_at ASC
-        ''', (session_id,))
-        
-        messages = []
-        for row in cursor.fetchall():
-            messages.append({
-                'type': row[0],
-                'sender_name': row[1],
-                'text': row[2],
-                'timestamp': row[3]
-            })
-        
-        conn.close()
-        return jsonify({'success': True, 'messages': messages})
-    
-    except Exception as e:
-        logger.error(f"Ошибка получения сообщений: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ==================== АДМИН API ====================
-
-@app.route('/api/geocode', methods=['GET'])
-def geocode_city():
-    """Получить координаты города по названию"""
-    try:
-        city_name = request.args.get('city')
-        if not city_name:
-            return jsonify({'success': False, 'error': 'Не указано название города'}), 400
-        
-        # Используем Nominatim OpenStreetMap для геокодирования
-        url = f'https://nominatim.openstreetmap.org/search'
-        params = {
-            'format': 'json',
-            'q': f'{city_name}, Россия',  # Добавляем "Россия" для точности
-            'limit': 1,
-            'addressdetails': 1
-        }
-        headers = {
-            'User-Agent': 'ShopsApp/1.0',
-            'Accept-Language': 'ru'
         }
         
-        response = requests.get(url, params=params, headers=headers, timeout=10)
-        data = response.json()
+        // Закрытие dropdown при клике вне его
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('cityDropdown');
+            const search = document.getElementById('citySearch');
+            if (dropdown && search && !dropdown.contains(e.target) && e.target !== search) {
+                dropdown.classList.add('hidden');
+            }
+        });
         
-        if len(data) == 0:
-            return jsonify({'success': False, 'error': 'Город не найден'}), 404
-        
-        result = data[0]
-        return jsonify({
-            'success': True,
-            'latitude': float(result['lat']),
-            'longitude': float(result['lon']),
-            'display_name': result.get('display_name', city_name)
-        })
-        
-    except Exception as e:
-        logger.error(f"Ошибка геокодирования: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/cities', methods=['POST'])
-def admin_add_city():
-    """Добавить новый город"""
-    conn = None
-    try:
-        data = request.json
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO cities (name, latitude, longitude, zoom_level, description, is_active)
-            VALUES (?, ?, ?, ?, ?, 1)
-        ''', (data['name'], data['latitude'], data['longitude'], 
-              data.get('zoom_level', 12), data.get('description', '')))
-        
-        conn.commit()
-        city_id = cursor.lastrowid
-        
-        logger.info(f"✅ Город '{data['name']}' добавлен (ID: {city_id})")
-        return jsonify({'success': True, 'id': city_id})
-        
-    except sqlite3.IntegrityError:
-        logger.warning(f"⚠️ Город '{data.get('name')}' уже существует")
-        return jsonify({'success': False, 'error': 'Город с таким названием уже существует'}), 400
-    except Exception as e:
-        logger.error(f"❌ Ошибка добавления города: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-    finally:
-        if conn:
-            conn.close()
-
-@app.route('/api/admin/cities/<int:city_id>', methods=['DELETE'])
-def admin_delete_city(city_id):
-    """ПОЛНОЕ УДАЛЕНИЕ ГОРОДА ИЗ БАЗЫ"""
-    conn = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Получаем название города
-        cursor.execute('SELECT name FROM cities WHERE id = ?', (city_id,))
-        city = cursor.fetchone()
-        if not city:
-            return jsonify({'success': False, 'error': 'Город не найден'}), 404
-        
-        city_name = city['name']
-        
-        # Проверяем есть ли магазины
-        cursor.execute('SELECT COUNT(*) as count FROM shops WHERE city_id = ? AND is_active = 1', (city_id,))
-        shop_count = cursor.fetchone()['count']
-        
-        if shop_count > 0:
-            # Есть магазины - только деактивируем
-            cursor.execute('UPDATE cities SET is_active = 0 WHERE id = ?', (city_id,))
-            conn.commit()
-            logger.info(f"⚠️ Город '{city_name}' деактивирован (есть {shop_count} магазинов)")
-            return jsonify({'success': True, 'message': f'Город деактивирован (есть {shop_count} активных магазинов)'})
-        else:
-            # Нет магазинов - ПОЛНОСТЬЮ УДАЛЯЕМ НАХУЙ
-            cursor.execute('DELETE FROM cities WHERE id = ?', (city_id,))
-            conn.commit()
-            logger.info(f"✅ Город '{city_name}' ПОЛНОСТЬЮ УДАЛЕН из базы")
-            return jsonify({'success': True, 'message': 'Город полностью удален из базы данных'})
+        async function addCity(e) {
+            e.preventDefault();
             
-    except Exception as e:
-        logger.error(f"❌ Ошибка удаления города: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-    finally:
-        if conn:
-            conn.close()
-
-@app.route('/api/admin/shops', methods=['GET'])
-def admin_get_all_shops():
-    """Получить все магазины для админки"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+            const cityName = document.getElementById('cityName').value;
+            const latitude = parseFloat(document.getElementById('cityLat').value);
+            const longitude = parseFloat(document.getElementById('cityLon').value);
+            const cityZoom = parseInt(document.getElementById('cityZoom').value);
+            const cityDesc = document.getElementById('cityDesc').value;
+            
+            if (!cityName || !latitude || !longitude) {
+                alert('❌ Сначала выберите город из списка');
+                return;
+            }
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Добавляем...';
+            submitBtn.disabled = true;
+            
+            try {
+                const cityData = {
+                    name: cityName,
+                    latitude: latitude,
+                    longitude: longitude,
+                    zoom_level: cityZoom,
+                    description: cityDesc
+                };
+                
+                const response = await fetch(`${API_BASE}/api/admin/cities`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cityData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ Город "${cityName}" добавлен!`);
+                    document.getElementById('cityForm').reset();
+                    document.getElementById('cityZoom').value = 12;
+                    document.getElementById('selectedCityInfo').classList.add('hidden');
+                    document.getElementById('citySearch').value = '';
+                    loadCities();
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                alert('Ошибка добавления города: ' + error.message);
+                console.error(error);
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
         
-        cursor.execute('''
-            SELECT 
-                s.id, s.name, s.address,
-                c.name as city_name,
-                sc.name as category_name
-            FROM shops s
-            LEFT JOIN cities c ON s.city_id = c.id
-            LEFT JOIN shop_categories sc ON s.category_id = sc.id
-            WHERE s.is_active = 1
-            ORDER BY c.name, s.name
-        ''')
+        async function loadCities() {
+            try {
+                const response = await fetch(`${API_BASE}/api/cities`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayCities(data.cities);
+                    updateCitySelects(data.cities);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки городов:', error);
+            }
+        }
         
-        shops = []
-        for row in cursor.fetchall():
-            shops.append({
-                'id': row[0],
-                'name': row[1],
-                'address': row[2],
-                'city_name': row[3],
-                'category_name': row[4]
-            })
+        function displayCities(cities) {
+            const list = document.getElementById('citiesList');
+            list.innerHTML = '';
+            
+            if (cities.length === 0) {
+                list.innerHTML = '<p class="text-gray-500">Нет городов</p>';
+                return;
+            }
+            
+            cities.forEach(city => {
+                const item = document.createElement('div');
+                item.className = 'city-item';
+                item.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-lg">📍 ${city.name}</h3>
+                        <p class="text-sm text-gray-600">${city.description || ''}</p>
+                        <p class="text-xs text-gray-500">Координаты: ${city.latitude}, ${city.longitude}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn btn-danger text-sm" onclick="deleteCity(${city.id})">Удалить</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
         
-        conn.close()
-        return jsonify({'success': True, 'shops': shops})
-    except Exception as e:
-        logger.error(f"Ошибка получения магазинов: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/shops', methods=['POST'])
-def admin_add_shop():
-    """Добавить новый магазин"""
-    try:
-        data = request.json
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        function updateCitySelects(cities) {
+            const select = document.getElementById('shopCity');
+            select.innerHTML = '<option value="">Выберите город</option>';
+            cities.forEach(city => {
+                select.innerHTML += `<option value="${city.id}">${city.name}</option>`;
+            });
+        }
         
-        cursor.execute('''
-            INSERT INTO shops 
-            (city_id, category_id, name, custom_id, address, latitude, longitude, phone, description, working_hours)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (data['city_id'], data['category_id'], data['name'], data.get('custom_id', ''),
-              data['address'], data['latitude'], data['longitude'], data.get('phone', ''),
-              data.get('description', ''), data.get('working_hours', '')))
+        async function deleteCity(cityId) {
+            if (!confirm('Удалить город? Все связанные магазины также будут удалены.')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/cities/${cityId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Город удален');
+                    loadCities();
+                }
+            } catch (error) {
+                alert('Ошибка удаления');
+            }
+        }
         
-        conn.commit()
-        shop_id = cursor.lastrowid
-        conn.close()
+        // ==================== МАГАЗИНЫ ====================
         
-        return jsonify({'success': True, 'id': shop_id})
-    except Exception as e:
-        logger.error(f"Ошибка добавления магазина: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/shops/<int:shop_id>', methods=['DELETE'])
-def admin_delete_shop(shop_id):
-    """Удалить магазин"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        async function addShop(e) {
+            e.preventDefault();
+            
+            const shopData = {
+                city_id: parseInt(document.getElementById('shopCity').value),
+                category_id: parseInt(document.getElementById('shopCategory').value),
+                name: document.getElementById('shopName').value,
+                custom_id: document.getElementById('shopCustomId').value,
+                address: document.getElementById('shopAddress').value,
+                latitude: parseFloat(document.getElementById('shopLat').value),
+                longitude: parseFloat(document.getElementById('shopLon').value),
+                phone: document.getElementById('shopPhone').value,
+                description: document.getElementById('shopDesc').value,
+                working_hours: document.getElementById('shopHours').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/shops`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(shopData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Магазин успешно добавлен!');
+                    document.getElementById('shopForm').reset();
+                    loadShops();
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                alert('Ошибка добавления магазина');
+                console.error(error);
+            }
+        }
         
-        cursor.execute('UPDATE shops SET is_active = 0 WHERE id = ?', (shop_id,))
+        async function loadShops() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/shops`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayShops(data.shops);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки магазинов:', error);
+            }
+        }
         
-        conn.commit()
-        conn.close()
+        function displayShops(shops) {
+            const list = document.getElementById('shopsList');
+            list.innerHTML = '';
+            
+            if (shops.length === 0) {
+                list.innerHTML = '<p class="text-gray-500">Нет магазинов</p>';
+                return;
+            }
+            
+            shops.forEach(shop => {
+                const item = document.createElement('div');
+                item.className = 'shop-item';
+                item.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-lg">🏬 ${shop.name}</h3>
+                        <p class="text-sm text-gray-600">${shop.address}</p>
+                        <p class="text-xs text-gray-500">Город: ${shop.city_name} | ${shop.category_name}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn btn-danger text-sm" onclick="deleteShop(${shop.id})">Удалить</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
         
-        return jsonify({'success': True})
-    except Exception as e:
-        logger.error(f"Ошибка удаления магазина: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/categories', methods=['GET'])
-def admin_get_categories():
-    """Получить все категории"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        async function deleteShop(shopId) {
+            if (!confirm('Удалить магазин?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/shops/${shopId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Магазин удален');
+                    loadShops();
+                }
+            } catch (error) {
+                alert('Ошибка удаления');
+            }
+        }
         
-        cursor.execute('SELECT id, name, icon, color FROM shop_categories')
+        // ==================== КАТЕГОРИИ ====================
         
-        categories = []
-        for row in cursor.fetchall():
-            categories.append({
-                'id': row[0],
-                'name': row[1],
-                'icon': row[2],
-                'color': row[3]
-            })
+        async function addCategory(e) {
+            e.preventDefault();
+            
+            const categoryData = {
+                name: document.getElementById('categoryName').value,
+                icon: document.getElementById('categoryIcon').value,
+                color: document.getElementById('categoryColor').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/categories`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(categoryData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Категория добавлена!');
+                    document.getElementById('categoryForm').reset();
+                    loadCategories();
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                alert('Ошибка добавления категории');
+            }
+        }
         
-        conn.close()
-        return jsonify({'success': True, 'categories': categories})
-    except Exception as e:
-        logger.error(f"Ошибка получения категорий: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/categories', methods=['POST'])
-def admin_add_category():
-    """Добавить новую категорию"""
-    try:
-        data = request.json
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/categories`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayCategories(data.categories);
+                    updateCategorySelect(data.categories);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки категорий:', error);
+            }
+        }
         
-        cursor.execute('''
-            INSERT INTO shop_categories (name, icon, color)
-            VALUES (?, ?, ?)
-        ''', (data['name'], data['icon'], data['color']))
+        function displayCategories(categories) {
+            const list = document.getElementById('categoriesList');
+            list.innerHTML = '';
+            
+            if (categories.length === 0) {
+                list.innerHTML = '<p class="text-gray-500">Нет категорий</p>';
+                return;
+            }
+            
+            categories.forEach(cat => {
+                const item = document.createElement('div');
+                item.className = 'city-item';
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div style="background: ${cat.color}20; padding: 8px; border-radius: 8px; font-size: 24px;">
+                            ${cat.icon}
+                        </div>
+                        <h3 class="font-bold">${cat.name}</h3>
+                    </div>
+                    <button class="btn btn-danger text-sm" onclick="deleteCategory(${cat.id})">Удалить</button>
+                `;
+                list.appendChild(item);
+            });
+        }
         
-        conn.commit()
-        cat_id = cursor.lastrowid
-        conn.close()
+        function updateCategorySelect(categories) {
+            const select = document.getElementById('shopCategory');
+            select.innerHTML = '<option value="">Выберите категорию</option>';
+            categories.forEach(cat => {
+                select.innerHTML += `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`;
+            });
+        }
         
-        return jsonify({'success': True, 'id': cat_id})
-    except Exception as e:
-        logger.error(f"Ошибка добавления категории: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/categories/<int:cat_id>', methods=['DELETE'])
-def admin_delete_category(cat_id):
-    """Удалить категорию"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        async function deleteCategory(catId) {
+            if (!confirm('Удалить категорию?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/categories/${catId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Категория удалена');
+                    loadCategories();
+                }
+            } catch (error) {
+                alert('Ошибка удаления');
+            }
+        }
         
-        cursor.execute('DELETE FROM shop_categories WHERE id = ?', (cat_id,))
+        // ==================== РЕГИСТРАЦИИ ====================
         
-        conn.commit()
-        conn.close()
+        async function loadRegistrations(status = 'pending') {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/registrations?status=${status}`);
+                const data = await response.json();
+                
+                const list = document.getElementById('registrationsList');
+                
+                if (data.registrations.length === 0) {
+                    list.innerHTML = '<p class="text-gray-500">Нет заявок</p>';
+                    return;
+                }
+                
+                list.innerHTML = data.registrations.map(reg => `
+                    <div class="border rounded-lg p-4 mb-3 ${status === 'pending' ? 'border-yellow-400 bg-yellow-50' : status === 'approved' ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50'}">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h3 class="font-bold text-lg mb-2">🏪 ${reg.name}</h3>
+                                <p class="text-sm"><strong>Категория:</strong> ${reg.category}</p>
+                                <p class="text-sm"><strong>Город:</strong> ${reg.city}</p>
+                                <p class="text-sm"><strong>Адрес:</strong> ${reg.address}</p>
+                                <p class="text-sm"><strong>Телефон:</strong> ${reg.phone}</p>
+                                ${reg.telegram ? `<p class="text-sm"><strong>Telegram:</strong> ${reg.telegram}</p>` : ''}
+                                ${reg.email ? `<p class="text-sm"><strong>Email:</strong> ${reg.email}</p>` : ''}
+                            </div>
+                            <div>
+                                <p class="text-sm mb-2"><strong>Координаты:</strong> ${reg.latitude}, ${reg.longitude}</p>
+                                ${reg.description ? `<p class="text-sm mb-2"><strong>Описание:</strong> ${reg.description}</p>` : ''}
+                                <a href="${reg.sheet_url}" target="_blank" class="text-blue-600 text-sm underline">
+                                    📋 Открыть Google таблицу
+                                </a>
+                                <p class="text-xs text-gray-500 mt-2">ID таблицы: ${reg.spreadsheet_id}</p>
+                                <p class="text-xs text-gray-500">Дата: ${new Date(reg.created_at).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        ${status === 'pending' ? `
+                            <div class="flex gap-2 mt-4">
+                                <button onclick="approveRegistration(${reg.id})" class="btn btn-success flex-1">
+                                    ✅ Одобрить
+                                </button>
+                                <button onclick="rejectRegistration(${reg.id})" class="btn btn-danger flex-1">
+                                    ❌ Отклонить
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+                
+                // Обновляем счетчик на кнопке
+                if (status === 'pending') {
+                    document.getElementById('regCount').textContent = data.registrations.length > 0 ? `(${data.registrations.length})` : '';
+                }
+                
+            } catch (error) {
+                console.error('Ошибка загрузки регистраций:', error);
+                document.getElementById('registrationsList').innerHTML = '<p class="text-red-500">Ошибка загрузки</p>';
+            }
+        }
         
-        return jsonify({'success': True})
-    except Exception as e:
-        logger.error(f"Ошибка удаления категории: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ==================== РЕГИСТРАЦИЯ МАГАЗИНОВ ====================
-
-@app.route('/api/shop-registration', methods=['POST'])
-def register_shop():
-    """Регистрация нового магазина владельцем"""
-    try:
-        data = request.json
+        async function approveRegistration(regId) {
+            if (!confirm('Одобрить эту заявку и создать магазин?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/registrations/${regId}/approve`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ Магазин успешно создан! ID: ${data.shop_id}`);
+                    loadRegistrations('pending');
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Ошибка одобрения:', error);
+                alert('Ошибка при одобрении заявки');
+            }
+        }
         
-        # Валидация обязательных полей
-        required_fields = ['name', 'category', 'address', 'city', 'phone', 'sheet_url', 'latitude', 'longitude']
-        for field in required_fields:
-            if field not in data or not data[field]:
-                return jsonify({'success': False, 'error': f'Поле {field} обязательно'}), 400
+        async function rejectRegistration(regId) {
+            const reason = prompt('Причина отклонения (опционально):');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/registrations/${regId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('❌ Заявка отклонена');
+                    loadRegistrations('pending');
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Ошибка отклонения:', error);
+                alert('Ошибка при отклонении заявки');
+            }
+        }
         
-        # Извлекаем ID из ссылки на Google Sheets
-        import re
-        sheet_match = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', data['sheet_url'])
-        if not sheet_match:
-            return jsonify({'success': False, 'error': 'Некорректная ссылка на Google Sheets'}), 400
-        
-        spreadsheet_id = sheet_match.group(1)
-        
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Создаем таблицу для регистраций, если её нет
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS shop_registrations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                category TEXT NOT NULL,
-                address TEXT NOT NULL,
-                city TEXT NOT NULL,
-                phone TEXT NOT NULL,
-                telegram TEXT,
-                sheet_url TEXT NOT NULL,
-                spreadsheet_id TEXT NOT NULL,
-                latitude REAL NOT NULL,
-                longitude REAL NOT NULL,
-                description TEXT,
-                email TEXT,
-                status TEXT DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        # Сохраняем регистрацию
-        cursor.execute('''
-            INSERT INTO shop_registrations 
-            (name, category, address, city, phone, telegram, sheet_url, spreadsheet_id, 
-             latitude, longitude, description, email)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            data['name'],
-            data['category'],
-            data['address'],
-            data['city'],
-            data['phone'],
-            data.get('telegram', ''),
-            data['sheet_url'],
-            spreadsheet_id,
-            data['latitude'],
-            data['longitude'],
-            data.get('description', ''),
-            data.get('email', '')
-        ))
-        
-        registration_id = cursor.lastrowid
-        
-        conn.commit()
-        conn.close()
-        
-        logger.info(f"✅ Новая регистрация магазина: {data['name']} (ID: {registration_id})")
-        
-        return jsonify({
-            'success': True,
-            'registration_id': registration_id,
-            'message': 'Магазин успешно зарегистрирован и ожидает модерации'
-        })
-        
-    except Exception as e:
-        logger.error(f"Ошибка регистрации магазина: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/registrations', methods=['GET'])
-def get_registrations():
-    """Получить список зарегистрированных магазинов для модерации"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        status = request.args.get('status', 'pending')
-        
-        cursor.execute('''
-            SELECT id, name, category, address, city, phone, telegram, 
-                   sheet_url, spreadsheet_id, latitude, longitude, 
-                   description, email, status, created_at
-            FROM shop_registrations
-            WHERE status = ?
-            ORDER BY created_at DESC
-        ''', (status,))
-        
-        registrations = []
-        for row in cursor.fetchall():
-            registrations.append({
-                'id': row[0],
-                'name': row[1],
-                'category': row[2],
-                'address': row[3],
-                'city': row[4],
-                'phone': row[5],
-                'telegram': row[6],
-                'sheet_url': row[7],
-                'spreadsheet_id': row[8],
-                'latitude': row[9],
-                'longitude': row[10],
-                'description': row[11],
-                'email': row[12],
-                'status': row[13],
-                'created_at': row[14]
-            })
-        
-        conn.close()
-        
-        return jsonify({'registrations': registrations})
-    except Exception as e:
-        logger.error(f"Ошибка получения регистраций: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/registrations/<int:reg_id>/approve', methods=['POST'])
-def approve_registration(reg_id):
-    """Одобрить регистрацию и создать магазин"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Получаем данные регистрации
-        cursor.execute('SELECT * FROM shop_registrations WHERE id = ?', (reg_id,))
-        reg = cursor.fetchone()
-        
-        if not reg:
-            return jsonify({'success': False, 'error': 'Регистрация не найдена'}), 404
-        
-        # Находим или создаем город
-        cursor.execute('SELECT id FROM cities WHERE name = ?', (reg[4],))  # city
-        city_row = cursor.fetchone()
-        
-        if not city_row:
-            # Создаем новый город
-            cursor.execute('''
-                INSERT INTO cities (name, latitude, longitude, zoom_level, is_active)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (reg[4], reg[9], reg[10], 13, 1))  # city, latitude, longitude
-            city_id = cursor.lastrowid
-        else:
-            city_id = city_row[0]
-        
-        # Находим или создаем категорию
-        cursor.execute('SELECT id FROM shop_categories WHERE name = ?', (reg[2],))  # category
-        cat_row = cursor.fetchone()
-        
-        if not cat_row:
-            cursor.execute('INSERT INTO shop_categories (name) VALUES (?)', (reg[2],))
-            category_id = cursor.lastrowid
-        else:
-            category_id = cat_row[0]
-        
-        # Создаем магазин
-        cursor.execute('''
-            INSERT INTO shops 
-            (city_id, name, category_id, address, phone, telegram, 
-             latitude, longitude, description, spreadsheet_id, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            city_id,
-            reg[1],  # name
-            category_id,
-            reg[3],  # address
-            reg[5],  # phone
-            reg[6],  # telegram
-            reg[9],  # latitude
-            reg[10],  # longitude
-            reg[11],  # description
-            reg[8],  # spreadsheet_id
-            1  # is_active
-        ))
-        
-        shop_id = cursor.lastrowid
-        
-        # Обновляем статус регистрации
-        cursor.execute('''
-            UPDATE shop_registrations 
-            SET status = 'approved' 
-            WHERE id = ?
-        ''', (reg_id,))
-        
-        conn.commit()
-        conn.close()
-        
-        logger.info(f"✅ Регистрация одобрена: {reg[1]} (Магазин ID: {shop_id})")
-        
-        return jsonify({
-            'success': True,
-            'shop_id': shop_id,
-            'message': 'Магазин успешно создан'
-        })
-        
-    except Exception as e:
-        logger.error(f"Ошибка одобрения регистрации: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/registrations/<int:reg_id>/reject', methods=['POST'])
-def reject_registration(reg_id):
-    """Отклонить регистрацию"""
-    try:
-        data = request.json
-        reason = data.get('reason', 'Не указана')
-        
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE shop_registrations 
-            SET status = 'rejected' 
-            WHERE id = ?
-        ''', (reg_id,))
-        
-        conn.commit()
-        conn.close()
-        
-        logger.info(f"❌ Регистрация отклонена ID: {reg_id}, причина: {reason}")
-        
-        return jsonify({'success': True, 'message': 'Регистрация отклонена'})
-    except Exception as e:
-        logger.error(f"Ошибка отклонения регистрации: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ==================== СТАТИКА ====================
-
-@app.route('/')
-def index():
-    return send_from_directory('.', 'index.html')
-
-@app.route('/<path:path>')
-def serve_static(path):
-    return send_from_directory('.', path)
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCities();
+            loadCategories();
+            loadRegistrations('pending'); // Загружаем регистрации
+            feather.replace();
+            
+            // Периодически проверяем новые регистрации
+            setInterval(() => {
+                loadRegistrations('pending');
+            }, 60000); // Каждую минуту
+        });
+    </script>
+</body>
+</html>
