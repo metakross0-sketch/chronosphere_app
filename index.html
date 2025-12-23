@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Магазины - Карта</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="config.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -259,8 +260,9 @@
     </div>
 
     <script>
-        // API URL - замените на ваш URL API на PythonAnywhere
-        const API_URL = 'https://chronosphere.pythonanywhere.com';
+        // API URL из config.js
+        const API_URL = CONFIG.API_URL;
+        const ADMIN_ID = CONFIG.ADMIN_ID;
         
         // Telegram WebApp
         const tg = window.Telegram.WebApp;
@@ -271,7 +273,6 @@
         let map = null;
         let currentCity = null;
         let selectedShop = null;
-        const ADMIN_ID = 7250236442;
 
         // Получение списка городов
         async function loadCities() {
@@ -401,4 +402,3 @@
     </script>
 </body>
 </html>
-
