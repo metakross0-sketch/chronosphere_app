@@ -470,7 +470,12 @@
 
         // Показ товаров
         function showProducts(section, category, model, submodel) {
-            navigationPath = [section, category, model, submodel];
+            // Если подмодель пустая, не добавляем её в путь
+            if (submodel === "") {
+                navigationPath = [section, category, model];
+            } else {
+                navigationPath = [section, category, model, submodel];
+            }
             updateBreadcrumb();
 
             const content = document.getElementById('content');
@@ -622,8 +627,10 @@
             } else if (navigationPath.length === 2) {
                 showCategories(navigationPath[0]);
             } else if (navigationPath.length === 3) {
+                // Возврат из товаров к моделям
                 showModels(navigationPath[0], navigationPath[1]);
             } else if (navigationPath.length === 4) {
+                // Возврат из товаров к подмоделям
                 showSubmodels(navigationPath[0], navigationPath[1], navigationPath[2]);
             }
         }
