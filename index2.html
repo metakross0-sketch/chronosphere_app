@@ -273,6 +273,13 @@
         let currentCity = null;
         let selectedShop = null;
 
+        // Функция для формирования URL фото
+        function getPhotoUrl(filename) {
+            if (!filename) return '';
+            if (filename.startsWith('http')) return filename; // если уже полный URL
+            return `https://metakross0-sketch.github.io/chronosphere_app/images/${filename}`;
+        }
+
         // Синхронизация магазинов из таблицы
         async function syncShops() {
             try {
@@ -339,8 +346,22 @@
                     // Добавляем маркеры
                     data.shops.forEach(shop => {
                         const marker = L.marker([shop.latitude, shop.longitude]).addTo(map);
-                        marker.bindPopup(shop.name);
-                        marker.on('click', () => showShopInfo(shop));
+                        
+                        // Создаём popup с фото
+                        const photoUrl = getPhotoUrl(shop.photo_url);
+                        const popupContent = `
+                            <div style="text-align: center; padding: 10px; min-width: 250px;">
+                                ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-width: 300px; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" onerror="this.style.display='none'">` : ''}
+                                <h3 style="margin: 10px 0; font-size: 18px;">${shop.name}</h3>
+                                <p style="color: #666; margin: 5px 0;">ID: ${shop.shop_id}</p>
+                                <button style="padding: 10px 20px; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px;" onclick="window.showShopInfoFromPopup('${shop.shop_id}')">
+                                    🏪 Открыть магазин
+                                </button>
+                            </div>
+                        `;
+                        
+                        marker.bindPopup(popupContent);
+                        marker.on('click', () => { selectedShop = shop; });
                     });
                 }
             } catch (error) {
@@ -357,6 +378,17 @@
             document.getElementById('shop-city').textContent = currentCity;
             document.getElementById('shop-modal').style.display = 'block';
         }
+
+        // Открытие магазина из popup (глобальная функция)
+        window.showShopInfoFromPopup = function(shopId) {
+            const shop = { shop_id: shopId };
+            // Найдём полную информацию о магазине если нужно
+            if (selectedShop && selectedShop.shop_id === shopId) {
+                shop.name = selectedShop.name;
+            }
+            selectedShop = shop;
+            openShop();
+        };
 
         // Открытие приложения магазина
         async function openShop() {
