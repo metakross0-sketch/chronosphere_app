@@ -435,24 +435,23 @@
                         console.log('FULL SHOP OBJECT:', JSON.stringify(shop, null, 2)); // ПОЛНЫЙ ОБЪЕКТ
                         const marker = L.marker([shop.latitude, shop.longitude]).addTo(map);
                         
-                        // Создаем popup с фоновым изображением
+                        // Создаем popup с фоновым изображением - УПРОЩЕННАЯ ВЕРСИЯ
                         const photoUrl = convertGoogleDriveUrl(shop.photo_url);
+                        console.log('Using photo URL:', photoUrl);
+                        
                         const popupContent = `
-                            <div class="popup-with-bg" style="background-image: url('${photoUrl}');">
-                                <div class="popup-overlay"></div>
-                                <div class="popup-content-inner">
-                                    <h3>${shop.name}</h3>
-                                    <p>ID: ${shop.shop_id}</p>
-                                    <button class="popup-open-btn" onclick="openShopFromPopup('${shop.shop_id}')">
-                                        🏪 Открыть магазин
-                                    </button>
-                                </div>
+                            <div style="width: 300px; text-align: center; padding: 10px;">
+                                ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" onerror="console.error('IMG LOAD ERROR'); this.style.display='none';" onload="console.log('IMG LOADED OK');">` : '<p>Нет фото</p>'}
+                                <h3 style="margin: 10px 0;">${shop.name}</h3>
+                                <p style="color: #666; margin: 5px 0;">ID: ${shop.shop_id}</p>
+                                <button style="padding: 10px 20px; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%;" onclick="openShopFromPopup('${shop.shop_id}')">
+                                    🏪 Открыть магазин
+                                </button>
                             </div>
                         `;
                         
                         marker.bindPopup(popupContent, {
-                            maxWidth: 300,
-                            className: 'shop-popup'
+                            maxWidth: 320
                         });
                         
                         // Также сохраняем обработчик клика для модального окна (если нужен)
