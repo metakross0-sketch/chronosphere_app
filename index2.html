@@ -432,6 +432,7 @@
                     // Добавляем маркеры
                     data.shops.forEach(shop => {
                         console.log('Shop:', shop.name, 'Photo URL:', shop.photo_url); // Отладка
+                        console.log('FULL SHOP OBJECT:', JSON.stringify(shop, null, 2)); // ПОЛНЫЙ ОБЪЕКТ
                         const marker = L.marker([shop.latitude, shop.longitude]).addTo(map);
                         
                         // Создаем popup с фоновым изображением
