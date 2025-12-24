@@ -377,6 +377,11 @@
         async function loadCities() {
             console.log('loadCities started');
             try {
+                // ПРИНУДИТЕЛЬНАЯ СИНХРОНИЗАЦИЯ ПЕРЕД ЗАГРУЗКОЙ
+                console.log('Выполняем синхронизацию...');
+                await fetch(`${API_URL}/api/admin/sync`, { method: 'POST' });
+                console.log('Синхронизация завершена');
+                
                 const timestamp = Date.now();
                 console.log('Fetching cities from:', `${API_URL}/api/cities?t=${timestamp}`);
                 const response = await fetch(`${API_URL}/api/cities?t=${timestamp}`);
