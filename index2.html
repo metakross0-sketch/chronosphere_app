@@ -420,13 +420,7 @@
 
             // Загрузка магазинов города
             try {
-                const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}?nocache=${Date.now()}`, {
-                    cache: 'no-store',
-                    headers: {
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    }
-                });
+                const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}?nocache=${Date.now()}`);
                 const data = await response.json();
                 
                 console.log('Shops data:', data); // Отладка
