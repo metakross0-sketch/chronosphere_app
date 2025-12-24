@@ -158,6 +158,78 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Стилизация Leaflet popup с фоновым изображением */
+        .leaflet-popup-content-wrapper {
+            padding: 0 !important;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .leaflet-popup-content {
+            margin: 0 !important;
+            width: 300px !important;
+        }
+
+        .popup-with-bg {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 15px;
+        }
+
+        .popup-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%);
+        }
+
+        .popup-content-inner {
+            position: relative;
+            z-index: 1;
+            color: white;
+        }
+
+        .popup-content-inner h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .popup-content-inner p {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            opacity: 0.9;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .popup-open-btn {
+            padding: 8px 16px;
+            background: white;
+            color: #3B82F6;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+
+        .popup-open-btn:hover {
+            transform: scale(1.05);
+        }
+
         /* Админ панель */
         #admin-panel {
             display: none;
@@ -273,6 +345,18 @@
         let currentCity = null;
         let selectedShop = null;
 
+        // Конвертация Google Drive ссылки в прямую ссылку на изображение
+        function convertGoogleDriveUrl(url) {
+            if (!url) return '';
+            // Формат: https://drive.google.com/file/d/FILE_ID/view?usp=drive_link
+            // Преобразуем в: https://drive.google.com/thumbnail?id=FILE_ID&sz=w600-h400
+            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w600-h400`;
+            }
+            return url;
+        }
+
         // Синхронизация магазинов из таблицы
         async function syncShops() {
             try {
@@ -339,8 +423,31 @@
                     // Добавляем маркеры
                     data.shops.forEach(shop => {
                         const marker = L.marker([shop.latitude, shop.longitude]).addTo(map);
-                        marker.bindPopup(shop.name);
-                        marker.on('click', () => showShopInfo(shop));
+                        
+                        // Создаем popup с фоновым изображением
+                        const photoUrl = convertGoogleDriveUrl(shop.photo_url);
+                        const popupContent = `
+                            <div class="popup-with-bg" style="background-image: url('${photoUrl}');">
+                                <div class="popup-overlay"></div>
+                                <div class="popup-content-inner">
+                                    <h3>${shop.name}</h3>
+                                    <p>ID: ${shop.shop_id}</p>
+                                    <button class="popup-open-btn" onclick="openShopFromPopup('${shop.shop_id}')">
+                                        🏪 Открыть магазин
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        marker.bindPopup(popupContent, {
+                            maxWidth: 300,
+                            className: 'shop-popup'
+                        });
+                        
+                        // Также сохраняем обработчик клика для модального окна (если нужен)
+                        marker.on('click', () => {
+                            selectedShop = shop;
+                        });
                     });
                 }
             } catch (error) {
@@ -352,38 +459,10 @@
         // Показ информации о магазине
         function showShopInfo(shop) {
             selectedShop = shop;
-            const modal = document.getElementById('shop-modal');
             document.getElementById('shop-name').textContent = shop.name;
             document.getElementById('shop-id').textContent = shop.shop_id;
             document.getElementById('shop-city').textContent = currentCity;
-            
-            // Устанавливаем фоновое изображение если оно есть
-            if (shop.background_image && shop.background_image.trim() !== '') {
-                // Конвертируем Google Drive ссылку
-                let imageUrl = shop.background_image;
-                const fileIdMatch = imageUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-                if (fileIdMatch) {
-                    imageUrl = `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
-                }
-                
-                console.log('Shop:', shop.name);
-                console.log('Original URL:', shop.background_image);
-                console.log('Converted URL:', imageUrl);
-                
-                // Устанавливаем градиент с полупрозрачным белым + фоновое изображение
-                modal.style.background = `linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('${imageUrl}')`;
-                modal.style.backgroundSize = 'cover';
-                modal.style.backgroundPosition = 'center';
-                modal.style.backgroundRepeat = 'no-repeat';
-            } else {
-                // Сбрасываем на белый фон
-                modal.style.background = 'white';
-                modal.style.backgroundSize = '';
-                modal.style.backgroundPosition = '';
-                modal.style.backgroundRepeat = '';
-            }
-            
-            modal.style.display = 'block';
+            document.getElementById('shop-modal').style.display = 'block';
         }
 
         // Открытие приложения магазина
@@ -407,6 +486,36 @@
                 tg.showAlert('Ошибка загрузки данных магазина');
             }
         }
+
+        // Открытие магазина из popup на карте
+        async function openShopFromPopup(shopId) {
+            try {
+                const response = await fetch(`${API_URL}/api/shop/${shopId}/catalog`);
+                const data = await response.json();
+
+                if (data.error) {
+                    tg.showAlert('Ошибка: ' + data.error);
+                    return;
+                }
+
+                // Находим информацию о магазине
+                const shopsResponse = await fetch(`${API_URL}/api/shops/${encodeURIComponent(currentCity)}`);
+                const shopsData = await shopsResponse.json();
+                const shop = shopsData.shops.find(s => s.shop_id === shopId);
+
+                if (shop) {
+                    localStorage.setItem('shopCatalog', JSON.stringify(data.catalog));
+                    localStorage.setItem('shopInfo', JSON.stringify(shop));
+                    localStorage.setItem('currentCity', currentCity);
+                    window.location.href = 'shop.html';
+                }
+            } catch (error) {
+                tg.showAlert('Ошибка загрузки данных магазина');
+            }
+        }
+
+        // Делаем функцию доступной глобально для onclick
+        window.openShopFromPopup = openShopFromPopup;
 
         // Возврат к выбору городов
         function backToCities() {
