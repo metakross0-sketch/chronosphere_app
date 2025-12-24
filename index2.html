@@ -99,14 +99,6 @@
             z-index: 2000;
             max-height: 50vh;
             overflow-y: auto;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-        
-        #shop-modal.has-background {
-            background-color: rgba(255, 255, 255, 0.92);
-            background-blend-mode: lighten;
         }
 
         #shop-modal h2 {
@@ -357,30 +349,6 @@
             }
         }
 
-        // Конвертация ссылки Google Drive в прямую ссылку на изображение
-        function convertGoogleDriveUrl(url) {
-            if (!url) return '';
-            
-            // Если это ссылка на просмотр файла (file/d/FILE_ID/view)
-            const viewMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-            if (viewMatch) {
-                return `https://drive.google.com/uc?export=view&id=${viewMatch[1]}`;
-            }
-            
-            // Если это уже прямая ссылка uc?id=FILE_ID или uc?export=view&id=FILE_ID
-            if (url.includes('drive.google.com/uc')) {
-                return url;
-            }
-            
-            // Если это ссылка открытого доступа open?id=FILE_ID
-            const openMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-            if (openMatch) {
-                return `https://drive.google.com/uc?export=view&id=${openMatch[1]}`;
-            }
-            
-            return url;
-        }
-
         // Показ информации о магазине
         function showShopInfo(shop) {
             selectedShop = shop;
@@ -390,16 +358,29 @@
             document.getElementById('shop-city').textContent = currentCity;
             
             // Устанавливаем фоновое изображение если оно есть
-            if (shop.background_image) {
-                const imageUrl = convertGoogleDriveUrl(shop.background_image);
+            if (shop.background_image && shop.background_image.trim() !== '') {
+                // Конвертируем Google Drive ссылку
+                let imageUrl = shop.background_image;
+                const fileIdMatch = imageUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (fileIdMatch) {
+                    imageUrl = `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
+                }
+                
+                console.log('Shop:', shop.name);
                 console.log('Original URL:', shop.background_image);
                 console.log('Converted URL:', imageUrl);
-                modal.style.backgroundImage = `url('${imageUrl}')`;
-                modal.classList.add('has-background');
+                
+                // Устанавливаем градиент с полупрозрачным белым + фоновое изображение
+                modal.style.background = `linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('${imageUrl}')`;
+                modal.style.backgroundSize = 'cover';
+                modal.style.backgroundPosition = 'center';
+                modal.style.backgroundRepeat = 'no-repeat';
             } else {
-                modal.style.backgroundImage = 'none';
-                modal.style.backgroundColor = 'white';
-                modal.classList.remove('has-background');
+                // Сбрасываем на белый фон
+                modal.style.background = 'white';
+                modal.style.backgroundSize = '';
+                modal.style.backgroundPosition = '';
+                modal.style.backgroundRepeat = '';
             }
             
             modal.style.display = 'block';
