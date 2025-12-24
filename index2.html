@@ -368,6 +368,30 @@
             }
         }
 
+        // Конвертация ссылки Google Drive в прямую ссылку на изображение
+        function convertGoogleDriveUrl(url) {
+            if (!url) return '';
+            
+            // Если это ссылка на просмотр файла (file/d/FILE_ID/view)
+            const viewMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (viewMatch) {
+                return `https://drive.google.com/uc?export=view&id=${viewMatch[1]}`;
+            }
+            
+            // Если это уже прямая ссылка uc?id=FILE_ID или uc?export=view&id=FILE_ID
+            if (url.includes('drive.google.com/uc')) {
+                return url;
+            }
+            
+            // Если это ссылка открытого доступа open?id=FILE_ID
+            const openMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (openMatch) {
+                return `https://drive.google.com/uc?export=view&id=${openMatch[1]}`;
+            }
+            
+            return url;
+        }
+
         // Показ информации о магазине
         function showShopInfo(shop) {
             selectedShop = shop;
@@ -378,7 +402,10 @@
             
             // Устанавливаем фоновое изображение если оно есть
             if (shop.background_image) {
-                modal.style.backgroundImage = `url('${shop.background_image}')`;
+                const imageUrl = convertGoogleDriveUrl(shop.background_image);
+                console.log('Original URL:', shop.background_image);
+                console.log('Converted URL:', imageUrl);
+                modal.style.backgroundImage = `url('${imageUrl}')`;
                 modal.classList.add('has-background');
             } else {
                 modal.style.backgroundImage = 'none';
