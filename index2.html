@@ -99,33 +99,14 @@
             z-index: 2000;
             max-height: 50vh;
             overflow-y: auto;
-        }
-        
-        #shop-modal.has-background::before {
-            content: '';
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 50vh;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            border-radius: 20px 20px 0 0;
-            z-index: -2;
         }
         
-        #shop-modal.has-background::after {
-            content: '';
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 50vh;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(3px);
-            border-radius: 20px 20px 0 0;
-            z-index: -1;
+        #shop-modal.has-background {
+            background-color: rgba(255, 255, 255, 0.92);
+            background-blend-mode: lighten;
         }
 
         #shop-modal h2 {
@@ -413,27 +394,12 @@
                 const imageUrl = convertGoogleDriveUrl(shop.background_image);
                 console.log('Original URL:', shop.background_image);
                 console.log('Converted URL:', imageUrl);
-                
-                // Применяем фон через псевдоэлемент
-                let styleEl = document.getElementById('modal-bg-style');
-                if (!styleEl) {
-                    styleEl = document.createElement('style');
-                    styleEl.id = 'modal-bg-style';
-                    document.head.appendChild(styleEl);
-                }
-                styleEl.textContent = `
-                    #shop-modal.has-background::before {
-                        background-image: url('${imageUrl}');
-                    }
-                `;
-                
+                modal.style.backgroundImage = `url('${imageUrl}')`;
                 modal.classList.add('has-background');
             } else {
+                modal.style.backgroundImage = 'none';
+                modal.style.backgroundColor = 'white';
                 modal.classList.remove('has-background');
-                const styleEl = document.getElementById('modal-bg-style');
-                if (styleEl) {
-                    styleEl.textContent = '';
-                }
             }
             
             modal.style.display = 'block';
