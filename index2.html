@@ -158,78 +158,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Стилизация Leaflet popup с фоновым изображением */
-        .leaflet-popup-content-wrapper {
-            padding: 0 !important;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .leaflet-popup-content {
-            margin: 0 !important;
-            width: 300px !important;
-        }
-
-        .popup-with-bg {
-            position: relative;
-            width: 300px;
-            height: 200px;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 15px;
-        }
-
-        .popup-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%);
-        }
-
-        .popup-content-inner {
-            position: relative;
-            z-index: 1;
-            color: white;
-        }
-
-        .popup-content-inner h3 {
-            margin: 0 0 5px 0;
-            font-size: 16px;
-            font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .popup-content-inner p {
-            margin: 0 0 10px 0;
-            font-size: 12px;
-            opacity: 0.9;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        }
-
-        .popup-open-btn {
-            padding: 8px 16px;
-            background: white;
-            color: #3B82F6;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-        }
-
-        .popup-open-btn:hover {
-            transform: scale(1.05);
-        }
-
         /* Админ панель */
         #admin-panel {
             display: none;
@@ -345,25 +273,6 @@
         let currentCity = null;
         let selectedShop = null;
 
-        // Конвертация Google Drive ссылки в прямую ссылку на изображение
-        function convertGoogleDriveUrl(url) {
-            console.log('Original photo URL:', url); // Отладка
-            if (!url) {
-                console.log('Photo URL is empty');
-                return '';
-            }
-            // Формат: https://drive.google.com/file/d/FILE_ID/view?usp=drive_link
-            // Преобразуем в: https://drive.google.com/uc?export=view&id=FILE_ID
-            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            if (match && match[1]) {
-                const convertedUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
-                console.log('Converted photo URL:', convertedUrl); // Отладка
-                return convertedUrl;
-            }
-            console.log('Could not parse Google Drive URL');
-            return url;
-        }
-
         // Синхронизация магазинов из таблицы
         async function syncShops() {
             try {
@@ -377,14 +286,8 @@
         async function loadCities() {
             console.log('loadCities started');
             try {
-                // ПРИНУДИТЕЛЬНАЯ СИНХРОНИЗАЦИЯ ПЕРЕД ЗАГРУЗКОЙ
-                console.log('Выполняем синхронизацию...');
-                await fetch(`${API_URL}/api/admin/sync`, { method: 'POST' });
-                console.log('Синхронизация завершена');
-                
-                const timestamp = Date.now();
-                console.log('Fetching cities from:', `${API_URL}/api/cities?t=${timestamp}`);
-                const response = await fetch(`${API_URL}/api/cities?t=${timestamp}`);
+                console.log('Fetching cities from:', `${API_URL}/api/cities`);
+                const response = await fetch(`${API_URL}/api/cities`);
                 console.log('Response status:', response.status);
                 const data = await response.json();
                 console.log('Cities data:', data);
@@ -426,10 +329,8 @@
 
             // Загрузка магазинов города
             try {
-                const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}?_cachebust=${Date.now()}`);
+                const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
                 const data = await response.json();
-                
-                console.log('Shops data:', data); // Отладка
 
                 if (data.shops && data.shops.length > 0) {
                     // Центрируем карту на первом магазине
@@ -437,33 +338,9 @@
 
                     // Добавляем маркеры
                     data.shops.forEach(shop => {
-                        console.log('Shop:', shop.name, 'Photo URL:', shop.photo_url); // Отладка
-                        console.log('FULL SHOP OBJECT:', JSON.stringify(shop, null, 2)); // ПОЛНЫЙ ОБЪЕКТ
                         const marker = L.marker([shop.latitude, shop.longitude]).addTo(map);
-                        
-                        // Создаем popup с фоновым изображением - УПРОЩЕННАЯ ВЕРСИЯ
-                        const photoUrl = convertGoogleDriveUrl(shop.photo_url);
-                        console.log('Using photo URL:', photoUrl);
-                        
-                        const popupContent = `
-                            <div style="width: 300px; text-align: center; padding: 10px;">
-                                ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" onerror="console.error('IMG LOAD ERROR'); this.style.display='none';" onload="console.log('IMG LOADED OK');">` : '<p>Нет фото</p>'}
-                                <h3 style="margin: 10px 0;">${shop.name}</h3>
-                                <p style="color: #666; margin: 5px 0;">ID: ${shop.shop_id}</p>
-                                <button style="padding: 10px 20px; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%;" onclick="openShopFromPopup('${shop.shop_id}')">
-                                    🏪 Открыть магазин
-                                </button>
-                            </div>
-                        `;
-                        
-                        marker.bindPopup(popupContent, {
-                            maxWidth: 320
-                        });
-                        
-                        // Также сохраняем обработчик клика для модального окна (если нужен)
-                        marker.on('click', () => {
-                            selectedShop = shop;
-                        });
+                        marker.bindPopup(shop.name);
+                        marker.on('click', () => showShopInfo(shop));
                     });
                 }
             } catch (error) {
@@ -502,36 +379,6 @@
                 tg.showAlert('Ошибка загрузки данных магазина');
             }
         }
-
-        // Открытие магазина из popup на карте
-        async function openShopFromPopup(shopId) {
-            try {
-                const response = await fetch(`${API_URL}/api/shop/${shopId}/catalog`);
-                const data = await response.json();
-
-                if (data.error) {
-                    tg.showAlert('Ошибка: ' + data.error);
-                    return;
-                }
-
-                // Находим информацию о магазине
-                const shopsResponse = await fetch(`${API_URL}/api/shops/${encodeURIComponent(currentCity)}`);
-                const shopsData = await shopsResponse.json();
-                const shop = shopsData.shops.find(s => s.shop_id === shopId);
-
-                if (shop) {
-                    localStorage.setItem('shopCatalog', JSON.stringify(data.catalog));
-                    localStorage.setItem('shopInfo', JSON.stringify(shop));
-                    localStorage.setItem('currentCity', currentCity);
-                    window.location.href = 'shop.html';
-                }
-            } catch (error) {
-                tg.showAlert('Ошибка загрузки данных магазина');
-            }
-        }
-
-        // Делаем функцию доступной глобально для onclick
-        window.openShopFromPopup = openShopFromPopup;
 
         // Возврат к выбору городов
         function backToCities() {
