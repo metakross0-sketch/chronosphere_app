@@ -99,6 +99,25 @@
             z-index: 2000;
             max-height: 50vh;
             overflow-y: auto;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        #shop-modal.has-background {
+            position: relative;
+        }
+        
+        #shop-modal.has-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 20px 20px 0 0;
+            z-index: -1;
         }
 
         #shop-modal h2 {
@@ -352,10 +371,21 @@
         // Показ информации о магазине
         function showShopInfo(shop) {
             selectedShop = shop;
+            const modal = document.getElementById('shop-modal');
             document.getElementById('shop-name').textContent = shop.name;
             document.getElementById('shop-id').textContent = shop.shop_id;
             document.getElementById('shop-city').textContent = currentCity;
-            document.getElementById('shop-modal').style.display = 'block';
+            
+            // Устанавливаем фоновое изображение если оно есть
+            if (shop.background_image) {
+                modal.style.backgroundImage = `url('${shop.background_image}')`;
+                modal.classList.add('has-background');
+            } else {
+                modal.style.backgroundImage = 'none';
+                modal.classList.remove('has-background');
+            }
+            
+            modal.style.display = 'block';
         }
 
         // Открытие приложения магазина
