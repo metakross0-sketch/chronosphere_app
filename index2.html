@@ -85,6 +85,21 @@
             font-weight: 500;
         }
 
+        #category-filter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            padding: 10px 15px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
         /* Модальное окно с информацией о магазине */
         #shop-modal {
             display: none;
@@ -215,6 +230,9 @@
         <!-- Карта -->
         <div id="map-container">
             <button id="back-to-cities">← Назад</button>
+            <select id="category-filter">
+                <option value="">🏷️ Все категории</option>
+            </select>
             <div id="map"></div>
         </div>
 
@@ -227,6 +245,9 @@
             </div>
             <div class="info-row">
                 <strong>Город:</strong> <span id="shop-city"></span>
+            </div>
+            <div class="info-row">
+                <strong>🏷️ Категория:</strong> <span id="shop-category">Без категории</span>
             </div>
             <button id="open-shop-btn">🏪 Открыть магазин</button>
         </div>
@@ -326,6 +347,9 @@
             document.getElementById('city-selection').style.display = 'none';
             document.getElementById('map-container').style.display = 'flex';
 
+            // Загружаем категории для этого города
+            await loadCategories(city);
+
             // Инициализация карты
             if (!map) {
                 map = L.map('map').setView([55.7558, 37.6173], 13); // Москва по умолчанию
@@ -399,6 +423,7 @@
                             // Несколько магазинов - показываем список
                             const shopsListHtml = group.map((shop) => {
                                 const photoUrl = getPhotoUrl(shop.photo_url);
+                                const category = shop.category || 'Без категории';
                                 return `
                                     <div style="
                                         border: 1px solid #E5E7EB;
@@ -410,6 +435,7 @@
                                     " onmouseover="this.style.background='#F3F4F6'" onmouseout="this.style.background='white'" onclick="window.showShopInfoFromPopup('${shop.shop_id}')">
                                         ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;" onerror="this.style.display='none'">` : ''}
                                         <div style="font-weight: 600; font-size: 16px; margin-bottom: 5px;">${shop.name}</div>
+                                        <div style="color: #9CA3AF; font-size: 12px; margin-bottom: 3px; font-weight: 500;">🏷️ ${category}</div>
                                         <div style="color: #666; font-size: 13px;">ID: ${shop.shop_id}</div>
                                         <div style="
                                             background: #3B82F6;
@@ -439,10 +465,12 @@
                             // Один магазин - обычный popup
                             const shop = group[0];
                             const photoUrl = getPhotoUrl(shop.photo_url);
+                            const category = shop.category || 'Без категории';
                             const popupContent = `
                                 <div style="text-align: center; padding: 10px; width: 280px;">
                                     ${photoUrl ? `<img src="${photoUrl}" style="width: 280px; max-height: 200px; object-fit: cover; object-position: center; border-radius: 8px; margin-bottom: 10px; display: block;" onerror="this.style.display='none'">` : ''}
                                     <h3 style="margin: 10px 0; font-size: 18px;">${shop.name}</h3>
+                                    <p style="color: #9CA3AF; margin: 5px 0; font-size: 13px; font-weight: 500;">🏷️ ${category}</p>
                                     <p style="color: #666; margin: 5px 0;">ID: ${shop.shop_id}</p>
                                     <button style="padding: 10px 20px; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px;" onclick="window.showShopInfoFromPopup('${shop.shop_id}')">
                                         🏪 Открыть магазин
@@ -466,6 +494,7 @@
             document.getElementById('shop-name').textContent = shop.name;
             document.getElementById('shop-id').textContent = shop.shop_id;
             document.getElementById('shop-city').textContent = currentCity;
+            document.getElementById('shop-category').textContent = shop.category || 'Без категории';
             document.getElementById('shop-modal').style.display = 'block';
         }
 
@@ -510,6 +539,184 @@
             selectedShop = null;
         }
 
+        // Загрузка категорий для города
+        async function loadCategories(city) {
+            try {
+                const response = await fetch(`${API_URL}/api/categories/${encodeURIComponent(city)}`);
+                const data = await response.json();
+                
+                const categoryFilter = document.getElementById('category-filter');
+                categoryFilter.innerHTML = '<option value="">🏷️ Все категории</option>';
+                
+                if (data.categories && data.categories.length > 0) {
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        categoryFilter.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки категорий:', error);
+            }
+        }
+
+        // Фильтрация магазинов по категории
+        function filterShopsByCategory() {
+            const selectedCategory = document.getElementById('category-filter').value;
+            
+            // Перезагружаем карту с фильтром
+            if (currentCity) {
+                showCityMapWithFilter(currentCity, selectedCategory);
+            }
+        }
+
+        // Показ карты с фильтром по категории
+        async function showCityMapWithFilter(city, category) {
+            // Очищаем текущие маркеры
+            if (map) {
+                map.eachLayer(layer => {
+                    if (layer instanceof L.Marker) {
+                        map.removeLayer(layer);
+                    }
+                });
+            }
+
+            // Загрузка магазинов города
+            try {
+                const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
+                const data = await response.json();
+
+                if (data.shops && data.shops.length > 0) {
+                    // Фильтруем магазины по категории, если выбрана
+                    let filteredShops = data.shops;
+                    if (category) {
+                        filteredShops = data.shops.filter(shop => shop.category === category);
+                    }
+
+                    if (filteredShops.length === 0) {
+                        tg.showAlert('В этой категории нет магазинов');
+                        return;
+                    }
+
+                    // Центрируем карту на первом магазине
+                    map.setView([filteredShops[0].latitude, filteredShops[0].longitude], 13);
+
+                    // Группируем магазины по координатам
+                    const coordGroups = {};
+                    filteredShops.forEach(shop => {
+                        const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
+                        if (!coordGroups[key]) {
+                            coordGroups[key] = [];
+                        }
+                        coordGroups[key].push(shop);
+                    });
+
+                    // Добавляем маркеры (используем ту же логику что и в showCityMap)
+                    Object.values(coordGroups).forEach(group => {
+                        const lat = group[0].latitude;
+                        const lng = group[0].longitude;
+                        
+                        let marker;
+                        if (group.length > 1) {
+                            const iconHtml = `
+                                <div style="position: relative;">
+                                    <div style="
+                                        background: #EF4444;
+                                        color: white;
+                                        width: 40px;
+                                        height: 40px;
+                                        border-radius: 50% 50% 50% 0;
+                                        transform: rotate(-45deg);
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        border: 3px solid white;
+                                        box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+                                    ">
+                                        <span style="transform: rotate(45deg); font-weight: bold; font-size: 18px;">${group.length}</span>
+                                    </div>
+                                </div>
+                            `;
+                            const customIcon = L.divIcon({
+                                html: iconHtml,
+                                className: 'custom-marker',
+                                iconSize: [40, 40],
+                                iconAnchor: [20, 40],
+                                popupAnchor: [0, -40]
+                            });
+                            marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+                        } else {
+                            marker = L.marker([lat, lng]).addTo(map);
+                        }
+                        
+                        // Создаём popup
+                        if (group.length > 1) {
+                            const shopsListHtml = group.map((shop) => {
+                                const photoUrl = getPhotoUrl(shop.photo_url);
+                                const shopCategory = shop.category || 'Без категории';
+                                return `
+                                    <div style="
+                                        border: 1px solid #E5E7EB;
+                                        border-radius: 8px;
+                                        padding: 10px;
+                                        margin-bottom: 10px;
+                                        cursor: pointer;
+                                        transition: background 0.2s;
+                                    " onmouseover="this.style.background='#F3F4F6'" onmouseout="this.style.background='white'" onclick="window.showShopInfoFromPopup('${shop.shop_id}')">
+                                        ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;" onerror="this.style.display='none'">` : ''}
+                                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 5px;">${shop.name}</div>
+                                        <div style="color: #9CA3AF; font-size: 12px; margin-bottom: 3px; font-weight: 500;">🏷️ ${shopCategory}</div>
+                                        <div style="color: #666; font-size: 13px;">ID: ${shop.shop_id}</div>
+                                        <div style="
+                                            background: #3B82F6;
+                                            color: white;
+                                            padding: 8px;
+                                            border-radius: 6px;
+                                            text-align: center;
+                                            margin-top: 8px;
+                                            font-size: 14px;
+                                        ">
+                                            🏪 Открыть магазин
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                            
+                            const popupContent = `
+                                <div style="padding: 10px; width: 300px; max-height: 400px; overflow-y: auto;">
+                                    <h3 style="margin: 0 0 15px 0; font-size: 18px; text-align: center;">
+                                        📍 ${group.length} ${group.length === 2 ? 'магазина' : group.length === 3 || group.length === 4 ? 'магазина' : 'магазинов'} в этом здании
+                                    </h3>
+                                    ${shopsListHtml}
+                                </div>
+                            `;
+                            marker.bindPopup(popupContent, { maxWidth: 320 });
+                        } else {
+                            const shop = group[0];
+                            const photoUrl = getPhotoUrl(shop.photo_url);
+                            const shopCategory = shop.category || 'Без категории';
+                            const popupContent = `
+                                <div style="text-align: center; padding: 10px; width: 280px;">
+                                    ${photoUrl ? `<img src="${photoUrl}" style="width: 280px; max-height: 200px; object-fit: cover; object-position: center; border-radius: 8px; margin-bottom: 10px; display: block;" onerror="this.style.display='none'">` : ''}
+                                    <h3 style="margin: 10px 0; font-size: 18px;">${shop.name}</h3>
+                                    <p style="color: #9CA3AF; margin: 5px 0; font-size: 13px; font-weight: 500;">🏷️ ${shopCategory}</p>
+                                    <p style="color: #666; margin: 5px 0;">ID: ${shop.shop_id}</p>
+                                    <button style="padding: 10px 20px; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px;" onclick="window.showShopInfoFromPopup('${shop.shop_id}')">
+                                        🏪 Открыть магазин
+                                    </button>
+                                </div>
+                            `;
+                            marker.bindPopup(popupContent);
+                            marker.on('click', () => { selectedShop = shop; });
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка фильтрации магазинов:', error);
+            }
+        }
+
         // Закрытие модального окна
         function closeModal() {
             document.getElementById('shop-modal').style.display = 'none';
@@ -532,6 +739,7 @@
         document.getElementById('back-to-cities').onclick = backToCities;
         document.getElementById('close-modal').onclick = closeModal;
         document.getElementById('open-shop-btn').onclick = openShop;
+        document.getElementById('category-filter').onchange = filterShopsByCategory;
 
         // Инициализация
         if (!checkAdmin()) {
