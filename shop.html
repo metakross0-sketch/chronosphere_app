@@ -6,7 +6,7 @@
     <title>Каталог магазина</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -15,97 +15,152 @@
         }
 
         :root {
-            --bg-primary: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            --bg-secondary: rgba(30, 41, 59, 0.95);
-            --bg-card: rgba(255, 255, 255, 0.05);
-            --border-color: rgba(255, 255, 255, 0.15);
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --shadow-color: rgba(0, 0, 0, 0.2);
-            --hover-bg: rgba(255, 255, 255, 0.08);
-            --button-color: #3B82F6;
+            --cyber-bg: #0a0e27;
+            --cyber-bg-secondary: #1a1f3a;
+            --neon-blue: #00d9ff;
+            --neon-pink: #ff006e;
+            --neon-purple: #8b5cf6;
+            --neon-cyan: #06ffa5;
+            --neon-yellow: #ffe600;
+            --glass-bg: rgba(26, 31, 58, 0.8);
+            --card-bg: rgba(26, 31, 58, 0.6);
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'Rajdhani', 'Orbitron', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1629 100%);
+            color: var(--neon-cyan);
             min-height: 100vh;
+            position: relative;
+        }
+
+        /* Киберпанк фоновая анимация */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 217, 255, 0.03) 2px,
+                    rgba(0, 217, 255, 0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 1;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(20px); }
         }
 
         #app {
             padding: 20px;
             max-width: 1400px;
             margin: 0 auto;
+            position: relative;
+            z-index: 2;
         }
 
-        /* Хедер */
+        /* Хедер - Киберпанк */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding: 15px;
-            background: var(--bg-card);
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
+            padding: 18px;
+            background: var(--glass-bg);
+            border: 2px solid var(--neon-blue);
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 0 20px rgba(0, 217, 255, 0.3),
+                inset 0 0 15px rgba(0, 217, 255, 0.1);
         }
 
         .header h1 {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(6, 255, 165, 0.8);
         }
 
         .back-btn {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 8px 16px;
-            border-radius: 12px;
+            background: var(--glass-bg);
+            border: 2px solid var(--neon-purple);
+            color: var(--neon-purple);
+            padding: 10px 20px;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.2s;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+        }
+
+        .back-btn:hover {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+            box-shadow: 0 0 25px rgba(255, 0, 110, 0.6);
+            transform: translateX(-3px);
         }
 
         .back-btn:active {
-            transform: scale(0.95);
+            transform: translateX(-3px) scale(0.95);
         }
 
-        /* Хлебные крошки */
+        /* Хлебные крошки - Киберпанк */
         .breadcrumb {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
             margin-bottom: 20px;
             padding: 15px;
-            background: var(--bg-card);
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
+            background: var(--glass-bg);
+            border: 2px solid var(--neon-purple);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
         }
 
         .breadcrumb-item {
-            padding: 8px 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            padding: 10px 18px;
+            background: var(--card-bg);
+            border: 2px solid var(--neon-blue);
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.2s;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            color: var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
         }
 
         .breadcrumb-item:hover {
-            background: var(--hover-bg);
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.5);
+            transform: translateY(-2px);
         }
 
         .breadcrumb-separator {
-            color: var(--text-secondary);
+            color: var(--neon-purple);
+            font-weight: 700;
         }
 
         /* Сетка товаров/категорий */
         .grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 16px;
+            gap: 20px;
         }
 
         @media (min-width: 640px) {
@@ -126,73 +181,123 @@
             }
         }
 
-        /* Карточка категории */
+        /* Карточка категории - Киберпанк */
         .category-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--neon-blue);
+            padding: 24px;
             cursor: pointer;
             transition: all 0.3s;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .category-card:hover::before {
+            left: 100%;
         }
 
         .category-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px var(--shadow-color);
-            background: var(--hover-bg);
+            transform: translateY(-5px);
+            box-shadow: 
+                0 0 30px rgba(0, 217, 255, 0.6),
+                0 0 40px rgba(255, 0, 110, 0.4);
+            border-color: var(--neon-pink);
         }
 
         .category-card h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(6, 255, 165, 0.6);
         }
 
         .category-card .count {
             font-size: 14px;
-            color: var(--text-secondary);
+            color: var(--neon-purple);
+            font-weight: 600;
+            text-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
         }
 
-        /* Карточка товара */
+        /* Карточка товара - Киберпанк */
         .product-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
+            background: var(--card-bg);
+            border: 2px solid var(--neon-purple);
             overflow: hidden;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .product-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            pointer-events: none;
         }
 
         .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px var(--shadow-color);
+            transform: translateY(-5px);
+            box-shadow: 
+                0 0 25px rgba(139, 92, 246, 0.6),
+                0 0 35px rgba(0, 217, 255, 0.4);
+            border-color: var(--neon-blue);
         }
 
         .product-image {
             width: 100%;
             height: 200px;
             object-fit: cover;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(10, 14, 39, 0.8);
+            border-bottom: 2px solid var(--neon-blue);
+            filter: brightness(0.9) contrast(1.1);
         }
 
         .product-info {
-            padding: 15px;
+            padding: 18px;
         }
 
         .product-color {
             font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
+            color: var(--neon-blue);
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(0, 217, 255, 0.4);
         }
 
         .product-price {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
-            color: var(--button-color);
+            color: var(--neon-pink);
+            text-shadow: 0 0 15px rgba(255, 0, 110, 0.6);
         }
 
-        /* Модальное окно товара */
+        /* Модальное окно товара - Киберпанк */
         .modal {
             display: none;
             position: fixed;
@@ -200,7 +305,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
             z-index: 1000;
             padding: 20px;
             overflow-y: auto;
@@ -213,13 +319,17 @@
         }
 
         .modal-content {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 20px;
+            background: linear-gradient(135deg, var(--cyber-bg) 0%, var(--cyber-bg-secondary) 100%);
+            padding: 25px;
             max-width: 600px;
             width: 100%;
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--neon-blue);
             position: relative;
+            box-shadow: 
+                0 0 40px rgba(0, 217, 255, 0.5),
+                0 0 60px rgba(255, 0, 110, 0.3),
+                inset 0 0 20px rgba(0, 217, 255, 0.1);
+            backdrop-filter: blur(20px);
         }
 
         .modal-close {
@@ -227,10 +337,25 @@
             top: 15px;
             right: 15px;
             background: none;
-            border: none;
-            color: var(--text-primary);
+            border: 2px solid var(--neon-purple);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: var(--neon-purple);
             font-size: 24px;
             cursor: pointer;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: var(--neon-pink);
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 25px rgba(255, 0, 110, 0.7);
+            transform: rotate(90deg);
         }
 
         .modal-image {
@@ -238,42 +363,51 @@
             height: auto;
             max-height: 400px;
             object-fit: contain;
-            border-radius: 12px;
+            border: 2px solid var(--neon-purple);
             margin-bottom: 20px;
+            filter: brightness(0.95) contrast(1.1);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
         }
 
         .modal-details {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .modal-details .detail-row {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border-color);
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 217, 255, 0.3);
         }
 
         .modal-details .label {
-            color: var(--text-secondary);
+            color: var(--neon-blue);
             font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .modal-details .value {
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px rgba(6, 255, 165, 0.4);
         }
 
         .modal-description {
-            margin-top: 15px;
-            padding: 15px;
-            background: var(--bg-card);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
+            margin-top: 18px;
+            padding: 18px;
+            background: var(--card-bg);
+            border: 2px solid var(--neon-purple);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+            color: var(--neon-cyan);
+            backdrop-filter: blur(10px);
         }
 
-        /* Загрузка */
+        /* Загрузка - Киберпанк */
         .loading {
             display: flex;
             justify-content: center;
@@ -282,12 +416,30 @@
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid var(--button-color);
+            width: 60px;
+            height: 60px;
+            border: 4px solid transparent;
+            border-top: 4px solid var(--neon-cyan);
+            border-right: 4px solid var(--neon-pink);
+            border-bottom: 4px solid var(--neon-purple);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite, glow-spin 2s ease-in-out infinite;
+            box-shadow: 
+                0 0 20px rgba(0, 217, 255, 0.5),
+                0 0 30px rgba(255, 0, 110, 0.3);
+        }
+
+        @keyframes glow-spin {
+            0%, 100% {
+                box-shadow: 
+                    0 0 20px rgba(0, 217, 255, 0.5),
+                    0 0 30px rgba(255, 0, 110, 0.3);
+            }
+            50% {
+                box-shadow: 
+                    0 0 30px rgba(0, 217, 255, 0.8),
+                    0 0 50px rgba(255, 0, 110, 0.6);
+            }
         }
 
         @keyframes spin {
