@@ -343,114 +343,25 @@
                     // Центрируем карту на первом магазине
                     map.setView([data.shops[0].latitude, data.shops[0].longitude], 13);
 
-                    // Группируем магазины по координатам
-                    const coordGroups = {};
-                    data.shops.forEach(shop => {
-                        const key = `${shop.latitude.toFixed(6)}_${shop.longitude.toFixed(6)}`;
-                        if (!coordGroups[key]) {
-                            coordGroups[key] = [];
-                        }
-                        coordGroups[key].push(shop);
-                    });
-
                     // Добавляем маркеры
-                    Object.values(coordGroups).forEach(group => {
-                        const lat = group[0].latitude;
-                        const lng = group[0].longitude;
+                    data.shops.forEach(shop => {
+                        const marker = L.marker([shop.latitude, shop.longitude]).addTo(map);
                         
-                        // Создаём маркер с количеством магазинов
-                        let customIcon = null;
-                        if (group.length > 1) {
-                            const iconHtml = `
-                                <div style="position: relative;">
-                                    <div style="
-                                        background: #EF4444;
-                                        color: white;
-                                        width: 40px;
-                                        height: 40px;
-                                        border-radius: 50% 50% 50% 0;
-                                        transform: rotate(-45deg);
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        border: 3px solid white;
-                                        box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-                                    ">
-                                        <span style="transform: rotate(45deg); font-weight: bold; font-size: 18px;">${group.length}</span>
-                                    </div>
-                                </div>
-                            `;
-                            customIcon = L.divIcon({
-                                html: iconHtml,
-                                className: 'custom-marker',
-                                iconSize: [40, 40],
-                                iconAnchor: [20, 40],
-                                popupAnchor: [0, -40]
-                            });
-                        }
+                        // Создаём popup с фото
+                        const photoUrl = getPhotoUrl(shop.photo_url);
+                        const popupContent = `
+                            <div style="text-align: center; padding: 10px; width: 280px;">
+                                ${photoUrl ? `<img src="${photoUrl}" style="width: 280px; max-height: 200px; object-fit: cover; object-position: center; border-radius: 8px; margin-bottom: 10px; display: block;" onerror="this.style.display='none'">` : ''}
+                                <h3 style="margin: 10px 0; font-size: 18px;">${shop.name}</h3>
+                                <p style="color: #666; margin: 5px 0;">ID: ${shop.shop_id}</p>
+                                <button style="padding: 10px 20px; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px;" onclick="window.showShopInfoFromPopup('${shop.shop_id}')">
+                                    🏪 Открыть магазин
+                                </button>
+                            </div>
+                        `;
                         
-                        const marker = customIcon 
-                            ? L.marker([lat, lng], { icon: customIcon }).addTo(map)
-                            : L.marker([lat, lng]).addTo(map);
-                        
-                        // Создаём popup с списком магазинов
-                        if (group.length > 1) {
-                            // Несколько магазинов - показываем список
-                            const shopsListHtml = group.map((shop, index) => {
-                                const photoUrl = getPhotoUrl(shop.photo_url);
-                                return `
-                                    <div style="
-                                        border: 1px solid #E5E7EB;
-                                        border-radius: 8px;
-                                        padding: 10px;
-                                        margin-bottom: 10px;
-                                        cursor: pointer;
-                                        transition: background 0.2s;
-                                    " onmouseover="this.style.background='#F3F4F6'" onmouseout="this.style.background='white'" onclick="window.showShopInfoFromPopup('${shop.shop_id}')">
-                                        ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;" onerror="this.style.display='none'">` : ''}
-                                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 5px;">${shop.name}</div>
-                                        <div style="color: #666; font-size: 13px;">ID: ${shop.shop_id}</div>
-                                        <div style="
-                                            background: #3B82F6;
-                                            color: white;
-                                            padding: 8px;
-                                            border-radius: 6px;
-                                            text-align: center;
-                                            margin-top: 8px;
-                                            font-size: 14px;
-                                        ">
-                                            🏪 Открыть магазин
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('');
-                            
-                            const popupContent = `
-                                <div style="padding: 10px; width: 300px; max-height: 400px; overflow-y: auto;">
-                                    <h3 style="margin: 0 0 15px 0; font-size: 18px; text-align: center;">
-                                        📍 ${group.length} магазина в этом здании
-                                    </h3>
-                                    ${shopsListHtml}
-                                </div>
-                            `;
-                            marker.bindPopup(popupContent, { maxWidth: 320 });
-                        } else {
-                            // Один магазин - обычный popup
-                            const shop = group[0];
-                            const photoUrl = getPhotoUrl(shop.photo_url);
-                            const popupContent = `
-                                <div style="text-align: center; padding: 10px; width: 280px;">
-                                    ${photoUrl ? `<img src="${photoUrl}" style="width: 280px; max-height: 200px; object-fit: cover; object-position: center; border-radius: 8px; margin-bottom: 10px; display: block;" onerror="this.style.display='none'">` : ''}
-                                    <h3 style="margin: 10px 0; font-size: 18px;">${shop.name}</h3>
-                                    <p style="color: #666; margin: 5px 0;">ID: ${shop.shop_id}</p>
-                                    <button style="padding: 10px 20px; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px;" onclick="window.showShopInfoFromPopup('${shop.shop_id}')">
-                                        🏪 Открыть магазин
-                                    </button>
-                                </div>
-                            `;
-                            marker.bindPopup(popupContent);
-                            marker.on('click', () => { selectedShop = shop; });
-                        }
+                        marker.bindPopup(popupContent);
+                        marker.on('click', () => { selectedShop = shop; });
                     });
                 }
             } catch (error) {
