@@ -343,10 +343,10 @@
                     // Центрируем карту на первом магазине
                     map.setView([data.shops[0].latitude, data.shops[0].longitude], 13);
 
-                    // Группируем магазины по координатам
+                    // Группируем магазины по координатам (округляем до 5 знаков = ~1 метр)
                     const coordGroups = {};
                     data.shops.forEach(shop => {
-                        const key = `${shop.latitude.toFixed(6)}_${shop.longitude.toFixed(6)}`;
+                        const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
                         if (!coordGroups[key]) {
                             coordGroups[key] = [];
                         }
