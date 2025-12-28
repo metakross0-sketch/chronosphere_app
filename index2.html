@@ -17,25 +17,44 @@
         }
 
         :root {
-            --bg-primary: #f5f5f7;
-            --bg-secondary: #ffffff;
-            --text-primary: #1d1d1f;
-            --text-secondary: #6e6e73;
-            --accent: #0071e3;
-            --accent-hover: #0077ed;
-            --border: rgba(0, 0, 0, 0.08);
-            --shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
-            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.3);
+            --bg-primary: linear-gradient(135deg, #0d1f2d 0%, #1a2f3f 100%);
+            --bg-secondary: rgba(15, 45, 40, 0.7);
+            --text-primary: #00ffaa;
+            --text-secondary: rgba(0, 255, 170, 0.6);
+            --accent: #00ffaa;
+            --accent-hover: #00ffcc;
+            --border: rgba(0, 255, 170, 0.3);
+            --shadow: 0 0 20px rgba(0, 255, 170, 0.3);
+            --shadow-lg: 0 0 40px rgba(0, 255, 170, 0.5);
+            --glass-bg: rgba(15, 45, 40, 0.85);
+            --glass-border: rgba(0, 255, 170, 0.4);
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            background: var(--bg-primary);
+            background: linear-gradient(135deg, #0d1f2d 0%, #1a2f3f 100%);
             color: var(--text-primary);
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        /* Биолюминесцентный фон */
+        body::before {
+            content: '';
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, rgba(0, 255, 170, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.12) 0%, transparent 50%);
+            animation: bio-breathe 8s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes bio-breathe {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
         }
 
         #app {
@@ -53,6 +72,8 @@
             gap: 12px;
             overflow-y: auto;
             animation: fadeIn 0.4s ease;
+            position: relative;
+            z-index: 1;
         }
 
         @keyframes fadeIn {
@@ -67,19 +88,22 @@
             text-align: center;
             color: var(--text-primary);
             letter-spacing: -0.5px;
+            text-shadow: 0 0 20px rgba(0, 255, 170, 0.6), 0 0 40px rgba(0, 255, 170, 0.4);
         }
 
         .city-btn {
             padding: 20px 24px;
             background: var(--bg-secondary);
             color: var(--text-primary);
-            border: 1px solid var(--border);
-            border-radius: 16px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
             font-size: 17px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+            position: relative;
+            z-index: 1;
         }
 
         .city-btn:active {
@@ -88,8 +112,9 @@
         }
 
         .city-btn:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 0 30px rgba(0, 255, 170, 0.6), inset 0 0 20px rgba(0, 255, 170, 0.1);
             border-color: var(--accent);
+            transform: scale(1.02);
         }
 
         /* Карта */
@@ -113,18 +138,19 @@
             background: var(--glass-bg);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--glass-border);
+            border: 2px solid var(--glass-border);
             border-radius: 12px;
-            box-shadow: var(--shadow);
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
             cursor: pointer;
             font-size: 15px;
             font-weight: 500;
             color: var(--text-primary);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .map-control:active {
             transform: scale(0.95);
+            box-shadow: 0 0 30px rgba(0, 255, 170, 0.7);
         }
 
         #back-to-cities {
@@ -138,22 +164,103 @@
             min-width: 160px;
             appearance: none;
             padding-right: 36px;
-            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%231d1d1f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2300ffaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
         }
 
         #category-filter option {
-            background: var(--bg-secondary);
+            background: rgba(10, 30, 25, 0.95);
             color: var(--text-primary);
         }
 
 
 
-        /* Кастомный маркер */
+        /* Биопузыри маркеров */
         .custom-marker {
             background: none;
             border: none;
+        }
+
+        .bio-bubble {
+            position: relative;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 170, 0.3) 0%, rgba(0, 255, 170, 0.1) 50%, transparent 70%);
+            border: 2px solid rgba(0, 255, 170, 0.6);
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.6), inset 0 0 15px rgba(0, 255, 170, 0.2);
+            animation: bubble-pulse 3s ease-in-out infinite;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00ffaa;
+            font-weight: 700;
+            overflow: hidden;
+        }
+
+        .bio-bubble::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 255, 170, 0.4) 0%, transparent 70%);
+            animation: bubble-inner-pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes bubble-pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 255, 170, 0.6), inset 0 0 15px rgba(0, 255, 170, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 170, 0.9), inset 0 0 25px rgba(0, 255, 170, 0.4);
+            }
+        }
+
+        @keyframes bubble-inner-pulse {
+            0%, 100% {
+                transform: scale(0.8);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.6;
+            }
+        }
+
+        .bio-bubble-expanded {
+            width: 80px !important;
+            height: 80px !important;
+            border-width: 3px;
+            box-shadow: 0 0 50px rgba(0, 255, 170, 1), inset 0 0 30px rgba(0, 255, 170, 0.5);
+        }
+
+        .bio-bubble-photo {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 1;
+        }
+
+        .bio-bubble-expanded .bio-bubble-photo {
+            opacity: 0.8;
+        }
+
+        .bio-bubble-count {
+            position: relative;
+            z-index: 2;
+            font-size: 18px;
+            transition: all 0.5s;
+        }
+
+        .bio-bubble-expanded .bio-bubble-count {
+            font-size: 22px;
+            text-shadow: 0 0 10px rgba(0, 255, 170, 1), 0 0 20px rgba(0, 255, 170, 0.8);
         }
 
         /* Overlay магазина поверх карты */
@@ -179,7 +286,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 10, 14, 0.7);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
         }
@@ -189,15 +296,15 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: calc(100% - 32px);
+            width: calc(100% - 16px);
+            height: 96vh;
             max-width: none;
-            max-height: 92vh;
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(15, 45, 40, 0.85);
             backdrop-filter: blur(40px) saturate(180%);
             -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+            border: 2px solid rgba(0, 255, 170, 0.5);
+            border-radius: 30px;
+            box-shadow: 0 0 50px rgba(0, 255, 170, 0.6), inset 0 0 30px rgba(0, 255, 170, 0.1);
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -217,9 +324,9 @@
 
         #shop-header {
             padding: 24px 24px 20px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 2px solid var(--border);
             flex-shrink: 0;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(10, 35, 30, 0.6);
         }
 
         #shop-header h2 {
@@ -238,8 +345,8 @@
         #shop-category-filter {
             margin-top: 16px;
             padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid var(--border);
+            background: rgba(15, 45, 40, 0.9);
+            border: 2px solid var(--border);
             border-radius: 10px;
             font-size: 15px;
             font-weight: 500;
@@ -247,7 +354,7 @@
             width: 100%;
             appearance: none;
             padding-right: 36px;
-            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%231d1d1f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2300ffaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
             cursor: pointer;
@@ -265,26 +372,28 @@
             flex-wrap: wrap;
             margin-bottom: 20px;
             padding: 12px;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(10, 35, 30, 0.6);
             border-radius: 12px;
+            border: 1px solid rgba(0, 255, 170, 0.3);
         }
 
         .breadcrumb-item {
             padding: 8px 14px;
-            background: white;
+            background: rgba(15, 45, 40, 0.7);
             border: 1px solid var(--border);
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
             color: var(--text-primary);
-            transition: all 0.2s;
+            transition: all 0.3s;
         }
 
         .breadcrumb-item:hover {
             background: var(--accent);
-            color: white;
+            color: #0d1f2d;
             transform: translateY(-1px);
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.6);
         }
 
         .breadcrumb-separator {
@@ -298,18 +407,19 @@
         }
 
         .category-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            background: rgba(15, 45, 40, 0.7);
+            border: 2px solid rgba(0, 255, 170, 0.4);
+            border-radius: 16px;
             padding: 20px;
             cursor: pointer;
             text-align: center;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
         }
 
         .category-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 0 35px rgba(0, 255, 170, 0.7), inset 0 0 20px rgba(0, 255, 170, 0.2);
             border-color: var(--accent);
         }
 
@@ -326,22 +436,25 @@
         }
 
         .product-card {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(15, 45, 40, 0.8);
+            border: 2px solid rgba(0, 255, 170, 0.3);
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .product-card:active {
             transform: scale(0.97);
+            box-shadow: 0 0 25px rgba(0, 255, 170, 0.5);
         }
 
         .product-image {
             width: 100%;
             aspect-ratio: 1;
             object-fit: cover;
-            background: var(--bg-primary);
+            background: rgba(10, 30, 25, 0.8);
+            border-bottom: 1px solid rgba(0, 255, 170, 0.3);
         }
 
         .product-info {
@@ -363,27 +476,29 @@
 
         #shop-footer {
             padding: 16px 24px;
-            border-top: 1px solid var(--border);
+            border-top: 2px solid var(--border);
             flex-shrink: 0;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(10, 35, 30, 0.6);
         }
 
         .close-btn {
             width: 100%;
             padding: 16px;
-            background: var(--accent);
-            color: white;
-            border: none;
+            background: rgba(0, 255, 170, 0.2);
+            color: var(--text-primary);
+            border: 2px solid rgba(0, 255, 170, 0.6);
             border-radius: 12px;
             font-size: 17px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
         }
 
         .close-btn:active {
             transform: scale(0.97);
-            background: var(--accent-hover);
+            background: rgba(0, 255, 170, 0.3);
+            box-shadow: 0 0 35px rgba(0, 255, 170, 0.7);
         }
 
         /* Scrollbar */
@@ -393,6 +508,41 @@
 
         ::-webkit-scrollbar-track {
             background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 170, 0.4);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 170, 0.6);
+        }
+
+        /* Стили для popup */
+        .leaflet-popup-content-wrapper {
+            background: rgba(10, 25, 20, 0.95) !important;
+            border: 2px solid rgba(0, 255, 170, 0.5) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 0 30px rgba(0, 255, 170, 0.6) !important;
+            padding: 0 !important;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(10, 25, 20, 0.95) !important;
+            border: 2px solid rgba(0, 255, 170, 0.5) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.4) !important;
+        }
+
+        .leaflet-popup-close-button {
+            color: #00ffaa !important;
+            font-size: 24px !important;
+            font-weight: bold !important;
+        }
+
+        .leaflet-popup-close-button:hover {
+            color: #00ffcc !important;
+        }
         }
 
         ::-webkit-scrollbar-thumb {
@@ -493,9 +643,15 @@
 
             if (!map) {
                 map = L.map('map').setView([55.7558, 37.6173], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap'
+                // Темная карта для bioluminescent стиля
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap © CartoDB',
+                    subdomains: 'abcd',
+                    maxZoom: 19
                 }).addTo(map);
+                
+                // Слушаем изменение zoom для анимации пузырей
+                map.on('zoomend', updateBubblesOnZoom);
             }
 
             try {
@@ -515,54 +671,40 @@
                         coordGroups[key].push(shop);
                     });
 
-                    // Добавляем маркеры
+                    // Добавляем биопузыри маркеры
                     Object.values(coordGroups).forEach(group => {
                         const lat = group[0].latitude;
                         const lng = group[0].longitude;
+                        const photoUrl = getPhotoUrl(group[0].photo_url);
                         
                         let marker;
                         if (group.length > 1) {
-                            // Группа магазинов
+                            // Группа магазинов - биопузырь с количеством
                             const iconHtml = `
-                                <div style="
-                                    width: 40px;
-                                    height: 40px;
-                                    background: #0071e3;
-                                    border-radius: 50%;
-                                    border: 3px solid white;
-                                    box-shadow: 0 2px 12px rgba(0,113,227,0.4);
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    color: white;
-                                    font-weight: 700;
-                                    font-size: 18px;
-                                ">${group.length}</div>
+                                <div class="bio-bubble" data-photo="${photoUrl}" style="width: 50px; height: 50px;">
+                                    <img class="bio-bubble-photo" src="${photoUrl}" onerror="this.style.display='none'">
+                                    <span class="bio-bubble-count">${group.length}</span>
+                                </div>
                             `;
                             const customIcon = L.divIcon({
                                 html: iconHtml,
                                 className: 'custom-marker',
-                                iconSize: [40, 40],
-                                iconAnchor: [20, 20]
+                                iconSize: [50, 50],
+                                iconAnchor: [25, 25]
                             });
                             marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
                         } else {
-                            // Один магазин
+                            // Один магазин - биопузырь
                             const iconHtml = `
-                                <div style="
-                                    width: 32px;
-                                    height: 32px;
-                                    background: #0071e3;
-                                    border-radius: 50%;
-                                    border: 3px solid white;
-                                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                                "></div>
+                                <div class="bio-bubble" data-photo="${photoUrl}" style="width: 42px; height: 42px;">
+                                    <img class="bio-bubble-photo" src="${photoUrl}" onerror="this.style.display='none'">
+                                </div>
                             `;
                             const customIcon = L.divIcon({
                                 html: iconHtml,
                                 className: 'custom-marker',
-                                iconSize: [32, 32],
-                                iconAnchor: [16, 16]
+                                iconSize: [42, 42],
+                                iconAnchor: [21, 21]
                             });
                             marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
                         }
@@ -575,26 +717,28 @@
                                 const category = shop.category || 'Без категории';
                                 return `
                                     <div style="
-                                        background: white;
-                                        border: 1px solid var(--border);
-                                        border-radius: 12px;
+                                        background: rgba(15, 45, 40, 0.9);
+                                        border: 2px solid rgba(0, 255, 170, 0.5);
+                                        border-radius: 16px;
                                         padding: 12px;
                                         margin-bottom: 12px;
                                         cursor: pointer;
-                                        transition: all 0.2s;
+                                        transition: all 0.3s;
+                                        box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
                                     " 
-                                    onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'; this.style.transform='scale(1.02)'" 
-                                    onmouseout="this.style.boxShadow='none'; this.style.transform='scale(1)'" 
+                                    onmouseover="this.style.boxShadow='0 0 30px rgba(0,255,170,0.6)'; this.style.transform='scale(1.02)'" 
+                                    onmouseout="this.style.boxShadow='0 0 15px rgba(0,255,170,0.3)'; this.style.transform='scale(1)'" 
                                     onclick="window.openShopOverlay('${shop.shop_id}', '${shop.name.replace(/'/g, "\\'")}', '${category.replace(/'/g, "\\'")}')">
-                                        ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" onerror="this.style.display='none'">` : ''}
-                                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px; color: var(--text-primary);">${shop.name}</div>
-                                        <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 3px;">🏷️ ${category}</div>
-                                        <div style="color: var(--text-secondary); font-size: 13px;">ID: ${shop.shop_id}</div>
+                                        ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(0,255,170,0.3);" onerror="this.style.display='none'">` : ''}
+                                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px; color: #00ffaa;">${shop.name}</div>
+                                        <div style="color: rgba(0,255,170,0.7); font-size: 13px; margin-bottom: 3px;">🏷️ ${category}</div>
+                                        <div style="color: rgba(0,255,170,0.6); font-size: 13px;">ID: ${shop.shop_id}</div>
                                         <div style="
-                                            background: var(--accent);
-                                            color: white;
+                                            background: rgba(0, 255, 170, 0.2);
+                                            color: #00ffaa;
                                             padding: 10px;
-                                            border-radius: 8px;
+                                            border: 1px solid rgba(0,255,170,0.5);
+                                            border-radius: 10px;
                                             text-align: center;
                                             margin-top: 10px;
                                             font-size: 15px;
@@ -607,46 +751,47 @@
                             }).join('');
                             
                             const popupContent = `
-                                <div style="padding: 12px; width: 300px; max-height: 400px; overflow-y: auto;">
-                                    <h3 style="margin: 0 0 16px 0; font-size: 18px; text-align: center; font-weight: 700;">
+                                <div style="padding: 16px; width: 300px; max-height: 400px; overflow-y: auto; background: rgba(10,25,20,0.95); border-radius: 16px;">
+                                    <h3 style="margin: 0 0 16px 0; font-size: 18px; text-align: center; font-weight: 700; color: #00ffaa; text-shadow: 0 0 10px rgba(0,255,170,0.6);">
                                         📍 ${group.length} ${group.length === 2 ? 'магазина' : 'магазинов'}
                                     </h3>
                                     ${shopsListHtml}
                                 </div>
                             `;
-                            marker.bindPopup(popupContent, { maxWidth: 320 });
+                            marker.bindPopup(popupContent, { maxWidth: 320, className: 'bio-popup' });
                         } else {
                             // Один магазин - popup с фото и кнопкой
                             const shop = group[0];
                             const photoUrl = getPhotoUrl(shop.photo_url);
                             const category = shop.category || 'Без категории';
                             const popupContent = `
-                                <div style="text-align: center; padding: 12px; width: 280px;">
-                                    ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; display: block;" onerror="this.style.display='none'">` : ''}
-                                    <h3 style="margin: 10px 0; font-size: 19px; font-weight: 700;">${shop.name}</h3>
-                                    <p style="color: var(--text-secondary); margin: 6px 0; font-size: 14px;">🏷️ ${category}</p>
-                                    <p style="color: var(--text-secondary); margin: 6px 0; font-size: 13px;">ID: ${shop.shop_id}</p>
+                                <div style="text-align: center; padding: 16px; width: 280px; background: rgba(10,25,20,0.95); border-radius: 16px;">
+                                    ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; display: block; border: 2px solid rgba(0,255,170,0.4);" onerror="this.style.display='none'">` : ''}
+                                    <h3 style="margin: 10px 0; font-size: 19px; font-weight: 700; color: #00ffaa; text-shadow: 0 0 10px rgba(0,255,170,0.6);">${shop.name}</h3>
+                                    <p style="color: rgba(0,255,170,0.7); margin: 6px 0; font-size: 14px;">🏷️ ${category}</p>
+                                    <p style="color: rgba(0,255,170,0.6); margin: 6px 0; font-size: 13px;">ID: ${shop.shop_id}</p>
                                     <button style="
                                         padding: 12px 24px; 
-                                        background: var(--accent); 
-                                        color: white; 
-                                        border: none; 
-                                        border-radius: 10px; 
+                                        background: rgba(0,255,170,0.2); 
+                                        color: #00ffaa; 
+                                        border: 2px solid rgba(0,255,170,0.6); 
+                                        border-radius: 12px; 
                                         cursor: pointer; 
                                         width: 100%; 
                                         margin-top: 12px;
                                         font-weight: 600;
                                         font-size: 16px;
-                                        transition: all 0.2s;
+                                        transition: all 0.3s;
+                                        box-shadow: 0 0 15px rgba(0,255,170,0.4);
                                     " 
-                                    onmouseover="this.style.background='var(--accent-hover)'"
-                                    onmouseout="this.style.background='var(--accent)'"
+                                    onmouseover="this.style.background='rgba(0,255,170,0.3)'; this.style.boxShadow='0 0 30px rgba(0,255,170,0.7)'"
+                                    onmouseout="this.style.background='rgba(0,255,170,0.2)'; this.style.boxShadow='0 0 15px rgba(0,255,170,0.4)'"
                                     onclick="window.openShopOverlay('${shop.shop_id}', '${shop.name.replace(/'/g, "\\'")}', '${category.replace(/'/g, "\\'")}')" >
                                         Открыть магазин
                                     </button>
                                 </div>
                             `;
-                            marker.bindPopup(popupContent);
+                            marker.bindPopup(popupContent, { className: 'bio-popup' });
                             marker.on('click', () => { selectedShop = shop; });
                         }
                     });
@@ -654,6 +799,29 @@
             } catch (error) {
                 console.error('Ошибка загрузки магазинов:', error);
             }
+        }
+
+        // Функция увеличения биопузырей при zoom
+        function updateBubblesOnZoom() {
+            const zoom = map.getZoom();
+            const bubbles = document.querySelectorAll('.bio-bubble');
+            
+            bubbles.forEach(bubble => {
+                // При zoom > 14 увеличиваем пузырь и показываем фото
+                if (zoom >= 14) {
+                    bubble.classList.add('bio-bubble-expanded');
+                    const photo = bubble.querySelector('.bio-bubble-photo');
+                    if (photo && photo.src) {
+                        photo.style.opacity = '0.8';
+                    }
+                } else {
+                    bubble.classList.remove('bio-bubble-expanded');
+                    const photo = bubble.querySelector('.bio-bubble-photo');
+                    if (photo) {
+                        photo.style.opacity = '0';
+                    }
+                }
+            });
         }
 
         let currentCatalogData = null;
