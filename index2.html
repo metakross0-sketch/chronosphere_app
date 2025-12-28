@@ -45,8 +45,9 @@
             position: fixed;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 20% 80%, rgba(0, 255, 170, 0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.12) 0%, transparent 50%);
+            background: radial-gradient(circle at 20% 80%, rgba(0, 255, 170, 0.25) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.2) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(0, 200, 255, 0.15) 0%, transparent 50%);
             animation: bio-breathe 8s ease-in-out infinite;
             z-index: 0;
             pointer-events: none;
@@ -55,6 +56,68 @@
         @keyframes bio-breathe {
             0%, 100% { opacity: 0.5; }
             50% { opacity: 0.8; }
+        }
+
+        /* Органические частицы */
+        .bio-particles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .bio-particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(0, 255, 170, 1) 0%, rgba(0, 255, 170, 0.5) 50%, transparent 70%);
+            border-radius: 50%;
+            animation: float-organic 20s ease-in-out infinite;
+        }
+
+        @keyframes float-organic {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: translate(var(--float-x), var(--float-y)) scale(1.5);
+                opacity: 0.7;
+            }
+        }
+
+        /* Светящиеся споры */
+        .spores {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .spore {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: rgba(0, 255, 170, 1);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(0, 255, 170, 1);
+            animation: spore-float 25s ease-in-out infinite;
+        }
+
+        @keyframes spore-float {
+            0% {
+                transform: translate(0, 100vh) scale(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translate(var(--drift-x), -100vh) scale(1);
+                opacity: 0;
+            }
         }
 
         #app {
@@ -184,11 +247,10 @@
 
         .bio-bubble {
             position: relative;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(0, 255, 170, 0.3) 0%, rgba(0, 255, 170, 0.1) 50%, transparent 70%);
-            border: 2px solid rgba(0, 255, 170, 0.6);
-            box-shadow: 0 0 20px rgba(0, 255, 170, 0.6), inset 0 0 15px rgba(0, 255, 170, 0.2);
-            animation: bubble-pulse 3s ease-in-out infinite;
+            background: radial-gradient(circle, rgba(0, 255, 170, 0.4) 0%, rgba(0, 255, 170, 0.15) 50%, transparent 70%);
+            border: 2px solid rgba(0, 255, 170, 0.7);
+            box-shadow: 0 0 25px rgba(0, 255, 170, 0.7), inset 0 0 20px rgba(0, 255, 170, 0.3);
+            animation: bubble-pulse 3s ease-in-out infinite, morph-bubble 8s ease-in-out infinite;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
@@ -196,6 +258,21 @@
             color: #00ffaa;
             font-weight: 700;
             overflow: hidden;
+        }
+
+        @keyframes morph-bubble {
+            0%, 100% {
+                border-radius: 45% 55% 52% 48% / 48% 50% 50% 52%;
+            }
+            25% {
+                border-radius: 52% 48% 45% 55% / 55% 45% 55% 45%;
+            }
+            50% {
+                border-radius: 48% 52% 55% 45% / 50% 52% 48% 50%;
+            }
+            75% {
+                border-radius: 55% 45% 48% 52% / 52% 48% 52% 48%;
+            }
         }
 
         .bio-bubble::before {
@@ -211,10 +288,12 @@
 
         @keyframes bubble-pulse {
             0%, 100% {
-                box-shadow: 0 0 20px rgba(0, 255, 170, 0.6), inset 0 0 15px rgba(0, 255, 170, 0.2);
+                box-shadow: 0 0 25px rgba(0, 255, 170, 0.7), inset 0 0 20px rgba(0, 255, 170, 0.3);
+                transform: scale(1);
             }
             50% {
-                box-shadow: 0 0 40px rgba(0, 255, 170, 0.9), inset 0 0 25px rgba(0, 255, 170, 0.4);
+                box-shadow: 0 0 45px rgba(0, 255, 170, 1), inset 0 0 30px rgba(0, 255, 170, 0.5);
+                transform: scale(1.05);
             }
         }
 
@@ -234,6 +313,16 @@
             height: 80px !important;
             border-width: 3px;
             box-shadow: 0 0 50px rgba(0, 255, 170, 1), inset 0 0 30px rgba(0, 255, 170, 0.5);
+            animation: bubble-pulse 2s ease-in-out infinite, morph-bubble-expand 6s ease-in-out infinite !important;
+        }
+
+        @keyframes morph-bubble-expand {
+            0%, 100% {
+                border-radius: 40% 60% 55% 45% / 45% 55% 45% 55%;
+            }
+            50% {
+                border-radius: 55% 45% 40% 60% / 60% 40% 55% 45%;
+            }
         }
 
         .bio-bubble-photo {
@@ -409,12 +498,52 @@
         .category-card {
             background: rgba(15, 45, 40, 0.7);
             border: 2px solid rgba(0, 255, 170, 0.4);
-            border-radius: 16px;
+            border-radius: 20% 30% 25% 35% / 30% 25% 35% 20%;
             padding: 20px;
             cursor: pointer;
             text-align: center;
             transition: all 0.3s;
             box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+            animation: morph-card 10s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 255, 170, 0.3) 0%, transparent 70%);
+            animation: card-pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes morph-card {
+            0%, 100% {
+                border-radius: 20% 30% 25% 35% / 30% 25% 35% 20%;
+            }
+            25% {
+                border-radius: 35% 20% 30% 25% / 25% 35% 20% 30%;
+            }
+            50% {
+                border-radius: 25% 35% 20% 30% / 35% 20% 30% 25%;
+            }
+            75% {
+                border-radius: 30% 25% 35% 20% / 20% 30% 25% 35%;
+            }
+        }
+
+        @keyframes card-pulse {
+            0%, 100% {
+                transform: scale(0.8) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 0.6;
+            }
         }
 
         .category-card:hover {
@@ -423,25 +552,77 @@
             border-color: var(--accent);
         }
 
+        /* Биолюминесцентные вены */
+        .bio-veins {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        .vein {
+            position: absolute;
+            width: 2px;
+            background: linear-gradient(
+                to bottom,
+                transparent,
+                rgba(0, 255, 170, 0.9),
+                transparent
+            );
+            animation: vein-flow 3s ease-in-out infinite;
+        }
+
+        @keyframes vein-flow {
+            0%, 100% {
+                opacity: 0.5;
+                box-shadow: 0 0 10px rgba(0, 255, 170, 0.6);
+            }
+            50% {
+                opacity: 1;
+                box-shadow: 0 0 25px rgba(0, 255, 170, 0.9);
+            }
+        }
+
         .category-card h3 {
             font-size: 17px;
             font-weight: 600;
             margin-bottom: 8px;
             color: var(--text-primary);
+            position: relative;
+            z-index: 2;
         }
 
         .category-card .count {
             font-size: 14px;
             color: var(--text-secondary);
+            position: relative;
+            z-index: 2;
         }
 
         .product-card {
             background: rgba(15, 45, 40, 0.8);
             border: 2px solid rgba(0, 255, 170, 0.3);
-            border-radius: 16px;
+            border-radius: 25% 30% 28% 32% / 32% 28% 30% 25%;
             overflow: hidden;
             box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: morph-product 12s ease-in-out infinite;
+        }
+
+        @keyframes morph-product {
+            0%, 100% {
+                border-radius: 25% 30% 28% 32% / 32% 28% 30% 25%;
+            }
+            33% {
+                border-radius: 32% 25% 30% 28% / 28% 32% 25% 30%;
+            }
+            66% {
+                border-radius: 28% 32% 25% 30% / 30% 25% 32% 28%;
+            }
         }
 
         .product-card:active {
@@ -556,6 +737,11 @@
     </style>
 </head>
 <body>
+    <!-- Органические частицы -->
+    <div class="bio-particles" id="bioParticles"></div>
+    <!-- Светящиеся споры -->
+    <div class="spores" id="spores"></div>
+    
     <div id="app">
         <!-- Экран выбора города -->
         <div id="city-selection">
@@ -603,6 +789,41 @@
         let map = null;
         let currentCity = null;
         let selectedShop = null;
+
+        // Создание органических частиц
+        function createBioParticles() {
+            const bioParticles = document.getElementById('bioParticles');
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'bio-particle';
+                const size = 20 + Math.random() * 40;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.setProperty('--float-x', (Math.random() - 0.5) * 300 + 'px');
+                particle.style.setProperty('--float-y', (Math.random() - 0.5) * 300 + 'px');
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                bioParticles.appendChild(particle);
+            }
+        }
+
+        // Создание спор
+        function createSpores() {
+            const sporesContainer = document.getElementById('spores');
+            for (let i = 0; i < 40; i++) {
+                const spore = document.createElement('div');
+                spore.className = 'spore';
+                spore.style.left = Math.random() * 100 + '%';
+                spore.style.setProperty('--drift-x', (Math.random() - 0.5) * 300 + 'px');
+                spore.style.animationDelay = Math.random() * 25 + 's';
+                sporesContainer.appendChild(spore);
+            }
+        }
+
+        // Инициализация живого интерфейса
+        createBioParticles();
+        createSpores();
 
         function getPhotoUrl(filename) {
             if (!filename) return '';
@@ -981,10 +1202,36 @@
         function createCategoryCard(name, count, onClick) {
             const card = document.createElement('div');
             card.className = 'category-card';
-            card.innerHTML = `
+            
+            // Добавляем вены
+            const veins = document.createElement('div');
+            veins.className = 'bio-veins';
+            const vein1 = document.createElement('div');
+            vein1.className = 'vein';
+            vein1.style.left = (30 + Math.random() * 20) + '%';
+            vein1.style.height = (40 + Math.random() * 20) + '%';
+            vein1.style.top = (10 + Math.random() * 10) + '%';
+            vein1.style.animationDelay = Math.random() + 's';
+            
+            const vein2 = document.createElement('div');
+            vein2.className = 'vein';
+            vein2.style.left = (60 + Math.random() * 20) + '%';
+            vein2.style.height = (50 + Math.random() * 20) + '%';
+            vein2.style.top = (20 + Math.random() * 10) + '%';
+            vein2.style.animationDelay = (Math.random() + 0.5) + 's';
+            
+            veins.appendChild(vein1);
+            veins.appendChild(vein2);
+            card.appendChild(veins);
+            
+            const content = document.createElement('div');
+            content.style.position = 'relative';
+            content.style.zIndex = '2';
+            content.innerHTML = `
                 <h3>${name}</h3>
                 <div class="count">${count} ${count === 1 ? 'товар' : 'товаров'}</div>
             `;
+            card.appendChild(content);
             card.onclick = onClick;
             return card;
         }
@@ -1076,6 +1323,23 @@
         }
 
         document.getElementById('back-to-cities').onclick = backToCities;
+        
+        // Органическая реакция карточек на движение курсора
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            document.querySelectorAll('.category-card, .product-card').forEach((card, index) => {
+                const rect = card.getBoundingClientRect();
+                const cardX = (rect.left + rect.width / 2) / window.innerWidth;
+                const cardY = (rect.top + rect.height / 2) / window.innerHeight;
+                
+                const distX = (x - cardX) * 10;
+                const distY = (y - cardY) * 10;
+                
+                card.style.transform = `translate(${distX}px, ${distY}px)`;
+            });
+        });
         
         function checkAdmin() {
             const userId = tg.initDataUnsafe?.user?.id;
