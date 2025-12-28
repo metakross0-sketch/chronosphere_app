@@ -167,6 +167,30 @@
             box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
             position: relative;
             z-index: 1;
+            animation: btn-active-glow 3s ease-in-out infinite, btn-morph 8s ease-in-out infinite;
+        }
+
+        @keyframes btn-active-glow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(0, 255, 170, 0.4);
+                border-color: rgba(0, 255, 170, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 35px rgba(0, 255, 170, 0.7), inset 0 0 15px rgba(0, 255, 170, 0.2);
+                border-color: rgba(0, 255, 170, 0.6);
+            }
+        }
+
+        @keyframes btn-morph {
+            0%, 100% {
+                border-radius: 20px;
+            }
+            33% {
+                border-radius: 25px 15px 25px 15px;
+            }
+            66% {
+                border-radius: 15px 25px 15px 25px;
+            }
         }
 
         .city-btn:active {
@@ -209,6 +233,16 @@
             font-weight: 500;
             color: var(--text-primary);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: control-glow 2.5s ease-in-out infinite;
+        }
+
+        @keyframes control-glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 170, 0.8), inset 0 0 15px rgba(0, 255, 170, 0.2);
+            }
         }
 
         .map-control:active {
@@ -247,10 +281,10 @@
 
         .bio-bubble {
             position: relative;
-            background: radial-gradient(circle, rgba(0, 255, 170, 0.4) 0%, rgba(0, 255, 170, 0.15) 50%, transparent 70%);
-            border: 2px solid rgba(0, 255, 170, 0.7);
-            box-shadow: 0 0 25px rgba(0, 255, 170, 0.7), inset 0 0 20px rgba(0, 255, 170, 0.3);
-            animation: bubble-pulse 3s ease-in-out infinite, morph-bubble 8s ease-in-out infinite;
+            background: radial-gradient(circle, rgba(0, 255, 170, 0.5) 0%, rgba(0, 255, 170, 0.2) 50%, transparent 70%);
+            border: 3px solid rgba(0, 255, 170, 0.9);
+            box-shadow: 0 0 35px rgba(0, 255, 170, 0.9), inset 0 0 25px rgba(0, 255, 170, 0.4);
+            animation: bubble-pulse 1.5s ease-in-out infinite, morph-bubble-square 4s ease-in-out infinite, bubble-rotate 8s linear infinite;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
@@ -260,19 +294,28 @@
             overflow: hidden;
         }
 
-        @keyframes morph-bubble {
+        @keyframes morph-bubble-square {
             0%, 100% {
-                border-radius: 45% 55% 52% 48% / 48% 50% 50% 52%;
+                border-radius: 20% 30% 25% 35% / 30% 25% 35% 20%;
+                transform: scale(1) rotate(0deg);
             }
             25% {
-                border-radius: 52% 48% 45% 55% / 55% 45% 55% 45%;
+                border-radius: 35% 20% 30% 25% / 25% 35% 20% 30%;
+                transform: scale(1.15) rotate(5deg);
             }
             50% {
-                border-radius: 48% 52% 55% 45% / 50% 52% 48% 50%;
+                border-radius: 25% 35% 20% 30% / 35% 20% 30% 25%;
+                transform: scale(1) rotate(-5deg);
             }
             75% {
-                border-radius: 55% 45% 48% 52% / 52% 48% 52% 48%;
+                border-radius: 30% 25% 35% 20% / 20% 30% 25% 35%;
+                transform: scale(1.15) rotate(5deg);
             }
+        }
+
+        @keyframes bubble-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .bio-bubble::before {
@@ -288,12 +331,10 @@
 
         @keyframes bubble-pulse {
             0%, 100% {
-                box-shadow: 0 0 25px rgba(0, 255, 170, 0.7), inset 0 0 20px rgba(0, 255, 170, 0.3);
-                transform: scale(1);
+                box-shadow: 0 0 30px rgba(0, 255, 170, 0.8), inset 0 0 25px rgba(0, 255, 170, 0.4);
             }
             50% {
-                box-shadow: 0 0 45px rgba(0, 255, 170, 1), inset 0 0 30px rgba(0, 255, 170, 0.5);
-                transform: scale(1.05);
+                box-shadow: 0 0 60px rgba(0, 255, 170, 1), inset 0 0 40px rgba(0, 255, 170, 0.7);
             }
         }
 
@@ -309,19 +350,21 @@
         }
 
         .bio-bubble-expanded {
-            width: 80px !important;
-            height: 80px !important;
-            border-width: 3px;
-            box-shadow: 0 0 50px rgba(0, 255, 170, 1), inset 0 0 30px rgba(0, 255, 170, 0.5);
-            animation: bubble-pulse 2s ease-in-out infinite, morph-bubble-expand 6s ease-in-out infinite !important;
+            width: 90px !important;
+            height: 90px !important;
+            border-width: 4px;
+            box-shadow: 0 0 70px rgba(0, 255, 170, 1), inset 0 0 40px rgba(0, 255, 170, 0.7);
+            animation: bubble-pulse 1s ease-in-out infinite, morph-bubble-expand 3s ease-in-out infinite !important;
         }
 
         @keyframes morph-bubble-expand {
             0%, 100% {
-                border-radius: 40% 60% 55% 45% / 45% 55% 45% 55%;
+                border-radius: 15% 25% 20% 30% / 25% 20% 30% 15%;
+                transform: scale(1) rotate(0deg);
             }
             50% {
-                border-radius: 55% 45% 40% 60% / 60% 40% 55% 45%;
+                border-radius: 30% 15% 25% 20% / 20% 30% 15% 25%;
+                transform: scale(1.1) rotate(10deg);
             }
         }
 
@@ -391,13 +434,36 @@
             background: rgba(15, 45, 40, 0.85);
             backdrop-filter: blur(40px) saturate(180%);
             -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 2px solid rgba(0, 255, 170, 0.5);
+            border: 3px solid rgba(0, 255, 170, 0.6);
             border-radius: 30px;
             box-shadow: 0 0 50px rgba(0, 255, 170, 0.6), inset 0 0 30px rgba(0, 255, 170, 0.1);
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1), container-glow 3s ease-in-out infinite, container-morph 10s ease-in-out infinite;
+        }
+
+        @keyframes container-glow {
+            0%, 100% {
+                box-shadow: 0 0 50px rgba(0, 255, 170, 0.6), inset 0 0 30px rgba(0, 255, 170, 0.1);
+                border-color: rgba(0, 255, 170, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 80px rgba(0, 255, 170, 0.9), inset 0 0 50px rgba(0, 255, 170, 0.2);
+                border-color: rgba(0, 255, 170, 0.9);
+            }
+        }
+
+        @keyframes container-morph {
+            0%, 100% {
+                border-radius: 30px;
+            }
+            33% {
+                border-radius: 35px 25px 35px 25px;
+            }
+            66% {
+                border-radius: 25px 35px 25px 35px;
+            }
         }
 
         @keyframes slideUp {
@@ -463,19 +529,44 @@
             padding: 12px;
             background: rgba(10, 35, 30, 0.6);
             border-radius: 12px;
-            border: 1px solid rgba(0, 255, 170, 0.3);
+            border: 2px solid rgba(0, 255, 170, 0.3);
+            animation: breadcrumb-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes breadcrumb-glow {
+            0%, 100% {
+                border-color: rgba(0, 255, 170, 0.3);
+                box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
+            }
+            50% {
+                border-color: rgba(0, 255, 170, 0.6);
+                box-shadow: 0 0 25px rgba(0, 255, 170, 0.4);
+            }
         }
 
         .breadcrumb-item {
             padding: 8px 14px;
             background: rgba(15, 45, 40, 0.7);
-            border: 1px solid var(--border);
+            border: 2px solid var(--border);
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
             color: var(--text-primary);
             transition: all 0.3s;
+            animation: breadcrumb-item-pulse 2.5s ease-in-out infinite;
+            animation-delay: calc(var(--item-index, 0) * 0.2s);
+        }
+
+        @keyframes breadcrumb-item-pulse {
+            0%, 100% {
+                box-shadow: 0 0 8px rgba(0, 255, 170, 0.3);
+                border-color: rgba(0, 255, 170, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(0, 255, 170, 0.6);
+                border-color: rgba(0, 255, 170, 0.6);
+            }
         }
 
         .breadcrumb-item:hover {
@@ -667,13 +758,25 @@
             padding: 16px;
             background: rgba(0, 255, 170, 0.2);
             color: var(--text-primary);
-            border: 2px solid rgba(0, 255, 170, 0.6);
+            border: 3px solid rgba(0, 255, 170, 0.6);
             border-radius: 12px;
             font-size: 17px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
+            animation: close-btn-active 2s ease-in-out infinite;
+        }
+
+        @keyframes close-btn-active {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 255, 170, 0.5);
+                border-color: rgba(0, 255, 170, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 45px rgba(0, 255, 170, 0.9), inset 0 0 20px rgba(0, 255, 170, 0.3);
+                border-color: rgba(0, 255, 170, 0.9);
+            }
         }
 
         .close-btn:active {
@@ -703,16 +806,48 @@
         /* Стили для popup */
         .leaflet-popup-content-wrapper {
             background: rgba(10, 25, 20, 0.95) !important;
-            border: 2px solid rgba(0, 255, 170, 0.5) !important;
-            border-radius: 16px !important;
-            box-shadow: 0 0 30px rgba(0, 255, 170, 0.6) !important;
+            border: 3px solid rgba(0, 255, 170, 0.7) !important;
+            border-radius: 20% 30% 25% 35% / 30% 25% 35% 20% !important;
+            box-shadow: 0 0 40px rgba(0, 255, 170, 0.8) !important;
             padding: 0 !important;
+            animation: popup-morph 6s ease-in-out infinite, popup-glow 2s ease-in-out infinite !important;
+        }
+
+        @keyframes popup-morph {
+            0%, 100% {
+                border-radius: 20% 30% 25% 35% / 30% 25% 35% 20% !important;
+            }
+            33% {
+                border-radius: 35% 20% 30% 25% / 25% 35% 20% 30% !important;
+            }
+            66% {
+                border-radius: 25% 35% 20% 30% / 35% 20% 30% 25% !important;
+            }
+        }
+
+        @keyframes popup-glow {
+            0%, 100% {
+                box-shadow: 0 0 40px rgba(0, 255, 170, 0.8) !important;
+            }
+            50% {
+                box-shadow: 0 0 60px rgba(0, 255, 170, 1), 0 0 100px rgba(0, 255, 170, 0.5) !important;
+            }
         }
 
         .leaflet-popup-tip {
             background: rgba(10, 25, 20, 0.95) !important;
-            border: 2px solid rgba(0, 255, 170, 0.5) !important;
-            box-shadow: 0 0 20px rgba(0, 255, 170, 0.4) !important;
+            border: 3px solid rgba(0, 255, 170, 0.7) !important;
+            box-shadow: 0 0 30px rgba(0, 255, 170, 0.6) !important;
+            animation: tip-pulse 2s ease-in-out infinite !important;
+        }
+
+        @keyframes tip-pulse {
+            0%, 100% {
+                box-shadow: 0 0 30px rgba(0, 255, 170, 0.6) !important;
+            }
+            50% {
+                box-shadow: 0 0 50px rgba(0, 255, 170, 0.9) !important;
+            }
         }
 
         .leaflet-popup-close-button {
@@ -723,6 +858,49 @@
 
         .leaflet-popup-close-button:hover {
             color: #00ffcc !important;
+        }
+
+        /* Паутина между маркерами */
+        .web-line {
+            stroke: rgba(255, 140, 50, 0.4) !important;
+            stroke-width: 2 !important;
+            animation: web-pulse 3s ease-in-out infinite !important;
+        }
+
+        @keyframes web-pulse {
+            0%, 100% {
+                stroke-opacity: 0.3;
+                stroke-width: 2;
+            }
+            50% {
+                stroke-opacity: 0.7;
+                stroke-width: 3;
+            }
+        }
+
+        /* Пульсирующая волна */
+        .pulse-wave {
+            stroke: rgba(255, 180, 80, 0.9) !important;
+            stroke-width: 4 !important;
+            fill: none !important;
+            animation: wave-travel 2s linear infinite !important;
+        }
+
+        @keyframes wave-travel {
+            0% {
+                stroke-dashoffset: 1000;
+                stroke-opacity: 0;
+            }
+            10% {
+                stroke-opacity: 1;
+            }
+            90% {
+                stroke-opacity: 1;
+            }
+            100% {
+                stroke-dashoffset: 0;
+                stroke-opacity: 0;
+            }
         }
         }
 
@@ -875,6 +1053,64 @@
                 map.on('zoomend', updateBubblesOnZoom);
             }
 
+        // Функция создания паутины между маркерами
+        function createWebBetweenMarkers(coordinates) {
+            if (coordinates.length < 2) return;
+            
+            // Создаем линии между близкими маркерами
+            for (let i = 0; i < coordinates.length; i++) {
+                for (let j = i + 1; j < coordinates.length; j++) {
+                    const distance = map.distance(coordinates[i], coordinates[j]);
+                    
+                    // Соединяем только близкие магазины (в пределах 2км)
+                    if (distance < 2000) {
+                        // Паутина (статичная линия)
+                        const webLine = L.polyline([coordinates[i], coordinates[j]], {
+                            color: 'rgba(255, 140, 50, 0.4)',
+                            weight: 2,
+                            opacity: 0.5,
+                            className: 'web-line'
+                        }).addTo(map);
+                        
+                        // Пульсирующая волна (анимированная линия)
+                        const waveLine = L.polyline([coordinates[i], coordinates[j]], {
+                            color: 'rgba(255, 180, 80, 0.9)',
+                            weight: 4,
+                            opacity: 0,
+                            dashArray: '10, 20',
+                            className: 'pulse-wave'
+                        }).addTo(map);
+                        
+                        // Анимация волны
+                        animateWave(waveLine, i * 200); // Задержка для каждой линии
+                    }
+                }
+            }
+        }
+
+        // Функция анимации пульсирующей волны
+        function animateWave(polyline, delay) {
+            setTimeout(() => {
+                let opacity = 0;
+                let increasing = true;
+                
+                setInterval(() => {
+                    if (increasing) {
+                        opacity += 0.05;
+                        if (opacity >= 1) {
+                            increasing = false;
+                        }
+                    } else {
+                        opacity -= 0.05;
+                        if (opacity <= 0) {
+                            increasing = true;
+                        }
+                    }
+                    polyline.setStyle({ opacity: opacity });
+                }, 30);
+            }, delay);
+        }
+
             try {
                 const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
                 const data = await response.json();
@@ -884,13 +1120,19 @@
 
                     // Группируем магазины по координатам
                     const coordGroups = {};
+                    const allCoordinates = []; // Массив всех координат для паутины
+                    
                     data.shops.forEach(shop => {
                         const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
                         if (!coordGroups[key]) {
                             coordGroups[key] = [];
+                            allCoordinates.push([shop.latitude, shop.longitude]);
                         }
                         coordGroups[key].push(shop);
                     });
+
+                    // Создаем паутину между всеми маркерами
+                    createWebBetweenMarkers(allCoordinates);
 
                     // Добавляем биопузыри маркеры
                     Object.values(coordGroups).forEach(group => {
