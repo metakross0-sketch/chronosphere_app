@@ -148,6 +148,14 @@
             color: var(--text-primary);
         }
 
+
+
+        /* Кастомный маркер */
+        .custom-marker {
+            background: none;
+            border: none;
+        }
+
         /* Overlay магазина поверх карты */
         #shop-overlay {
             display: none;
@@ -184,12 +192,12 @@
             width: calc(100% - 48px);
             max-width: 600px;
             max-height: 80vh;
-            background: var(--glass-bg);
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(40px) saturate(180%);
             -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid var(--glass-border);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: 24px;
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -211,6 +219,7 @@
             padding: 24px 24px 20px;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.5);
         }
 
         #shop-header h2 {
@@ -251,7 +260,7 @@
         }
 
         .product-card {
-            background: var(--bg-secondary);
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -290,6 +299,7 @@
             padding: 16px 24px;
             border-top: 1px solid var(--border);
             flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .close-btn {
@@ -308,12 +318,6 @@
         .close-btn:active {
             transform: scale(0.97);
             background: var(--accent-hover);
-        }
-
-        /* Кастомный маркер */
-        .custom-marker {
-            background: none;
-            border: none;
         }
 
         /* Scrollbar */
@@ -432,26 +436,150 @@
                 if (data.shops && data.shops.length > 0) {
                     map.setView([data.shops[0].latitude, data.shops[0].longitude], 13);
 
+                    // Группируем магазины по координатам
+                    const coordGroups = {};
                     data.shops.forEach(shop => {
-                        const iconHtml = `
-                            <div style="
-                                width: 32px;
-                                height: 32px;
-                                background: #0071e3;
-                                border-radius: 50%;
-                                border: 3px solid white;
-                                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                            "></div>
-                        `;
-                        const customIcon = L.divIcon({
-                            html: iconHtml,
-                            className: 'custom-marker',
-                            iconSize: [32, 32],
-                            iconAnchor: [16, 16]
-                        });
+                        const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
+                        if (!coordGroups[key]) {
+                            coordGroups[key] = [];
+                        }
+                        coordGroups[key].push(shop);
+                    });
+
+                    // Добавляем маркеры
+                    Object.values(coordGroups).forEach(group => {
+                        const lat = group[0].latitude;
+                        const lng = group[0].longitude;
                         
-                        const marker = L.marker([shop.latitude, shop.longitude], { icon: customIcon }).addTo(map);
-                        marker.on('click', () => openShopOverlay(shop));
+                        let marker;
+                        if (group.length > 1) {
+                            // Группа магазинов
+                            const iconHtml = `
+                                <div style="
+                                    width: 40px;
+                                    height: 40px;
+                                    background: #0071e3;
+                                    border-radius: 50%;
+                                    border: 3px solid white;
+                                    box-shadow: 0 2px 12px rgba(0,113,227,0.4);
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: white;
+                                    font-weight: 700;
+                                    font-size: 18px;
+                                ">${group.length}</div>
+                            `;
+                            const customIcon = L.divIcon({
+                                html: iconHtml,
+                                className: 'custom-marker',
+                                iconSize: [40, 40],
+                                iconAnchor: [20, 20]
+                            });
+                            marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+                        } else {
+                            // Один магазин
+                            const iconHtml = `
+                                <div style="
+                                    width: 32px;
+                                    height: 32px;
+                                    background: #0071e3;
+                                    border-radius: 50%;
+                                    border: 3px solid white;
+                                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                                "></div>
+                            `;
+                            const customIcon = L.divIcon({
+                                html: iconHtml,
+                                className: 'custom-marker',
+                                iconSize: [32, 32],
+                                iconAnchor: [16, 16]
+                            });
+                            marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+                        }
+                        
+                        // Создаём popup
+                        if (group.length > 1) {
+                            // Несколько магазинов - список
+                            const shopsListHtml = group.map((shop) => {
+                                const photoUrl = getPhotoUrl(shop.photo_url);
+                                const category = shop.category || 'Без категории';
+                                return `
+                                    <div style="
+                                        background: white;
+                                        border: 1px solid var(--border);
+                                        border-radius: 12px;
+                                        padding: 12px;
+                                        margin-bottom: 12px;
+                                        cursor: pointer;
+                                        transition: all 0.2s;
+                                    " 
+                                    onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'; this.style.transform='scale(1.02)'" 
+                                    onmouseout="this.style.boxShadow='none'; this.style.transform='scale(1)'" 
+                                    onclick="window.openShopOverlay('${shop.shop_id}', '${shop.name.replace(/'/g, "\\'")}', '${category.replace(/'/g, "\\'")}')">
+                                        ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" onerror="this.style.display='none'">` : ''}
+                                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px; color: var(--text-primary);">${shop.name}</div>
+                                        <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 3px;">🏷️ ${category}</div>
+                                        <div style="color: var(--text-secondary); font-size: 13px;">ID: ${shop.shop_id}</div>
+                                        <div style="
+                                            background: var(--accent);
+                                            color: white;
+                                            padding: 10px;
+                                            border-radius: 8px;
+                                            text-align: center;
+                                            margin-top: 10px;
+                                            font-size: 15px;
+                                            font-weight: 600;
+                                        ">
+                                            Открыть магазин
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                            
+                            const popupContent = `
+                                <div style="padding: 12px; width: 300px; max-height: 400px; overflow-y: auto;">
+                                    <h3 style="margin: 0 0 16px 0; font-size: 18px; text-align: center; font-weight: 700;">
+                                        📍 ${group.length} ${group.length === 2 ? 'магазина' : 'магазинов'}
+                                    </h3>
+                                    ${shopsListHtml}
+                                </div>
+                            `;
+                            marker.bindPopup(popupContent, { maxWidth: 320 });
+                        } else {
+                            // Один магазин - popup с фото и кнопкой
+                            const shop = group[0];
+                            const photoUrl = getPhotoUrl(shop.photo_url);
+                            const category = shop.category || 'Без категории';
+                            const popupContent = `
+                                <div style="text-align: center; padding: 12px; width: 280px;">
+                                    ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; display: block;" onerror="this.style.display='none'">` : ''}
+                                    <h3 style="margin: 10px 0; font-size: 19px; font-weight: 700;">${shop.name}</h3>
+                                    <p style="color: var(--text-secondary); margin: 6px 0; font-size: 14px;">🏷️ ${category}</p>
+                                    <p style="color: var(--text-secondary); margin: 6px 0; font-size: 13px;">ID: ${shop.shop_id}</p>
+                                    <button style="
+                                        padding: 12px 24px; 
+                                        background: var(--accent); 
+                                        color: white; 
+                                        border: none; 
+                                        border-radius: 10px; 
+                                        cursor: pointer; 
+                                        width: 100%; 
+                                        margin-top: 12px;
+                                        font-weight: 600;
+                                        font-size: 16px;
+                                        transition: all 0.2s;
+                                    " 
+                                    onmouseover="this.style.background='var(--accent-hover)'"
+                                    onmouseout="this.style.background='var(--accent)'"
+                                    onclick="window.openShopOverlay('${shop.shop_id}', '${shop.name.replace(/'/g, "\\'")}', '${category.replace(/'/g, "\\'")}')" >
+                                        Открыть магазин
+                                    </button>
+                                </div>
+                            `;
+                            marker.bindPopup(popupContent);
+                            marker.on('click', () => { selectedShop = shop; });
+                        }
                     });
                 }
             } catch (error) {
@@ -459,14 +587,16 @@
             }
         }
 
-        async function openShopOverlay(shop) {
-            selectedShop = shop;
-            document.getElementById('shop-name').textContent = shop.name;
+        // Открытие overlay магазина (глобальная функция)
+        window.openShopOverlay = async function(shopId, shopName, category) {
+            selectedShop = { shop_id: shopId, name: shopName, category: category };
+            
+            document.getElementById('shop-name').textContent = shopName;
             document.getElementById('shop-city').textContent = currentCity;
-            document.getElementById('shop-category').textContent = shop.category || 'Без категории';
+            document.getElementById('shop-category').textContent = category;
 
             try {
-                const response = await fetch(`${API_URL}/api/shop/${shop.shop_id}/catalog`);
+                const response = await fetch(`${API_URL}/api/shop/${shopId}/catalog`);
                 const data = await response.json();
 
                 const content = document.getElementById('shop-content');
@@ -538,7 +668,7 @@
                 console.error('Ошибка загрузки каталога:', error);
                 tg.showAlert('Ошибка загрузки каталога');
             }
-        }
+        };
 
         function closeShopOverlay() {
             document.getElementById('shop-overlay').style.display = 'none';
