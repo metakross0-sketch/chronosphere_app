@@ -891,19 +891,17 @@
 
         /* Паутина между маркерами */
         .web-line {
-            stroke: rgba(255, 140, 50, 0.4) !important;
+            stroke: rgba(255, 140, 50, 0.5) !important;
             stroke-width: 2 !important;
-            animation: web-pulse 3s ease-in-out infinite !important;
+            animation: web-wave 4s ease-in-out infinite !important;
         }
 
-        @keyframes web-pulse {
+        @keyframes web-wave {
             0%, 100% {
-                stroke-opacity: 0.3;
-                stroke-width: 2;
+                stroke-opacity: 0.4;
             }
             50% {
-                stroke-opacity: 0.7;
-                stroke-width: 3;
+                stroke-opacity: 0.8;
             }
         }
 
@@ -1089,83 +1087,56 @@
             // Создаем линии между ВСЕМИ маркерами
             for (let i = 0; i < coordinates.length; i++) {
                 for (let j = i + 1; j < coordinates.length; j++) {
-                    // Вычисляем контрольную точку для кривой (волновая линия)
-                    const midLat = (coordinates[i][0] + coordinates[j][0]) / 2;
-                    const midLng = (coordinates[i][1] + coordinates[j][1]) / 2;
+                    // Создаем волнистую линию с 2-3 пиками
+                    const wavyPoints = createWavyLine(coordinates[i], coordinates[j], 3);
                     
-                    // Добавляем смещение для волнового эффекта
-                    const offsetLat = (coordinates[j][0] - coordinates[i][0]) * 0.1;
-                    const offsetLng = (coordinates[j][1] - coordinates[i][1]) * 0.1;
-                    const controlPoint = [midLat + offsetLng, midLng - offsetLat];
-                    
-                    // Создаем волновую линию через промежуточные точки
-                    const curvedPoints = createCurvedLine(coordinates[i], coordinates[j], controlPoint, 20);
-                    
-                    // Паутина (статичная волновая линия)
-                    const webLine = L.polyline(curvedPoints, {
-                        color: 'rgba(255, 140, 50, 0.4)',
+                    // Паутина (волнистая линия)
+                    const webLine = L.polyline(wavyPoints, {
+                        color: 'rgba(255, 140, 50, 0.5)',
                         weight: 2,
                         opacity: 0.5,
-                        className: 'web-line'
+                        className: 'web-line',
+                        smoothFactor: 1
                     }).addTo(map);
-                    
-                    // Создаем эффект движущегося сгустка
-                    createTravelingBlob(curvedPoints, i * 300 + j * 150);
                 }
             }
         }
         
-        // Функция создания кривой линии между двумя точками
-        function createCurvedLine(start, end, control, segments) {
+        // Функция создания волнистой линии с несколькими пиками
+        function createWavyLine(start, end, peaks) {
             const points = [];
+            const segments = peaks * 10; // 10 точек на каждый пик
+            
+            // Вектор направления
+            const deltaLat = end[0] - start[0];
+            const deltaLng = end[1] - start[1];
+            
+            // Перпендикулярный вектор для создания волн
+            const perpLat = -deltaLng;
+            const perpLng = deltaLat;
+            
+            // Амплитуда волны (10% от расстояния)
+            const distance = Math.sqrt(deltaLat * deltaLat + deltaLng * deltaLng);
+            const amplitude = distance * 0.08;
+            
             for (let i = 0; i <= segments; i++) {
                 const t = i / segments;
-                const lat = Math.pow(1 - t, 2) * start[0] + 
-                           2 * (1 - t) * t * control[0] + 
-                           Math.pow(t, 2) * end[0];
-                const lng = Math.pow(1 - t, 2) * start[1] + 
-                           2 * (1 - t) * t * control[1] + 
-                           Math.pow(t, 2) * end[1];
-                points.push([lat, lng]);
-            }
-            return points;
-        }
-        
-        // Функция создания движущегося сгустка по линии
-        function createTravelingBlob(points, delay) {
-            setTimeout(() => {
-                let currentIndex = 0;
-                const blobSegments = 3; // Длина сгустка
                 
-                const intervalId = setInterval(() => {
-                    // Удаляем предыдущий сгусток
-                    if (window.currentBlobs && window.currentBlobs[intervalId]) {
-                        map.removeLayer(window.currentBlobs[intervalId]);
-                    }
-                    
-                    // Создаем новый сгусток
-                    const blobPoints = [];
-                    for (let i = 0; i < blobSegments; i++) {
-                        const index = (currentIndex + i) % points.length;
-                        blobPoints.push(points[index]);
-                    }
-                    
-                    if (blobPoints.length > 1) {
-                        const blob = L.polyline(blobPoints, {
-                            color: 'rgba(255, 180, 80, 0.95)',
-                            weight: 6,
-                            opacity: 0.9,
-                            lineCap: 'round',
-                            lineJoin: 'round'
-                        }).addTo(map);
-                        
-                        if (!window.currentBlobs) window.currentBlobs = {};
-                        window.currentBlobs[intervalId] = blob;
-                    }
-                    
-                    currentIndex = (currentIndex + 1) % points.length;
-                }, 80); // Скорость движения сгустка
-            }, delay);
+                // Базовая точка на прямой линии
+                const baseLat = start[0] + deltaLat * t;
+                const baseLng = start[1] + deltaLng * t;
+                
+                // Волновое смещение (синусоида с несколькими периодами)
+                const wave = Math.sin(t * Math.PI * peaks * 2) * amplitude;
+                
+                // Применяем смещение перпендикулярно направлению
+                const waveLat = baseLat + perpLat * wave;
+                const waveLng = baseLng + perpLng * wave;
+                
+                points.push([waveLat, waveLng]);
+            }
+            
+            return points;
         }
 
 
