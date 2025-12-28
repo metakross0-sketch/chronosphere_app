@@ -284,7 +284,7 @@
             background: radial-gradient(circle, rgba(0, 255, 170, 0.5) 0%, rgba(0, 255, 170, 0.2) 50%, transparent 70%);
             border: 3px solid rgba(0, 255, 170, 0.9);
             box-shadow: 0 0 35px rgba(0, 255, 170, 0.9), inset 0 0 25px rgba(0, 255, 170, 0.4);
-            animation: bubble-pulse 1.5s ease-in-out infinite, morph-bubble-square 4s ease-in-out infinite, bubble-rotate 8s linear infinite;
+            animation: bubble-pulse 1.5s ease-in-out infinite, morph-bubble-square 4s ease-in-out infinite, bubble-rotate 8s linear infinite, border-wave 3s ease-in-out infinite;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
@@ -332,9 +332,11 @@
         @keyframes bubble-pulse {
             0%, 100% {
                 box-shadow: 0 0 30px rgba(0, 255, 170, 0.8), inset 0 0 25px rgba(0, 255, 170, 0.4);
+                border-width: 3px;
             }
             50% {
                 box-shadow: 0 0 60px rgba(0, 255, 170, 1), inset 0 0 40px rgba(0, 255, 170, 0.7);
+                border-width: 5px;
             }
         }
 
@@ -347,6 +349,33 @@
                 transform: scale(1.2);
                 opacity: 0.6;
             }
+        }
+        
+        /* Волновое изменение формы границы пузыря */
+        @keyframes border-wave {
+            0% { border-radius: 25% 35% 30% 28%; }
+            25% { border-radius: 32% 28% 35% 25%; }
+            50% { border-radius: 28% 30% 25% 35%; }
+            75% { border-radius: 35% 25% 32% 30%; }
+            100% { border-radius: 25% 35% 30% 28%; }
+        }
+        
+        /* Волновое изменение формы границы пузыря */
+        @keyframes border-wave {
+            0% { border-radius: 25% 35% 30% 28%; }
+            25% { border-radius: 32% 28% 35% 25%; }
+            50% { border-radius: 28% 30% 25% 35%; }
+            75% { border-radius: 35% 25% 32% 30%; }
+            100% { border-radius: 25% 35% 30% 28%; }
+        }
+        
+        /* Волновое изменение формы границы пузыря */
+        @keyframes border-wave {
+            0% { border-radius: 25% 35% 30% 28%; }
+            25% { border-radius: 32% 28% 35% 25%; }
+            50% { border-radius: 28% 30% 25% 35%; }
+            75% { border-radius: 35% 25% 32% 30%; }
+            100% { border-radius: 25% 35% 30% 28%; }
         }
 
         .bio-bubble-expanded {
@@ -1057,59 +1086,89 @@
         function createWebBetweenMarkers(coordinates) {
             if (coordinates.length < 2) return;
             
-            // Создаем линии между близкими маркерами
+            // Создаем линии между ВСЕМИ маркерами
             for (let i = 0; i < coordinates.length; i++) {
                 for (let j = i + 1; j < coordinates.length; j++) {
-                    const distance = map.distance(coordinates[i], coordinates[j]);
+                    // Вычисляем контрольную точку для кривой (волновая линия)
+                    const midLat = (coordinates[i][0] + coordinates[j][0]) / 2;
+                    const midLng = (coordinates[i][1] + coordinates[j][1]) / 2;
                     
-                    // Соединяем только близкие магазины (в пределах 2км)
-                    if (distance < 2000) {
-                        // Паутина (статичная линия)
-                        const webLine = L.polyline([coordinates[i], coordinates[j]], {
-                            color: 'rgba(255, 140, 50, 0.4)',
-                            weight: 2,
-                            opacity: 0.5,
-                            className: 'web-line'
-                        }).addTo(map);
-                        
-                        // Пульсирующая волна (анимированная линия)
-                        const waveLine = L.polyline([coordinates[i], coordinates[j]], {
-                            color: 'rgba(255, 180, 80, 0.9)',
-                            weight: 4,
-                            opacity: 0,
-                            dashArray: '10, 20',
-                            className: 'pulse-wave'
-                        }).addTo(map);
-                        
-                        // Анимация волны
-                        animateWave(waveLine, i * 200); // Задержка для каждой линии
-                    }
+                    // Добавляем смещение для волнового эффекта
+                    const offsetLat = (coordinates[j][0] - coordinates[i][0]) * 0.1;
+                    const offsetLng = (coordinates[j][1] - coordinates[i][1]) * 0.1;
+                    const controlPoint = [midLat + offsetLng, midLng - offsetLat];
+                    
+                    // Создаем волновую линию через промежуточные точки
+                    const curvedPoints = createCurvedLine(coordinates[i], coordinates[j], controlPoint, 20);
+                    
+                    // Паутина (статичная волновая линия)
+                    const webLine = L.polyline(curvedPoints, {
+                        color: 'rgba(255, 140, 50, 0.4)',
+                        weight: 2,
+                        opacity: 0.5,
+                        className: 'web-line'
+                    }).addTo(map);
+                    
+                    // Создаем эффект движущегося сгустка
+                    createTravelingBlob(curvedPoints, i * 300 + j * 150);
                 }
             }
         }
-
-        // Функция анимации пульсирующей волны
-        function animateWave(polyline, delay) {
+        
+        // Функция создания кривой линии между двумя точками
+        function createCurvedLine(start, end, control, segments) {
+            const points = [];
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const lat = Math.pow(1 - t, 2) * start[0] + 
+                           2 * (1 - t) * t * control[0] + 
+                           Math.pow(t, 2) * end[0];
+                const lng = Math.pow(1 - t, 2) * start[1] + 
+                           2 * (1 - t) * t * control[1] + 
+                           Math.pow(t, 2) * end[1];
+                points.push([lat, lng]);
+            }
+            return points;
+        }
+        
+        // Функция создания движущегося сгустка по линии
+        function createTravelingBlob(points, delay) {
             setTimeout(() => {
-                let opacity = 0;
-                let increasing = true;
+                let currentIndex = 0;
+                const blobSegments = 3; // Длина сгустка
                 
-                setInterval(() => {
-                    if (increasing) {
-                        opacity += 0.05;
-                        if (opacity >= 1) {
-                            increasing = false;
-                        }
-                    } else {
-                        opacity -= 0.05;
-                        if (opacity <= 0) {
-                            increasing = true;
-                        }
+                const intervalId = setInterval(() => {
+                    // Удаляем предыдущий сгусток
+                    if (window.currentBlobs && window.currentBlobs[intervalId]) {
+                        map.removeLayer(window.currentBlobs[intervalId]);
                     }
-                    polyline.setStyle({ opacity: opacity });
-                }, 30);
+                    
+                    // Создаем новый сгусток
+                    const blobPoints = [];
+                    for (let i = 0; i < blobSegments; i++) {
+                        const index = (currentIndex + i) % points.length;
+                        blobPoints.push(points[index]);
+                    }
+                    
+                    if (blobPoints.length > 1) {
+                        const blob = L.polyline(blobPoints, {
+                            color: 'rgba(255, 180, 80, 0.95)',
+                            weight: 6,
+                            opacity: 0.9,
+                            lineCap: 'round',
+                            lineJoin: 'round'
+                        }).addTo(map);
+                        
+                        if (!window.currentBlobs) window.currentBlobs = {};
+                        window.currentBlobs[intervalId] = blob;
+                    }
+                    
+                    currentIndex = (currentIndex + 1) % points.length;
+                }, 80); // Скорость движения сгустка
             }, delay);
         }
+
+
 
             try {
                 const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
