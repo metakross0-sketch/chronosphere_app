@@ -891,18 +891,8 @@
 
         /* Паутина между маркерами */
         .web-line {
-            stroke: rgba(255, 140, 50, 0.5) !important;
+            stroke: rgba(255, 140, 50, 0.7) !important;
             stroke-width: 2 !important;
-            animation: web-wave 4s ease-in-out infinite !important;
-        }
-
-        @keyframes web-wave {
-            0%, 100% {
-                stroke-opacity: 0.4;
-            }
-            50% {
-                stroke-opacity: 0.8;
-            }
         }
 
         /* Пульсирующая волна */
@@ -1084,26 +1074,46 @@
         function createWebBetweenMarkers(coordinates) {
             if (coordinates.length < 2) return;
             
+            const webLines = [];
+            
             // Создаем линии между ВСЕМИ маркерами
             for (let i = 0; i < coordinates.length; i++) {
                 for (let j = i + 1; j < coordinates.length; j++) {
                     // Создаем волнистую линию с 2-3 пиками
-                    const wavyPoints = createWavyLine(coordinates[i], coordinates[j], 3);
+                    const wavyPoints = createWavyLine(coordinates[i], coordinates[j], 3, 0);
                     
                     // Паутина (волнистая линия)
                     const webLine = L.polyline(wavyPoints, {
-                        color: 'rgba(255, 140, 50, 0.5)',
+                        color: 'rgba(255, 140, 50, 0.7)',
                         weight: 2,
-                        opacity: 0.5,
+                        opacity: 1,
                         className: 'web-line',
                         smoothFactor: 1
                     }).addTo(map);
+                    
+                    // Сохраняем линию и координаты для анимации
+                    webLines.push({
+                        line: webLine,
+                        start: coordinates[i],
+                        end: coordinates[j],
+                        peaks: 3
+                    });
                 }
             }
+            
+            // Анимация волн
+            let phase = 0;
+            setInterval(() => {
+                phase += 0.05; // Скорость движения волны
+                webLines.forEach(webData => {
+                    const newPoints = createWavyLine(webData.start, webData.end, webData.peaks, phase);
+                    webData.line.setLatLngs(newPoints);
+                });
+            }, 50); // Обновление каждые 50мс
         }
         
         // Функция создания волнистой линии с несколькими пиками
-        function createWavyLine(start, end, peaks) {
+        function createWavyLine(start, end, peaks, phase = 0) {
             const points = [];
             const segments = peaks * 10; // 10 точек на каждый пик
             
@@ -1126,8 +1136,8 @@
                 const baseLat = start[0] + deltaLat * t;
                 const baseLng = start[1] + deltaLng * t;
                 
-                // Волновое смещение (синусоида с несколькими периодами)
-                const wave = Math.sin(t * Math.PI * peaks * 2) * amplitude;
+                // Волновое смещение (синусоида с несколькими периодами + фаза для анимации)
+                const wave = Math.sin(t * Math.PI * peaks * 2 + phase) * amplitude;
                 
                 // Применяем смещение перпендикулярно направлению
                 const waveLat = baseLat + perpLat * wave;
