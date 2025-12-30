@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Магазины</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="//unpkg.com/globe.gl"></script>
+    <script src="https://unpkg.com/globe.gl"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -234,7 +234,9 @@
             flex: 1;
             width: 100%;
             height: 100%;
+            min-height: 100vh;
             background: #000000;
+            position: relative;
         }
 
         /* Кнопки на карте */
@@ -768,8 +770,11 @@
         }
 
         // Инициализация sci-fi интерфейса
-        createBioParticles();
-        createSpores();
+        document.addEventListener('DOMContentLoaded', () => {
+            createBioParticles();
+            createSpores();
+            loadCities();
+        });
 
         function getPhotoUrl(filename) {
             if (!filename) return '';
@@ -812,9 +817,9 @@
                 // Инициализация 3D глобуса
                 globe = Globe()
                     (document.getElementById('map'))
-                    .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
-                    .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
-                    .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+                    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+                    .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+                    .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
                     .showAtmosphere(true)
                     .atmosphereColor('#00d4ff')
                     .atmosphereAltitude(0.25)
@@ -839,7 +844,26 @@
                 // Автовращение глобуса
                 globe.controls().autoRotate = true;
                 globe.controls().autoRotateSpeed = 0.3;
+                
+                // Отключить автовращение при взаимодействии
+                globe.controls().addEventListener('start', () => {
+                    globe.controls().autoRotate = false;
+                });
+                
+                // Установить размер глобуса
+                globe.width(window.innerWidth);
+                globe.height(window.innerHeight);
+                
+                // Обработчик изменения размера окна
+                window.addEventListener('resize', () => {
+                    globe.width(window.innerWidth);
+                    globe.height(window.innerHeight);
+                });
             }
+            
+            // Загрузка магазинов для города
+            loadShopsForCity(city);
+        }
 
         // Функция создания паутины с максимум 2 линиями из каждого магазина
         function createWebBetweenMarkers(coordinates) {
@@ -919,8 +943,8 @@
             return points;
         }
 
-
-
+        // Функция загрузки магазинов для города
+        async function loadShopsForCity(city) {
             try {
                 const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
                 const data = await response.json();
