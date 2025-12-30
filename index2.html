@@ -17,46 +17,52 @@
         }
 
         :root {
-            --bg-primary: linear-gradient(135deg, #000408 0%, #001a33 100%);
-            --bg-secondary: rgba(0, 26, 51, 0.7);
-            --text-primary: #00d4ff;
-            --text-secondary: rgba(0, 212, 255, 0.6);
-            --accent: #00d4ff;
-            --accent-hover: #00e6ff;
-            --accent-orange: #ff6b00;
-            --border: rgba(0, 212, 255, 0.3);
-            --shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-            --shadow-lg: 0 0 40px rgba(0, 212, 255, 0.5);
-            --glass-bg: rgba(0, 20, 40, 0.85);
-            --glass-border: rgba(0, 212, 255, 0.4);
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --text-primary: #00ff00;
+            --text-secondary: #ffffff;
+            --accent: #ff00ff;
+            --accent-hover: #00ffff;
+            --accent-orange: #ffff00;
+            --border: #00ff00;
+            --shadow: none;
+            --shadow-lg: none;
+            --glass-bg: #000000;
+            --glass-border: #00ff00;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            background: linear-gradient(135deg, #000408 0%, #001a33 100%);
-            color: var(--text-primary);
+            font-family: 'Courier New', 'Courier', monospace;
+            background: #000000;
+            color: #ffffff;
             overflow: hidden;
-            -webkit-font-smoothing: antialiased;
+            -webkit-font-smoothing: none;
             position: relative;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
         }
 
-        /* Неоновый фон Трон */
+        /* Глитч-линии */
         body::before {
             content: '';
             position: fixed;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.3) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(255, 107, 0, 0.25) 0%, transparent 50%),
-                        radial-gradient(circle at 40% 40%, rgba(0, 150, 255, 0.2) 0%, transparent 50%);
-            animation: bio-breathe 8s ease-in-out infinite;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent 0px,
+                rgba(0, 255, 0, 0.03) 1px,
+                transparent 2px,
+                transparent 4px
+            );
+            animation: glitch-lines 0.3s infinite;
             z-index: 0;
             pointer-events: none;
         }
 
-        @keyframes bio-breathe {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.8; }
+        @keyframes glitch-lines {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(4px); }
         }
 
         /* Органические частицы */
@@ -71,19 +77,21 @@
 
         .bio-particle {
             position: absolute;
-            background: radial-gradient(circle, rgba(0, 212, 255, 1) 0%, rgba(0, 212, 255, 0.5) 50%, transparent 70%);
-            border-radius: 50%;
-            animation: float-organic 20s ease-in-out infinite;
+            background: var(--accent);
+            border-radius: 0;
+            border: 2px solid #00ff00;
+            animation: brutal-float 3s linear infinite;
+            mix-blend-mode: screen;
         }
 
-        @keyframes float-organic {
-            0%, 100% {
-                transform: translate(0, 0) scale(1);
-                opacity: 0.3;
+        @keyframes brutal-float {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
             }
-            50% {
-                transform: translate(var(--float-x), var(--float-y)) scale(1.5);
-                opacity: 0.7;
+            100% {
+                transform: translate(var(--float-x), var(--float-y)) rotate(360deg);
+                opacity: 0;
             }
         }
 
@@ -100,33 +108,24 @@
 
         .spore {
             position: absolute;
-            width: 6px;
-            height: 6px;
-            background: var(--spore-color);
-            border-radius: 50%;
-            box-shadow: 0 0 20px var(--spore-color), 0 0 30px var(--spore-color);
-            animation: spore-float 12s ease-in-out infinite, spore-pulse 2s ease-in-out infinite;
+            font-family: 'Courier New', monospace;
+            color: var(--spore-color);
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1;
+            animation: brutal-fall 2s linear infinite;
         }
 
-        @keyframes spore-float {
+        @keyframes brutal-fall {
             0% {
-                transform: translate(0, 100vh) scale(0) rotate(0deg);
+                transform: translate(0, -20px);
                 opacity: 0;
             }
             10% { opacity: 1; }
             90% { opacity: 1; }
             100% {
-                transform: translate(var(--drift-x), -100vh) scale(1.5) rotate(360deg);
+                transform: translate(var(--drift-x), 100vh);
                 opacity: 0;
-            }
-        }
-        
-        @keyframes spore-pulse {
-            0%, 100% {
-                box-shadow: 0 0 15px var(--spore-color), 0 0 25px var(--spore-color);
-            }
-            50% {
-                box-shadow: 0 0 35px var(--spore-color), 0 0 50px var(--spore-color);
             }
         }
 
@@ -155,63 +154,65 @@
         }
 
         #city-selection h1 {
-            font-size: 32px;
-            font-weight: 700;
+            font-size: 48px;
+            font-weight: 900;
             margin-bottom: 24px;
-            text-align: center;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-            text-shadow: 0 0 20px rgba(0, 212, 255, 0.6), 0 0 40px rgba(0, 212, 255, 0.4);
+            text-align: left;
+            color: #00ff00;
+            letter-spacing: 0.2em;
+            text-shadow: 3px 3px 0px #ff00ff, 6px 6px 0px #00ffff;
+            transform: rotate(-2deg);
+            position: relative;
+            z-index: 10;
         }
 
         .city-btn {
             padding: 20px 24px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 2px solid var(--border);
-            border-radius: 20px;
-            font-size: 17px;
-            font-weight: 500;
+            background: #000000;
+            color: #00ff00;
+            border: 4px solid #00ff00;
+            border-radius: 0;
+            font-size: 20px;
+            font-weight: 900;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            transition: all 0.1s;
+            box-shadow: 8px 8px 0px #ff00ff;
             position: relative;
             z-index: 1;
-            animation: btn-active-glow 3s ease-in-out infinite, btn-morph 8s ease-in-out infinite;
+            animation: none;
+            transform: rotate(-1deg);
+            letter-spacing: 0.15em;
         }
 
-        @keyframes btn-active-glow {
-            0%, 100% {
-                box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
-                border-color: rgba(0, 212, 255, 0.3);
-            }
-            50% {
-                box-shadow: 0 0 35px rgba(0, 212, 255, 0.7), inset 0 0 15px rgba(0, 212, 255, 0.2);
-                border-color: rgba(0, 212, 255, 0.6);
-            }
-        }
-
-        @keyframes btn-morph {
-            0%, 100% {
-                border-radius: 20px;
+        @keyframes brutal-glitch {
+            0% {
+                transform: translate(0, 0) rotate(-1deg);
+                color: #00ff00;
             }
             33% {
-                border-radius: 25px 15px 25px 15px;
+                transform: translate(-2px, 2px) rotate(1deg);
+                color: #ff00ff;
             }
             66% {
-                border-radius: 15px 25px 15px 25px;
+                transform: translate(2px, -2px) rotate(-1deg);
+                color: #00ffff;
+            }
+            100% {
+                transform: translate(0, 0) rotate(-1deg);
+                color: #00ff00;
             }
         }
 
         .city-btn:active {
-            transform: scale(0.97);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+            transform: translate(8px, 8px) rotate(-1deg);
+            box-shadow: none;
         }
 
         .city-btn:hover {
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6), inset 0 0 20px rgba(0, 212, 255, 0.1);
-            border-color: var(--accent);
-            transform: scale(1.02);
+            background: #00ff00;
+            color: #000000;
+            box-shadow: 8px 8px 0px #ffff00;
+            animation: brutal-glitch 0.3s infinite;
         }
 
         /* Карта */
@@ -232,32 +233,24 @@
             position: absolute;
             z-index: 1000;
             padding: 12px 20px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 2px solid var(--glass-border);
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+            background: #000000;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border: 3px solid #00ff00;
+            border-radius: 0;
+            box-shadow: 5px 5px 0px #ff00ff;
             cursor: pointer;
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--text-primary);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: control-glow 2.5s ease-in-out infinite;
-        }
-
-        @keyframes control-glow {
-            0%, 100% {
-                box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
-            }
-            50% {
-                box-shadow: 0 0 40px rgba(0, 212, 255, 0.8), inset 0 0 15px rgba(0, 212, 255, 0.2);
-            }
+            font-size: 18px;
+            font-weight: 900;
+            color: #00ff00;
+            transition: all 0.1s;
+            animation: none;
+            letter-spacing: 0.15em;
         }
 
         .map-control:active {
-            transform: scale(0.95);
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.7);
+            transform: translate(5px, 5px);
+            box-shadow: none;
         }
 
         #back-to-cities {
@@ -291,131 +284,46 @@
 
         .bio-bubble {
             position: relative;
-            background: radial-gradient(circle, rgba(0, 212, 255, 0.5) 0%, rgba(0, 212, 255, 0.2) 50%, transparent 70%);
-            border: 3px solid rgba(0, 212, 255, 0.9);
-            box-shadow: 0 0 35px rgba(0, 212, 255, 0.9), inset 0 0 25px rgba(0, 212, 255, 0.4);
-            animation: bubble-pulse 1.5s ease-in-out infinite, morph-bubble-square 4s ease-in-out infinite, bubble-rotate 8s linear infinite, border-wave 3s ease-in-out infinite;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #000000;
+            border: 4px solid #00ff00;
+            box-shadow: 0 0 0 2px #ff00ff, 4px 4px 0 0 #ffff00;
+            animation: none;
+            transition: all 0.1s;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #00d4ff;
-            font-weight: 700;
-            overflow: hidden;
-        }
-
-        @keyframes morph-bubble-square {
-            0%, 100% {
-                border-radius: 20% 30% 25% 35% / 30% 25% 35% 20%;
-                transform: scale(1) rotate(0deg);
-            }
-            25% {
-                border-radius: 35% 20% 30% 25% / 25% 35% 20% 30%;
-                transform: scale(1.15) rotate(5deg);
-            }
-            50% {
-                border-radius: 25% 35% 20% 30% / 35% 20% 30% 25%;
-                transform: scale(1) rotate(-5deg);
-            }
-            75% {
-                border-radius: 30% 25% 35% 20% / 20% 30% 25% 35%;
-                transform: scale(1.15) rotate(5deg);
-            }
-        }
-
-        @keyframes bubble-rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            color: #00ff00;
+            font-weight: 900;
+            overflow: visible;
+            border-radius: 0;
+            transform: rotate(-3deg);
+            letter-spacing: 0.1em;
         }
 
         .bio-bubble::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(0, 212, 255, 0.4) 0%, transparent 70%);
-            animation: bubble-inner-pulse 4s ease-in-out infinite;
-        }
-
-        @keyframes bubble-pulse {
-            0%, 100% {
-                box-shadow: 0 0 30px rgba(0, 212, 255, 0.8), inset 0 0 25px rgba(0, 212, 255, 0.4);
-                border-width: 3px;
-            }
-            50% {
-                box-shadow: 0 0 60px rgba(0, 212, 255, 1), inset 0 0 40px rgba(0, 212, 255, 0.7);
-                border-width: 5px;
-            }
-        }
-
-        @keyframes bubble-inner-pulse {
-            0%, 100% {
-                transform: scale(0.8);
-                opacity: 0.3;
-            }
-            50% {
-                transform: scale(1.2);
-                opacity: 0.6;
-            }
-        }
-        
-        /* Волновое изменение формы границы пузыря */
-        @keyframes border-wave {
-            0% { border-radius: 25% 35% 30% 28%; }
-            25% { border-radius: 32% 28% 35% 25%; }
-            50% { border-radius: 28% 30% 25% 35%; }
-            75% { border-radius: 35% 25% 32% 30%; }
-            100% { border-radius: 25% 35% 30% 28%; }
-        }
-        
-        /* Волновое изменение формы границы пузыря */
-        @keyframes border-wave {
-            0% { border-radius: 25% 35% 30% 28%; }
-            25% { border-radius: 32% 28% 35% 25%; }
-            50% { border-radius: 28% 30% 25% 35%; }
-            75% { border-radius: 35% 25% 32% 30%; }
-            100% { border-radius: 25% 35% 30% 28%; }
-        }
-        
-        /* Волновое изменение формы границы пузыря */
-        @keyframes border-wave {
-            0% { border-radius: 25% 35% 30% 28%; }
-            25% { border-radius: 32% 28% 35% 25%; }
-            50% { border-radius: 28% 30% 25% 35%; }
-            75% { border-radius: 35% 25% 32% 30%; }
-            100% { border-radius: 25% 35% 30% 28%; }
+            display: none;
         }
 
         .bio-bubble-expanded {
             width: 90px !important;
             height: 90px !important;
-            border-width: 4px;
-            box-shadow: 0 0 70px rgba(0, 212, 255, 1), inset 0 0 40px rgba(0, 212, 255, 0.7);
-            animation: bubble-pulse 1s ease-in-out infinite, morph-bubble-expand 3s ease-in-out infinite !important;
-        }
-
-        @keyframes morph-bubble-expand {
-            0%, 100% {
-                border-radius: 15% 25% 20% 30% / 25% 20% 30% 15%;
-                transform: scale(1) rotate(0deg);
-            }
-            50% {
-                border-radius: 30% 15% 25% 20% / 20% 30% 15% 25%;
-                transform: scale(1.1) rotate(10deg);
-            }
+            border-width: 5px;
+            box-shadow: 0 0 0 3px #ff00ff, 6px 6px 0 0 #ffff00;
+            animation: none !important;
+            transform: rotate(3deg) !important;
         }
 
         .bio-bubble-photo {
             position: absolute;
             width: 100%;
             height: 100%;
-            border-radius: 50%;
+            border-radius: 0;
             object-fit: cover;
             opacity: 0;
-            transition: opacity 0.5s;
+            transition: opacity 0.1s;
             z-index: 1;
+            filter: grayscale(100%) contrast(150%);
+            mix-blend-mode: multiply;
         }
 
         .bio-bubble-expanded .bio-bubble-photo {
@@ -426,12 +334,15 @@
             position: relative;
             z-index: 2;
             font-size: 18px;
-            transition: all 0.5s;
+            transition: all 0.1s;
+            color: #00ff00;
+            font-weight: 900;
+            text-shadow: 2px 2px 0px #ff00ff;
         }
 
         .bio-bubble-expanded .bio-bubble-count {
-            font-size: 22px;
-            text-shadow: 0 0 10px rgba(0, 212, 255, 1), 0 0 20px rgba(0, 212, 255, 0.8);
+            font-size: 28px;
+            text-shadow: 3px 3px 0px #ff00ff, 6px 6px 0px #ffff00;
         }
 
         /* Overlay магазина поверх карты */
@@ -466,74 +377,44 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) rotate(-1deg);
             width: calc(100% - 16px);
             height: 96vh;
             max-width: none;
-            background: rgba(0, 20, 40, 0.85);
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 3px solid rgba(0, 212, 255, 0.6);
-            border-radius: 30px;
-            box-shadow: 0 0 50px rgba(0, 212, 255, 0.6), inset 0 0 30px rgba(0, 212, 255, 0.1);
+            background: #000000;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border: 5px solid #00ff00;
+            border-radius: 0;
+            box-shadow: 12px 12px 0px #ff00ff, 24px 24px 0px #ffff00;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1), container-glow 3s ease-in-out infinite, container-morph 10s ease-in-out infinite;
-        }
-
-        @keyframes container-glow {
-            0%, 100% {
-                box-shadow: 0 0 50px rgba(0, 212, 255, 0.6), inset 0 0 30px rgba(0, 212, 255, 0.1);
-                border-color: rgba(0, 212, 255, 0.6);
-            }
-            50% {
-                box-shadow: 0 0 80px rgba(0, 212, 255, 0.9), inset 0 0 50px rgba(0, 212, 255, 0.2);
-                border-color: rgba(0, 212, 255, 0.9);
-            }
-        }
-
-        @keyframes container-morph {
-            0%, 100% {
-                border-radius: 30px;
-            }
-            33% {
-                border-radius: 35px 25px 35px 25px;
-            }
-            66% {
-                border-radius: 25px 35px 25px 35px;
-            }
-        }
-
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translate(-50%, -45%);
-            }
-            to { 
-                opacity: 1;
-                transform: translate(-50%, -50%);
-            }
+            animation: none;
         }
 
         #shop-header {
             padding: 24px 24px 20px;
-            border-bottom: 2px solid var(--border);
+            border-bottom: 4px solid #00ff00;
             flex-shrink: 0;
-            background: rgba(10, 35, 30, 0.6);
+            background: #000000;
         }
 
         #shop-header h2 {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 32px;
+            font-weight: 900;
             margin-bottom: 8px;
-            letter-spacing: -0.5px;
+            letter-spacing: 0.2em;
+            color: #00ff00;
+            text-shadow: 3px 3px 0px #ff00ff;
+            transform: rotate(-1deg);
         }
 
         #shop-header .info-text {
-            font-size: 15px;
-            color: var(--text-secondary);
+            font-size: 14px;
+            color: #ffffff;
             margin: 4px 0;
+            letter-spacing: 0.1em;
         }
 
         #shop-category-filter {
@@ -566,53 +447,31 @@
             flex-wrap: wrap;
             margin-bottom: 20px;
             padding: 12px;
-            background: rgba(0, 15, 30, 0.6);
-            border-radius: 12px;
-            border: 2px solid rgba(0, 212, 255, 0.3);
-            animation: breadcrumb-glow 3s ease-in-out infinite;
-        }
-
-        @keyframes breadcrumb-glow {
-            0%, 100% {
-                border-color: rgba(0, 212, 255, 0.3);
-                box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
-            }
-            50% {
-                border-color: rgba(0, 212, 255, 0.6);
-                box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
-            }
+            background: #0a0a0a;
+            border-radius: 0;
+            border: 3px solid #ffff00;
+            animation: none;
+            transform: skewX(-2deg);
         }
 
         .breadcrumb-item {
             padding: 8px 14px;
-            background: rgba(0, 20, 40, 0.7);
-            border: 2px solid var(--border);
-            border-radius: 8px;
+            background: #000000;
+            border: 2px solid #00ff00;
+            border-radius: 0;
             cursor: pointer;
             font-size: 14px;
-            font-weight: 500;
-            color: var(--text-primary);
-            transition: all 0.3s;
-            animation: breadcrumb-item-pulse 2.5s ease-in-out infinite;
-            animation-delay: calc(var(--item-index, 0) * 0.2s);
-        }
-
-        @keyframes breadcrumb-item-pulse {
-            0%, 100% {
-                box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
-                border-color: rgba(0, 212, 255, 0.3);
-            }
-            50% {
-                box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
-                border-color: rgba(0, 212, 255, 0.6);
-            }
+            font-weight: 900;
+            color: #00ff00;
+            transition: all 0.1s;
+            animation: none;
         }
 
         .breadcrumb-item:hover {
-            background: var(--accent);
-            color: #000408;
-            transform: translateY(-1px);
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+            background: #00ff00;
+            color: #000000;
+            transform: translate(-2px, -2px);
+            box-shadow: 2px 2px 0px #ff00ff;
         }
 
         .breadcrumb-separator {
@@ -626,28 +485,23 @@
         }
 
         .category-card {
-            background: rgba(0, 20, 40, 0.7);
-            border: 2px solid rgba(0, 212, 255, 0.4);
-            border-radius: 20% 30% 25% 35% / 30% 25% 35% 20%;
+            background: #000000;
+            border: 4px solid #ff00ff;
+            border-radius: 0;
             padding: 20px;
             cursor: pointer;
-            text-align: center;
-            transition: all 0.3s;
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
-            animation: morph-card 10s ease-in-out infinite;
+            text-align: left;
+            transition: all 0.1s;
+            box-shadow: 6px 6px 0px #00ffff;
+            animation: none;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
+            transform: rotate(1deg);
         }
 
         .category-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(0, 212, 255, 0.3) 0%, transparent 70%);
-            animation: card-pulse 4s ease-in-out infinite;
+            display: none;
+        }
         }
 
         @keyframes morph-card {
@@ -665,24 +519,14 @@
             }
         }
 
-        @keyframes card-pulse {
-            0%, 100% {
-                transform: scale(0.8) rotate(0deg);
-                opacity: 0.3;
-            }
-            50% {
-                transform: scale(1.2) rotate(180deg);
-                opacity: 0.6;
-            }
-        }
-
         .category-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 0 35px rgba(0, 212, 255, 0.7), inset 0 0 20px rgba(0, 212, 255, 0.2);
-            border-color: var(--accent);
+            background: #ff00ff;
+            color: #000000;
+            transform: translate(-6px, -6px) rotate(1deg);
+            box-shadow: 12px 12px 0px #00ffff, 18px 18px 0px #ffff00;
         }
 
-        /* Биолюминесцентные вены */
+        /* Брутальные вены */
         .bio-veins {
             position: absolute;
             width: 100%;
@@ -695,77 +539,52 @@
         }
 
         .vein {
-            position: absolute;
-            width: 0.8px;
-            background: linear-gradient(
-                to bottom,
-                transparent,
-                rgba(0, 212, 255, 0.6),
-                transparent
-            );
-            animation: vein-flow 3s ease-in-out infinite;
-        }
-
-        @keyframes vein-flow {
-            0%, 100% {
-                opacity: 0.2;
-                box-shadow: 0 0 4px rgba(0, 212, 255, 0.4);
-            }
-            50% {
-                opacity: 0.4;
-                box-shadow: 0 0 10px rgba(0, 212, 255, 0.6);
-            }
+            display: none;
         }
 
         .category-card h3 {
-            font-size: 17px;
-            font-weight: 600;
+            font-size: 20px;
+            font-weight: 900;
             margin-bottom: 8px;
-            color: var(--text-primary);
+            color: #00ff00;
             position: relative;
             z-index: 2;
+            letter-spacing: 0.15em;
+            text-shadow: 2px 2px 0px #ff00ff;
         }
 
         .category-card .count {
-            font-size: 14px;
-            color: var(--text-secondary);
+            font-size: 16px;
+            color: #ffffff;
             position: relative;
             z-index: 2;
+            font-weight: 700;
+            letter-spacing: 0.1em;
         }
 
         .product-card {
-            background: rgba(0, 20, 40, 0.8);
-            border: 2px solid rgba(0, 212, 255, 0.3);
-            border-radius: 25% 30% 28% 32% / 32% 28% 30% 25%;
+            background: #000000;
+            border: 3px solid #00ffff;
+            border-radius: 0;
             overflow: hidden;
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: morph-product 12s ease-in-out infinite;
-        }
-
-        @keyframes morph-product {
-            0%, 100% {
-                border-radius: 25% 30% 28% 32% / 32% 28% 30% 25%;
-            }
-            33% {
-                border-radius: 32% 25% 30% 28% / 28% 32% 25% 30%;
-            }
-            66% {
-                border-radius: 28% 32% 25% 30% / 30% 25% 32% 28%;
-            }
+            box-shadow: 4px 4px 0px #ffff00;
+            transition: all 0.1s;
+            animation: none;
+            transform: rotate(-1deg);
         }
 
         .product-card:active {
-            transform: scale(0.97);
-            box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+            transform: translate(4px, 4px) rotate(-1deg);
+            box-shadow: none;
         }
 
         .product-image {
             width: 100%;
             aspect-ratio: 1;
             object-fit: cover;
-            background: rgba(0, 10, 20, 0.8);
-            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+            background: #0a0a0a;
+            border-bottom: 3px solid #00ffff;
+            filter: grayscale(100%) contrast(120%);
         }
 
         .product-info {
@@ -774,140 +593,105 @@
 
         .product-color {
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 900;
             margin-bottom: 4px;
-            color: var(--text-primary);
+            color: #ffff00;
+            letter-spacing: 0.1em;
         }
 
         .product-price {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--accent);
+            font-size: 18px;
+            font-weight: 900;
+            color: #00ff00;
+            text-shadow: 2px 2px 0px #000000;
+            letter-spacing: 0.05em;
         }
 
         #shop-footer {
             padding: 16px 24px;
-            border-top: 2px solid var(--border);
+            border-top: 4px solid #00ff00;
             flex-shrink: 0;
-            background: rgba(10, 35, 30, 0.6);
+            background: #000000;
         }
 
         .close-btn {
             width: 100%;
             padding: 16px;
-            background: rgba(0, 212, 255, 0.2);
-            color: var(--text-primary);
-            border: 3px solid rgba(0, 212, 255, 0.6);
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: 600;
+            background: #000000;
+            color: #ff00ff;
+            border: 4px solid #ff00ff;
+            border-radius: 0;
+            font-size: 20px;
+            font-weight: 900;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
-            animation: close-btn-active 2s ease-in-out infinite;
-        }
-
-        @keyframes close-btn-active {
-            0%, 100% {
-                box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
-                border-color: rgba(0, 212, 255, 0.6);
-            }
-            50% {
-                box-shadow: 0 0 45px rgba(0, 212, 255, 0.9), inset 0 0 20px rgba(0, 212, 255, 0.3);
-                border-color: rgba(0, 212, 255, 0.9);
-            }
+            transition: all 0.1s;
+            box-shadow: 6px 6px 0px #00ffff;
+            animation: none;
+            letter-spacing: 0.2em;
         }
 
         .close-btn:active {
-            transform: scale(0.97);
-            background: rgba(0, 212, 255, 0.3);
-            box-shadow: 0 0 35px rgba(0, 212, 255, 0.7);
+            transform: translate(6px, 6px);
+            background: #ff00ff;
+            color: #000000;
+            box-shadow: none;
         }
 
         /* Scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 10px;
         }
 
         ::-webkit-scrollbar-track {
-            background: transparent;
+            background: #000000;
+            border: 2px solid #00ff00;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(0, 212, 255, 0.4);
-            border-radius: 3px;
+            background: #00ff00;
+            border-radius: 0;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 212, 255, 0.6);
+            background: #ff00ff;
         }
 
-        /* Стили для popup */
+        /* Брутальные popup */
         .leaflet-popup-content-wrapper {
-            background: rgba(0, 10, 20, 0.95) !important;
-            border: 3px solid rgba(0, 212, 255, 0.7) !important;
-            border-radius: 20% 30% 25% 35% / 30% 25% 35% 20% !important;
-            box-shadow: 0 0 40px rgba(0, 212, 255, 0.8) !important;
+            background: #000000 !important;
+            border: 5px solid #00ff00 !important;
+            border-radius: 0 !important;
+            box-shadow: 8px 8px 0px #ff00ff !important;
             padding: 0 !important;
-            animation: popup-morph 6s ease-in-out infinite, popup-glow 2s ease-in-out infinite !important;
-        }
-
-        @keyframes popup-morph {
-            0%, 100% {
-                border-radius: 20% 30% 25% 35% / 30% 25% 35% 20% !important;
-            }
-            33% {
-                border-radius: 35% 20% 30% 25% / 25% 35% 20% 30% !important;
-            }
-            66% {
-                border-radius: 25% 35% 20% 30% / 35% 20% 30% 25% !important;
-            }
-        }
-
-        @keyframes popup-glow {
-            0%, 100% {
-                box-shadow: 0 0 40px rgba(0, 212, 255, 0.8) !important;
-            }
-            50% {
-                box-shadow: 0 0 60px rgba(0, 212, 255, 1), 0 0 100px rgba(0, 212, 255, 0.5) !important;
-            }
+            animation: none !important;
         }
 
         .leaflet-popup-tip {
-            background: rgba(0, 10, 20, 0.95) !important;
-            border: 3px solid rgba(0, 212, 255, 0.7) !important;
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6) !important;
-            animation: tip-pulse 2s ease-in-out infinite !important;
-        }
-
-        @keyframes tip-pulse {
-            0%, 100% {
-                box-shadow: 0 0 30px rgba(0, 212, 255, 0.6) !important;
-            }
-            50% {
-                box-shadow: 0 0 50px rgba(0, 212, 255, 0.9) !important;
-            }
-        }
-
-        .leaflet-popup-close-button {
-            color: #00d4ff !important;
-            font-size: 24px !important;
-            font-weight: bold !important;
+            background: #000000 !important;
+            border: 3px solid #00ff00 !important;
+            box-shadow: none !important;
+            animation: none !important;
+        }        .leaflet-popup-close-button {
+            color: #00ff00 !important;
+            font-size: 32px !important;
+            font-weight: 900 !important;
+            text-shadow: 2px 2px 0px #ff00ff !important;
         }
 
         .leaflet-popup-close-button:hover {
-            color: #00e6ff !important;
+            color: #ff00ff !important;
         }
 
-        /* Неоновые линии между маркерами */
+        /* Брутальные линии между маркерами */
         .web-line {
-            stroke: rgba(255, 107, 0, 0.5) !important;
-            stroke-width: 0.8 !important;
+            stroke: #ff00ff !important;
+            stroke-width: 3 !important;
+            stroke-dasharray: 10, 5 !important;
         }
 
-        /* Пульсирующая волна */
+        /* Глитч-линия */
         .pulse-wave {
-            stroke: rgba(255, 107, 0, 0.8) !important;
+            stroke: #00ff00 !important;
             stroke-width: 4 !important;
             fill: none !important;
             animation: wave-travel 2s linear infinite !important;
@@ -950,7 +734,7 @@
     <div id="app">
         <!-- Экран выбора города -->
         <div id="city-selection">
-            <h1>Выберите город</h1>
+            <h1>/// МАГАЗИНЫ ///</h1>
             <div id="cities-list"></div>
         </div>
 
@@ -1013,21 +797,23 @@
             }
         }
 
-        // Создание спор
+        // Создание брутальных глитч-символов
         function createSpores() {
             const sporesContainer = document.getElementById('spores');
-            const colors = [
-                'rgba(0, 212, 255, 1)', // Голубой
-                'rgba(255, 107, 0, 1)'   // Оранжевый
-            ];
+            const symbols = ['█', '▓', '▒', '░', '▀', '▄', '▌', '▐', '■', '□', '▪', '▫', '▬', '▭', '▮', '▯'];
+            const colors = ['#00ff00', '#ff00ff', '#00ffff', '#ffff00'];
             
-            for (let i = 0; i < 80; i++) { // Увеличено с 40 до 80
+            for (let i = 0; i < 50; i++) {
                 const spore = document.createElement('div');
                 spore.className = 'spore';
+                spore.textContent = symbols[Math.floor(Math.random() * symbols.length)];
                 spore.style.left = Math.random() * 100 + '%';
-                spore.style.setProperty('--drift-x', (Math.random() - 0.5) * 400 + 'px'); // Увеличен дрейф
-                spore.style.setProperty('--spore-color', colors[i % 2]); // Чередование цветов
-                spore.style.animationDelay = Math.random() * 12 + 's'; // Уменьшена задержка для большей активности
+                spore.style.setProperty('--drift-x', (Math.random() - 0.5) * 200 + 'px');
+                spore.style.setProperty('--spore-color', colors[i % colors.length]);
+                spore.style.color = colors[i % colors.length];
+                spore.style.fontSize = (8 + Math.random() * 12) + 'px';
+                spore.style.fontWeight = '900';
+                spore.style.animationDelay = Math.random() * 2 + 's';
                 sporesContainer.appendChild(spore);
             }
         }
@@ -1117,49 +903,34 @@
                 }
             }
             
-            // Анимация волн
-            let phase = 0;
-            setInterval(() => {
-                phase += 0.05; // Скорость движения волны
-                webLines.forEach(webData => {
-                    const newPoints = createWavyLine(webData.start, webData.end, webData.peaks, phase);
-                    webData.line.setLatLngs(newPoints);
-                });
-            }, 50); // Обновление каждые 50мс
+            // Убрать анимацию волн для брутального стиля
+            // Линии будут статичными и ломаными
         }
         
-        // Функция создания волнистой линии с несколькими пиками
+        // Функция создания ломаной брутальной линии
         function createWavyLine(start, end, peaks, phase = 0) {
             const points = [];
-            const segments = peaks * 10; // 10 точек на каждый пик
+            const segments = 5; // Меньше сегментов для более угловатого вида
             
             // Вектор направления
             const deltaLat = end[0] - start[0];
             const deltaLng = end[1] - start[1];
             
-            // Перпендикулярный вектор для создания волн
-            const perpLat = -deltaLng;
-            const perpLng = deltaLat;
-            
-            // Амплитуда волны (10% от расстояния)
-            const distance = Math.sqrt(deltaLat * deltaLat + deltaLng * deltaLng);
-            const amplitude = distance * 0.08;
-            
             for (let i = 0; i <= segments; i++) {
                 const t = i / segments;
                 
                 // Базовая точка на прямой линии
-                const baseLat = start[0] + deltaLat * t;
-                const baseLng = start[1] + deltaLng * t;
+                let lat = start[0] + deltaLat * t;
+                let lng = start[1] + deltaLng * t;
                 
-                // Волновое смещение (синусоида с несколькими периодами + фаза для анимации)
-                const wave = Math.sin(t * Math.PI * peaks * 2 + phase) * amplitude;
+                // Случайное смещение для неровности (фиксированное для каждой точки)
+                if (i > 0 && i < segments) {
+                    const randomOffset = Math.sin(i * 1000) * 0.001; // Детерминированное "случайное" смещение
+                    lat += randomOffset;
+                    lng += randomOffset;
+                }
                 
-                // Применяем смещение перпендикулярно направлению
-                const waveLat = baseLat + perpLat * wave;
-                const waveLng = baseLng + perpLng * wave;
-                
-                points.push([waveLat, waveLng]);
+                points.push([lat, lng]);
             }
             
             return points;
