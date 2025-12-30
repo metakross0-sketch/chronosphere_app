@@ -770,10 +770,30 @@
         }
 
         // Инициализация sci-fi интерфейса
-        document.addEventListener('DOMContentLoaded', () => {
-            createBioParticles();
-            createSpores();
+        createBioParticles();
+        createSpores();
+        
+        // Загрузка городов после инициализации
+        window.addEventListener('load', () => {
+            console.log('Window loaded, loading cities...');
+            console.log('Globe.gl available?', typeof Globe !== 'undefined');
             loadCities();
+            
+            // Добавляем обработчик кнопки назад
+            const backBtn = document.getElementById('back-to-cities');
+            if (backBtn) {
+                backBtn.onclick = backToCities;
+                console.log('Back button handler attached');
+            } else {
+                console.error('Back button not found!');
+            }
+            
+            // Добавляем обработчик фильтра категорий
+            const categoryFilter = document.getElementById('category-filter');
+            if (categoryFilter) {
+                categoryFilter.onchange = filterByCategory;
+                console.log('Category filter handler attached');
+            }
         });
 
         function getPhotoUrl(filename) {
@@ -807,6 +827,7 @@
         }
 
         async function showCityMap(city) {
+            console.log('showCityMap called with city:', city);
             currentCity = city;
             document.getElementById('city-selection').style.display = 'none';
             document.getElementById('map-container').style.display = 'flex';
@@ -814,10 +835,12 @@
             await loadCategories(city);
 
             if (!globe) {
+                console.log('Initializing globe...');
                 // Инициализация 3D глобуса
-                globe = Globe()
-                    (document.getElementById('map'))
-                    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+                try {
+                    globe = Globe()
+                        (document.getElementById('map'))
+                        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
                     .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
                     .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
                     .showAtmosphere(true)
@@ -872,9 +895,17 @@
                     globe.width(window.innerWidth);
                     globe.height(window.innerHeight);
                 });
+                
+                console.log('Globe initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing globe:', error);
+                    alert('Ошибка инициализации глобуса: ' + error.message);
+                    return;
+                }
             }
             
             // Загрузка магазинов для города
+            console.log('Loading shops for city:', city);
             loadShopsForCity(city);
         }
 
@@ -1036,10 +1067,13 @@
         }
 
         // Функция загрузки магазинов для города
-        async function loadShopsForCity(city) {
+        async function loadShopsForCity(city, categoryFilter = '') {
             try {
+                console.log('loadShopsForCity called for:', city, 'with filter:', categoryFilter);
                 const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
                 const data = await response.json();
+                
+                console.log('Received shops data:', data);
 
                 if (data.shops && data.shops.length > 0) {
                     // Группируем магазины по координатам
@@ -1381,7 +1415,15 @@
             }
         }
 
-        document.getElementById('back-to-cities').onclick = backToCities;
+        function filterByCategory() {
+            const selectedCategory = document.getElementById('category-filter').value;
+            console.log('Filtering by category:', selectedCategory);
+            // TODO: Реализовать фильтрацию точек на глобусе по категории
+            // Пока просто перезагружаем магазины
+            if (currentCity) {
+                loadShopsForCity(currentCity, selectedCategory);
+            }
+        }
         
         // Органическая реакция карточек на движение курсора
         document.addEventListener('mousemove', (e) => {
