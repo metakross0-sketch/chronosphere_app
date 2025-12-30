@@ -17,37 +17,38 @@
         }
 
         :root {
-            --bg-primary: linear-gradient(135deg, #0d1f2d 0%, #1a2f3f 100%);
-            --bg-secondary: rgba(15, 45, 40, 0.7);
-            --text-primary: #00ffaa;
-            --text-secondary: rgba(0, 255, 170, 0.6);
-            --accent: #00ffaa;
-            --accent-hover: #00ffcc;
-            --border: rgba(0, 255, 170, 0.3);
-            --shadow: 0 0 20px rgba(0, 255, 170, 0.3);
-            --shadow-lg: 0 0 40px rgba(0, 255, 170, 0.5);
-            --glass-bg: rgba(15, 45, 40, 0.85);
-            --glass-border: rgba(0, 255, 170, 0.4);
+            --bg-primary: linear-gradient(135deg, #000408 0%, #001a33 100%);
+            --bg-secondary: rgba(0, 26, 51, 0.7);
+            --text-primary: #00d4ff;
+            --text-secondary: rgba(0, 212, 255, 0.6);
+            --accent: #00d4ff;
+            --accent-hover: #00e6ff;
+            --accent-orange: #ff6b00;
+            --border: rgba(0, 212, 255, 0.3);
+            --shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            --shadow-lg: 0 0 40px rgba(0, 212, 255, 0.5);
+            --glass-bg: rgba(0, 20, 40, 0.85);
+            --glass-border: rgba(0, 212, 255, 0.4);
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            background: linear-gradient(135deg, #0d1f2d 0%, #1a2f3f 100%);
+            background: linear-gradient(135deg, #000408 0%, #001a33 100%);
             color: var(--text-primary);
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
             position: relative;
         }
 
-        /* Биолюминесцентный фон */
+        /* Неоновый фон Трон */
         body::before {
             content: '';
             position: fixed;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 20% 80%, rgba(0, 255, 170, 0.25) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.2) 0%, transparent 50%),
-                        radial-gradient(circle at 40% 40%, rgba(0, 200, 255, 0.15) 0%, transparent 50%);
+            background: radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 107, 0, 0.25) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(0, 150, 255, 0.2) 0%, transparent 50%);
             animation: bio-breathe 8s ease-in-out infinite;
             z-index: 0;
             pointer-events: none;
@@ -70,7 +71,7 @@
 
         .bio-particle {
             position: absolute;
-            background: radial-gradient(circle, rgba(0, 255, 170, 1) 0%, rgba(0, 255, 170, 0.5) 50%, transparent 70%);
+            background: radial-gradient(circle, rgba(0, 212, 255, 1) 0%, rgba(0, 212, 255, 0.5) 50%, transparent 70%);
             border-radius: 50%;
             animation: float-organic 20s ease-in-out infinite;
         }
@@ -99,24 +100,33 @@
 
         .spore {
             position: absolute;
-            width: 5px;
-            height: 5px;
-            background: rgba(0, 255, 170, 1);
+            width: 6px;
+            height: 6px;
+            background: var(--spore-color);
             border-radius: 50%;
-            box-shadow: 0 0 15px rgba(0, 255, 170, 1);
-            animation: spore-float 25s ease-in-out infinite;
+            box-shadow: 0 0 20px var(--spore-color), 0 0 30px var(--spore-color);
+            animation: spore-float 12s ease-in-out infinite, spore-pulse 2s ease-in-out infinite;
         }
 
         @keyframes spore-float {
             0% {
-                transform: translate(0, 100vh) scale(0);
+                transform: translate(0, 100vh) scale(0) rotate(0deg);
                 opacity: 0;
             }
             10% { opacity: 1; }
             90% { opacity: 1; }
             100% {
-                transform: translate(var(--drift-x), -100vh) scale(1);
+                transform: translate(var(--drift-x), -100vh) scale(1.5) rotate(360deg);
                 opacity: 0;
+            }
+        }
+        
+        @keyframes spore-pulse {
+            0%, 100% {
+                box-shadow: 0 0 15px var(--spore-color), 0 0 25px var(--spore-color);
+            }
+            50% {
+                box-shadow: 0 0 35px var(--spore-color), 0 0 50px var(--spore-color);
             }
         }
 
@@ -151,7 +161,7 @@
             text-align: center;
             color: var(--text-primary);
             letter-spacing: -0.5px;
-            text-shadow: 0 0 20px rgba(0, 255, 170, 0.6), 0 0 40px rgba(0, 255, 170, 0.4);
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.6), 0 0 40px rgba(0, 212, 255, 0.4);
         }
 
         .city-btn {
@@ -164,7 +174,7 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
             position: relative;
             z-index: 1;
             animation: btn-active-glow 3s ease-in-out infinite, btn-morph 8s ease-in-out infinite;
@@ -172,12 +182,12 @@
 
         @keyframes btn-active-glow {
             0%, 100% {
-                box-shadow: 0 0 15px rgba(0, 255, 170, 0.4);
-                border-color: rgba(0, 255, 170, 0.3);
+                box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+                border-color: rgba(0, 212, 255, 0.3);
             }
             50% {
-                box-shadow: 0 0 35px rgba(0, 255, 170, 0.7), inset 0 0 15px rgba(0, 255, 170, 0.2);
-                border-color: rgba(0, 255, 170, 0.6);
+                box-shadow: 0 0 35px rgba(0, 212, 255, 0.7), inset 0 0 15px rgba(0, 212, 255, 0.2);
+                border-color: rgba(0, 212, 255, 0.6);
             }
         }
 
@@ -199,7 +209,7 @@
         }
 
         .city-btn:hover {
-            box-shadow: 0 0 30px rgba(0, 255, 170, 0.6), inset 0 0 20px rgba(0, 255, 170, 0.1);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6), inset 0 0 20px rgba(0, 212, 255, 0.1);
             border-color: var(--accent);
             transform: scale(1.02);
         }
@@ -227,7 +237,7 @@
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 2px solid var(--glass-border);
             border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
             cursor: pointer;
             font-size: 15px;
             font-weight: 500;
@@ -238,16 +248,16 @@
 
         @keyframes control-glow {
             0%, 100% {
-                box-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
+                box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
             }
             50% {
-                box-shadow: 0 0 40px rgba(0, 255, 170, 0.8), inset 0 0 15px rgba(0, 255, 170, 0.2);
+                box-shadow: 0 0 40px rgba(0, 212, 255, 0.8), inset 0 0 15px rgba(0, 212, 255, 0.2);
             }
         }
 
         .map-control:active {
             transform: scale(0.95);
-            box-shadow: 0 0 30px rgba(0, 255, 170, 0.7);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.7);
         }
 
         #back-to-cities {
@@ -261,7 +271,7 @@
             min-width: 160px;
             appearance: none;
             padding-right: 36px;
-            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2300ffaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2300d4ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
         }
@@ -281,15 +291,15 @@
 
         .bio-bubble {
             position: relative;
-            background: radial-gradient(circle, rgba(0, 255, 170, 0.5) 0%, rgba(0, 255, 170, 0.2) 50%, transparent 70%);
-            border: 3px solid rgba(0, 255, 170, 0.9);
-            box-shadow: 0 0 35px rgba(0, 255, 170, 0.9), inset 0 0 25px rgba(0, 255, 170, 0.4);
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.5) 0%, rgba(0, 212, 255, 0.2) 50%, transparent 70%);
+            border: 3px solid rgba(0, 212, 255, 0.9);
+            box-shadow: 0 0 35px rgba(0, 212, 255, 0.9), inset 0 0 25px rgba(0, 212, 255, 0.4);
             animation: bubble-pulse 1.5s ease-in-out infinite, morph-bubble-square 4s ease-in-out infinite, bubble-rotate 8s linear infinite, border-wave 3s ease-in-out infinite;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #00ffaa;
+            color: #00d4ff;
             font-weight: 700;
             overflow: hidden;
         }
@@ -325,17 +335,17 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(0, 255, 170, 0.4) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.4) 0%, transparent 70%);
             animation: bubble-inner-pulse 4s ease-in-out infinite;
         }
 
         @keyframes bubble-pulse {
             0%, 100% {
-                box-shadow: 0 0 30px rgba(0, 255, 170, 0.8), inset 0 0 25px rgba(0, 255, 170, 0.4);
+                box-shadow: 0 0 30px rgba(0, 212, 255, 0.8), inset 0 0 25px rgba(0, 212, 255, 0.4);
                 border-width: 3px;
             }
             50% {
-                box-shadow: 0 0 60px rgba(0, 255, 170, 1), inset 0 0 40px rgba(0, 255, 170, 0.7);
+                box-shadow: 0 0 60px rgba(0, 212, 255, 1), inset 0 0 40px rgba(0, 212, 255, 0.7);
                 border-width: 5px;
             }
         }
@@ -382,7 +392,7 @@
             width: 90px !important;
             height: 90px !important;
             border-width: 4px;
-            box-shadow: 0 0 70px rgba(0, 255, 170, 1), inset 0 0 40px rgba(0, 255, 170, 0.7);
+            box-shadow: 0 0 70px rgba(0, 212, 255, 1), inset 0 0 40px rgba(0, 212, 255, 0.7);
             animation: bubble-pulse 1s ease-in-out infinite, morph-bubble-expand 3s ease-in-out infinite !important;
         }
 
@@ -421,7 +431,7 @@
 
         .bio-bubble-expanded .bio-bubble-count {
             font-size: 22px;
-            text-shadow: 0 0 10px rgba(0, 255, 170, 1), 0 0 20px rgba(0, 255, 170, 0.8);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 1), 0 0 20px rgba(0, 212, 255, 0.8);
         }
 
         /* Overlay магазина поверх карты */
@@ -460,12 +470,12 @@
             width: calc(100% - 16px);
             height: 96vh;
             max-width: none;
-            background: rgba(15, 45, 40, 0.85);
+            background: rgba(0, 20, 40, 0.85);
             backdrop-filter: blur(40px) saturate(180%);
             -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 3px solid rgba(0, 255, 170, 0.6);
+            border: 3px solid rgba(0, 212, 255, 0.6);
             border-radius: 30px;
-            box-shadow: 0 0 50px rgba(0, 255, 170, 0.6), inset 0 0 30px rgba(0, 255, 170, 0.1);
+            box-shadow: 0 0 50px rgba(0, 212, 255, 0.6), inset 0 0 30px rgba(0, 212, 255, 0.1);
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -474,12 +484,12 @@
 
         @keyframes container-glow {
             0%, 100% {
-                box-shadow: 0 0 50px rgba(0, 255, 170, 0.6), inset 0 0 30px rgba(0, 255, 170, 0.1);
-                border-color: rgba(0, 255, 170, 0.6);
+                box-shadow: 0 0 50px rgba(0, 212, 255, 0.6), inset 0 0 30px rgba(0, 212, 255, 0.1);
+                border-color: rgba(0, 212, 255, 0.6);
             }
             50% {
-                box-shadow: 0 0 80px rgba(0, 255, 170, 0.9), inset 0 0 50px rgba(0, 255, 170, 0.2);
-                border-color: rgba(0, 255, 170, 0.9);
+                box-shadow: 0 0 80px rgba(0, 212, 255, 0.9), inset 0 0 50px rgba(0, 212, 255, 0.2);
+                border-color: rgba(0, 212, 255, 0.9);
             }
         }
 
@@ -529,7 +539,7 @@
         #shop-category-filter {
             margin-top: 16px;
             padding: 12px 16px;
-            background: rgba(15, 45, 40, 0.9);
+            background: rgba(0, 20, 40, 0.9);
             border: 2px solid var(--border);
             border-radius: 10px;
             font-size: 15px;
@@ -538,7 +548,7 @@
             width: 100%;
             appearance: none;
             padding-right: 36px;
-            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2300ffaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2300d4ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
             cursor: pointer;
@@ -556,26 +566,26 @@
             flex-wrap: wrap;
             margin-bottom: 20px;
             padding: 12px;
-            background: rgba(10, 35, 30, 0.6);
+            background: rgba(0, 15, 30, 0.6);
             border-radius: 12px;
-            border: 2px solid rgba(0, 255, 170, 0.3);
+            border: 2px solid rgba(0, 212, 255, 0.3);
             animation: breadcrumb-glow 3s ease-in-out infinite;
         }
 
         @keyframes breadcrumb-glow {
             0%, 100% {
-                border-color: rgba(0, 255, 170, 0.3);
-                box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
+                border-color: rgba(0, 212, 255, 0.3);
+                box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
             }
             50% {
-                border-color: rgba(0, 255, 170, 0.6);
-                box-shadow: 0 0 25px rgba(0, 255, 170, 0.4);
+                border-color: rgba(0, 212, 255, 0.6);
+                box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
             }
         }
 
         .breadcrumb-item {
             padding: 8px 14px;
-            background: rgba(15, 45, 40, 0.7);
+            background: rgba(0, 20, 40, 0.7);
             border: 2px solid var(--border);
             border-radius: 8px;
             cursor: pointer;
@@ -589,20 +599,20 @@
 
         @keyframes breadcrumb-item-pulse {
             0%, 100% {
-                box-shadow: 0 0 8px rgba(0, 255, 170, 0.3);
-                border-color: rgba(0, 255, 170, 0.3);
+                box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+                border-color: rgba(0, 212, 255, 0.3);
             }
             50% {
-                box-shadow: 0 0 20px rgba(0, 255, 170, 0.6);
-                border-color: rgba(0, 255, 170, 0.6);
+                box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+                border-color: rgba(0, 212, 255, 0.6);
             }
         }
 
         .breadcrumb-item:hover {
             background: var(--accent);
-            color: #0d1f2d;
+            color: #000408;
             transform: translateY(-1px);
-            box-shadow: 0 0 15px rgba(0, 255, 170, 0.6);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
         }
 
         .breadcrumb-separator {
@@ -616,14 +626,14 @@
         }
 
         .category-card {
-            background: rgba(15, 45, 40, 0.7);
-            border: 2px solid rgba(0, 255, 170, 0.4);
+            background: rgba(0, 20, 40, 0.7);
+            border: 2px solid rgba(0, 212, 255, 0.4);
             border-radius: 20% 30% 25% 35% / 30% 25% 35% 20%;
             padding: 20px;
             cursor: pointer;
             text-align: center;
             transition: all 0.3s;
-            box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
             animation: morph-card 10s ease-in-out infinite;
             position: relative;
             overflow: hidden;
@@ -636,7 +646,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(0, 255, 170, 0.3) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.3) 0%, transparent 70%);
             animation: card-pulse 4s ease-in-out infinite;
         }
 
@@ -668,7 +678,7 @@
 
         .category-card:hover {
             transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 0 35px rgba(0, 255, 170, 0.7), inset 0 0 20px rgba(0, 255, 170, 0.2);
+            box-shadow: 0 0 35px rgba(0, 212, 255, 0.7), inset 0 0 20px rgba(0, 212, 255, 0.2);
             border-color: var(--accent);
         }
 
@@ -686,11 +696,11 @@
 
         .vein {
             position: absolute;
-            width: 2px;
+            width: 0.8px;
             background: linear-gradient(
                 to bottom,
                 transparent,
-                rgba(0, 255, 170, 0.9),
+                rgba(0, 212, 255, 0.6),
                 transparent
             );
             animation: vein-flow 3s ease-in-out infinite;
@@ -698,12 +708,12 @@
 
         @keyframes vein-flow {
             0%, 100% {
-                opacity: 0.5;
-                box-shadow: 0 0 10px rgba(0, 255, 170, 0.6);
+                opacity: 0.2;
+                box-shadow: 0 0 4px rgba(0, 212, 255, 0.4);
             }
             50% {
-                opacity: 1;
-                box-shadow: 0 0 25px rgba(0, 255, 170, 0.9);
+                opacity: 0.4;
+                box-shadow: 0 0 10px rgba(0, 212, 255, 0.6);
             }
         }
 
@@ -724,11 +734,11 @@
         }
 
         .product-card {
-            background: rgba(15, 45, 40, 0.8);
-            border: 2px solid rgba(0, 255, 170, 0.3);
+            background: rgba(0, 20, 40, 0.8);
+            border: 2px solid rgba(0, 212, 255, 0.3);
             border-radius: 25% 30% 28% 32% / 32% 28% 30% 25%;
             overflow: hidden;
-            box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             animation: morph-product 12s ease-in-out infinite;
         }
@@ -747,15 +757,15 @@
 
         .product-card:active {
             transform: scale(0.97);
-            box-shadow: 0 0 25px rgba(0, 255, 170, 0.5);
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
         }
 
         .product-image {
             width: 100%;
             aspect-ratio: 1;
             object-fit: cover;
-            background: rgba(10, 30, 25, 0.8);
-            border-bottom: 1px solid rgba(0, 255, 170, 0.3);
+            background: rgba(0, 10, 20, 0.8);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
         }
 
         .product-info {
@@ -785,33 +795,33 @@
         .close-btn {
             width: 100%;
             padding: 16px;
-            background: rgba(0, 255, 170, 0.2);
+            background: rgba(0, 212, 255, 0.2);
             color: var(--text-primary);
-            border: 3px solid rgba(0, 255, 170, 0.6);
+            border: 3px solid rgba(0, 212, 255, 0.6);
             border-radius: 12px;
             font-size: 17px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
             animation: close-btn-active 2s ease-in-out infinite;
         }
 
         @keyframes close-btn-active {
             0%, 100% {
-                box-shadow: 0 0 20px rgba(0, 255, 170, 0.5);
-                border-color: rgba(0, 255, 170, 0.6);
+                box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+                border-color: rgba(0, 212, 255, 0.6);
             }
             50% {
-                box-shadow: 0 0 45px rgba(0, 255, 170, 0.9), inset 0 0 20px rgba(0, 255, 170, 0.3);
-                border-color: rgba(0, 255, 170, 0.9);
+                box-shadow: 0 0 45px rgba(0, 212, 255, 0.9), inset 0 0 20px rgba(0, 212, 255, 0.3);
+                border-color: rgba(0, 212, 255, 0.9);
             }
         }
 
         .close-btn:active {
             transform: scale(0.97);
-            background: rgba(0, 255, 170, 0.3);
-            box-shadow: 0 0 35px rgba(0, 255, 170, 0.7);
+            background: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 0 35px rgba(0, 212, 255, 0.7);
         }
 
         /* Scrollbar */
@@ -824,20 +834,20 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(0, 255, 170, 0.4);
+            background: rgba(0, 212, 255, 0.4);
             border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 255, 170, 0.6);
+            background: rgba(0, 212, 255, 0.6);
         }
 
         /* Стили для popup */
         .leaflet-popup-content-wrapper {
-            background: rgba(10, 25, 20, 0.95) !important;
-            border: 3px solid rgba(0, 255, 170, 0.7) !important;
+            background: rgba(0, 10, 20, 0.95) !important;
+            border: 3px solid rgba(0, 212, 255, 0.7) !important;
             border-radius: 20% 30% 25% 35% / 30% 25% 35% 20% !important;
-            box-shadow: 0 0 40px rgba(0, 255, 170, 0.8) !important;
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.8) !important;
             padding: 0 !important;
             animation: popup-morph 6s ease-in-out infinite, popup-glow 2s ease-in-out infinite !important;
         }
@@ -856,48 +866,48 @@
 
         @keyframes popup-glow {
             0%, 100% {
-                box-shadow: 0 0 40px rgba(0, 255, 170, 0.8) !important;
+                box-shadow: 0 0 40px rgba(0, 212, 255, 0.8) !important;
             }
             50% {
-                box-shadow: 0 0 60px rgba(0, 255, 170, 1), 0 0 100px rgba(0, 255, 170, 0.5) !important;
+                box-shadow: 0 0 60px rgba(0, 212, 255, 1), 0 0 100px rgba(0, 212, 255, 0.5) !important;
             }
         }
 
         .leaflet-popup-tip {
-            background: rgba(10, 25, 20, 0.95) !important;
-            border: 3px solid rgba(0, 255, 170, 0.7) !important;
-            box-shadow: 0 0 30px rgba(0, 255, 170, 0.6) !important;
+            background: rgba(0, 10, 20, 0.95) !important;
+            border: 3px solid rgba(0, 212, 255, 0.7) !important;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6) !important;
             animation: tip-pulse 2s ease-in-out infinite !important;
         }
 
         @keyframes tip-pulse {
             0%, 100% {
-                box-shadow: 0 0 30px rgba(0, 255, 170, 0.6) !important;
+                box-shadow: 0 0 30px rgba(0, 212, 255, 0.6) !important;
             }
             50% {
-                box-shadow: 0 0 50px rgba(0, 255, 170, 0.9) !important;
+                box-shadow: 0 0 50px rgba(0, 212, 255, 0.9) !important;
             }
         }
 
         .leaflet-popup-close-button {
-            color: #00ffaa !important;
+            color: #00d4ff !important;
             font-size: 24px !important;
             font-weight: bold !important;
         }
 
         .leaflet-popup-close-button:hover {
-            color: #00ffcc !important;
+            color: #00e6ff !important;
         }
 
-        /* Паутина между маркерами */
+        /* Неоновые линии между маркерами */
         .web-line {
-            stroke: rgba(255, 140, 50, 0.7) !important;
-            stroke-width: 2 !important;
+            stroke: rgba(255, 107, 0, 0.5) !important;
+            stroke-width: 0.8 !important;
         }
 
         /* Пульсирующая волна */
         .pulse-wave {
-            stroke: rgba(255, 180, 80, 0.9) !important;
+            stroke: rgba(255, 107, 0, 0.8) !important;
             stroke-width: 4 !important;
             fill: none !important;
             animation: wave-travel 2s linear infinite !important;
@@ -1006,12 +1016,18 @@
         // Создание спор
         function createSpores() {
             const sporesContainer = document.getElementById('spores');
-            for (let i = 0; i < 40; i++) {
+            const colors = [
+                'rgba(0, 212, 255, 1)', // Голубой
+                'rgba(255, 107, 0, 1)'   // Оранжевый
+            ];
+            
+            for (let i = 0; i < 80; i++) { // Увеличено с 40 до 80
                 const spore = document.createElement('div');
                 spore.className = 'spore';
                 spore.style.left = Math.random() * 100 + '%';
-                spore.style.setProperty('--drift-x', (Math.random() - 0.5) * 300 + 'px');
-                spore.style.animationDelay = Math.random() * 25 + 's';
+                spore.style.setProperty('--drift-x', (Math.random() - 0.5) * 400 + 'px'); // Увеличен дрейф
+                spore.style.setProperty('--spore-color', colors[i % 2]); // Чередование цветов
+                spore.style.animationDelay = Math.random() * 12 + 's'; // Уменьшена задержка для большей активности
                 sporesContainer.appendChild(spore);
             }
         }
@@ -1220,27 +1236,27 @@
                                 const category = shop.category || 'Без категории';
                                 return `
                                     <div style="
-                                        background: rgba(15, 45, 40, 0.9);
-                                        border: 2px solid rgba(0, 255, 170, 0.5);
+                                        background: rgba(0, 20, 40, 0.9);
+                                        border: 2px solid rgba(0, 212, 255, 0.5);
                                         border-radius: 16px;
                                         padding: 12px;
                                         margin-bottom: 12px;
                                         cursor: pointer;
                                         transition: all 0.3s;
-                                        box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+                                        box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
                                     " 
-                                    onmouseover="this.style.boxShadow='0 0 30px rgba(0,255,170,0.6)'; this.style.transform='scale(1.02)'" 
-                                    onmouseout="this.style.boxShadow='0 0 15px rgba(0,255,170,0.3)'; this.style.transform='scale(1)'" 
+                                    onmouseover="this.style.boxShadow='0 0 30px rgba(0,212,255,0.6)'; this.style.transform='scale(1.02)'" 
+                                    onmouseout="this.style.boxShadow='0 0 15px rgba(0,212,255,0.3)'; this.style.transform='scale(1)'" 
                                     onclick="window.openShopOverlay('${shop.shop_id}', '${shop.name.replace(/'/g, "\\'")}', '${category.replace(/'/g, "\\'")}')">
-                                        ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(0,255,170,0.3);" onerror="this.style.display='none'">` : ''}
-                                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px; color: #00ffaa;">${shop.name}</div>
-                                        <div style="color: rgba(0,255,170,0.7); font-size: 13px; margin-bottom: 3px;">🏷️ ${category}</div>
-                                        <div style="color: rgba(0,255,170,0.6); font-size: 13px;">ID: ${shop.shop_id}</div>
+                                        ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(0,212,255,0.3);" onerror="this.style.display='none'">` : ''}
+                                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px; color: #00d4ff;">${shop.name}</div>
+                                        <div style="color: rgba(0,212,255,0.7); font-size: 13px; margin-bottom: 3px;">🏷️ ${category}</div>
+                                        <div style="color: rgba(0,212,255,0.6); font-size: 13px;">ID: ${shop.shop_id}</div>
                                         <div style="
-                                            background: rgba(0, 255, 170, 0.2);
-                                            color: #00ffaa;
+                                            background: rgba(0, 212, 255, 0.2);
+                                            color: #00d4ff;
                                             padding: 10px;
-                                            border: 1px solid rgba(0,255,170,0.5);
+                                            border: 1px solid rgba(0,212,255,0.5);
                                             border-radius: 10px;
                                             text-align: center;
                                             margin-top: 10px;
@@ -1254,8 +1270,8 @@
                             }).join('');
                             
                             const popupContent = `
-                                <div style="padding: 16px; width: 300px; max-height: 400px; overflow-y: auto; background: rgba(10,25,20,0.95); border-radius: 16px;">
-                                    <h3 style="margin: 0 0 16px 0; font-size: 18px; text-align: center; font-weight: 700; color: #00ffaa; text-shadow: 0 0 10px rgba(0,255,170,0.6);">
+                                <div style="padding: 16px; width: 300px; max-height: 400px; overflow-y: auto; background: rgba(0,10,20,0.95); border-radius: 16px;">
+                                    <h3 style="margin: 0 0 16px 0; font-size: 18px; text-align: center; font-weight: 700; color: #00d4ff; text-shadow: 0 0 10px rgba(0,212,255,0.6);">
                                         📍 ${group.length} ${group.length === 2 ? 'магазина' : 'магазинов'}
                                     </h3>
                                     ${shopsListHtml}
@@ -1268,16 +1284,16 @@
                             const photoUrl = getPhotoUrl(shop.photo_url);
                             const category = shop.category || 'Без категории';
                             const popupContent = `
-                                <div style="text-align: center; padding: 16px; width: 280px; background: rgba(10,25,20,0.95); border-radius: 16px;">
-                                    ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; display: block; border: 2px solid rgba(0,255,170,0.4);" onerror="this.style.display='none'">` : ''}
-                                    <h3 style="margin: 10px 0; font-size: 19px; font-weight: 700; color: #00ffaa; text-shadow: 0 0 10px rgba(0,255,170,0.6);">${shop.name}</h3>
-                                    <p style="color: rgba(0,255,170,0.7); margin: 6px 0; font-size: 14px;">🏷️ ${category}</p>
-                                    <p style="color: rgba(0,255,170,0.6); margin: 6px 0; font-size: 13px;">ID: ${shop.shop_id}</p>
+                                <div style="text-align: center; padding: 16px; width: 280px; background: rgba(0,10,20,0.95); border-radius: 16px;">
+                                    ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; display: block; border: 2px solid rgba(0,212,255,0.4);" onerror="this.style.display='none'">` : ''}
+                                    <h3 style="margin: 10px 0; font-size: 19px; font-weight: 700; color: #00d4ff; text-shadow: 0 0 10px rgba(0,212,255,0.6);">${shop.name}</h3>
+                                    <p style="color: rgba(0,212,255,0.7); margin: 6px 0; font-size: 14px;">🏷️ ${category}</p>
+                                    <p style="color: rgba(0,212,255,0.6); margin: 6px 0; font-size: 13px;">ID: ${shop.shop_id}</p>
                                     <button style="
                                         padding: 12px 24px; 
-                                        background: rgba(0,255,170,0.2); 
-                                        color: #00ffaa; 
-                                        border: 2px solid rgba(0,255,170,0.6); 
+                                        background: rgba(0,212,255,0.2); 
+                                        color: #00d4ff; 
+                                        border: 2px solid rgba(0,212,255,0.6); 
                                         border-radius: 12px; 
                                         cursor: pointer; 
                                         width: 100%; 
@@ -1285,10 +1301,10 @@
                                         font-weight: 600;
                                         font-size: 16px;
                                         transition: all 0.3s;
-                                        box-shadow: 0 0 15px rgba(0,255,170,0.4);
+                                        box-shadow: 0 0 15px rgba(0,212,255,0.4);
                                     " 
-                                    onmouseover="this.style.background='rgba(0,255,170,0.3)'; this.style.boxShadow='0 0 30px rgba(0,255,170,0.7)'"
-                                    onmouseout="this.style.background='rgba(0,255,170,0.2)'; this.style.boxShadow='0 0 15px rgba(0,255,170,0.4)'"
+                                    onmouseover="this.style.background='rgba(0,212,255,0.3)'; this.style.boxShadow='0 0 30px rgba(0,212,255,0.7)'"
+                                    onmouseout="this.style.background='rgba(0,212,255,0.2)'; this.style.boxShadow='0 0 15px rgba(0,212,255,0.4)'"
                                     onclick="window.openShopOverlay('${shop.shop_id}', '${shop.name.replace(/'/g, "\\'")}', '${category.replace(/'/g, "\\'")}')" >
                                         Открыть магазин
                                     </button>
