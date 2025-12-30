@@ -19,16 +19,16 @@
         :root {
             --bg-primary: #000000;
             --bg-secondary: #0a0a0a;
-            --text-primary: #00ff00;
-            --text-secondary: #ffffff;
-            --accent: #ff00ff;
-            --accent-hover: #00ffff;
-            --accent-orange: #ffff00;
-            --border: #00ff00;
+            --text-primary: #88cc99;
+            --text-secondary: #cccccc;
+            --accent: #bb88cc;
+            --accent-hover: #88bbcc;
+            --accent-orange: #ccbb88;
+            --border: #88cc99;
             --shadow: none;
             --shadow-lg: none;
             --glass-bg: #000000;
-            --glass-border: #00ff00;
+            --glass-border: #88cc99;
         }
 
         body {
@@ -51,7 +51,7 @@
             background: repeating-linear-gradient(
                 0deg,
                 transparent 0px,
-                rgba(0, 255, 0, 0.03) 1px,
+                rgba(136, 204, 153, 0.03) 1px,
                 transparent 2px,
                 transparent 4px
             );
@@ -158,9 +158,9 @@
             font-weight: 900;
             margin-bottom: 24px;
             text-align: left;
-            color: #00ff00;
+            color: #88cc99;
             letter-spacing: 0.2em;
-            text-shadow: 3px 3px 0px #ff00ff, 6px 6px 0px #00ffff;
+            text-shadow: 3px 3px 0px #bb88cc, 6px 6px 0px #88bbcc;
             transform: rotate(-2deg);
             position: relative;
             z-index: 10;
@@ -169,14 +169,14 @@
         .city-btn {
             padding: 20px 24px;
             background: #000000;
-            color: #00ff00;
-            border: 4px solid #00ff00;
+            color: #88cc99;
+            border: 4px solid #88cc99;
             border-radius: 0;
             font-size: 20px;
             font-weight: 900;
             cursor: pointer;
             transition: all 0.1s;
-            box-shadow: 8px 8px 0px #ff00ff;
+            box-shadow: 8px 8px 0px #bb88cc;
             position: relative;
             z-index: 1;
             animation: none;
@@ -187,19 +187,19 @@
         @keyframes brutal-glitch {
             0% {
                 transform: translate(0, 0) rotate(-1deg);
-                color: #00ff00;
+                color: #88cc99;
             }
             33% {
                 transform: translate(-2px, 2px) rotate(1deg);
-                color: #ff00ff;
+                color: #bb88cc;
             }
             66% {
                 transform: translate(2px, -2px) rotate(-1deg);
-                color: #00ffff;
+                color: #88bbcc;
             }
             100% {
                 transform: translate(0, 0) rotate(-1deg);
-                color: #00ff00;
+                color: #88cc99;
             }
         }
 
@@ -209,9 +209,9 @@
         }
 
         .city-btn:hover {
-            background: #00ff00;
+            background: #88cc99;
             color: #000000;
-            box-shadow: 8px 8px 0px #ffff00;
+            box-shadow: 8px 8px 0px #ccbb88;
             animation: brutal-glitch 0.3s infinite;
         }
 
@@ -236,13 +236,13 @@
             background: #000000;
             backdrop-filter: none;
             -webkit-backdrop-filter: none;
-            border: 3px solid #00ff00;
+            border: 3px solid #88cc99;
             border-radius: 0;
-            box-shadow: 5px 5px 0px #ff00ff;
+            box-shadow: 5px 5px 0px #bb88cc;
             cursor: pointer;
             font-size: 18px;
             font-weight: 900;
-            color: #00ff00;
+            color: #88cc99;
             transition: all 0.1s;
             animation: none;
             letter-spacing: 0.15em;
@@ -285,14 +285,14 @@
         .bio-bubble {
             position: relative;
             background: #000000;
-            border: 4px solid #00ff00;
-            box-shadow: 0 0 0 2px #ff00ff, 4px 4px 0 0 #ffff00;
+            border: 4px solid #88cc99;
+            box-shadow: 0 0 0 2px #bb88cc, 4px 4px 0 0 #ccbb88;
             animation: none;
             transition: all 0.1s;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #00ff00;
+            color: #88cc99;
             font-weight: 900;
             overflow: visible;
             border-radius: 0;
@@ -308,7 +308,7 @@
             width: 90px !important;
             height: 90px !important;
             border-width: 5px;
-            box-shadow: 0 0 0 3px #ff00ff, 6px 6px 0 0 #ffff00;
+            box-shadow: 0 0 0 3px #bb88cc, 6px 6px 0 0 #ccbb88;
             animation: none !important;
             transform: rotate(3deg) !important;
         }
@@ -335,14 +335,14 @@
             z-index: 2;
             font-size: 18px;
             transition: all 0.1s;
-            color: #00ff00;
+            color: #88cc99;
             font-weight: 900;
-            text-shadow: 2px 2px 0px #ff00ff;
+            text-shadow: 2px 2px 0px #bb88cc;
         }
 
         .bio-bubble-expanded .bio-bubble-count {
             font-size: 28px;
-            text-shadow: 3px 3px 0px #ff00ff, 6px 6px 0px #ffff00;
+            text-shadow: 3px 3px 0px #bb88cc, 6px 6px 0px #ccbb88;
         }
 
         /* Overlay магазина поверх карты */
@@ -384,9 +384,9 @@
             background: #000000;
             backdrop-filter: none;
             -webkit-backdrop-filter: none;
-            border: 5px solid #00ff00;
+            border: 5px solid #88cc99;
             border-radius: 0;
-            box-shadow: 12px 12px 0px #ff00ff, 24px 24px 0px #ffff00;
+            box-shadow: 12px 12px 0px #bb88cc, 24px 24px 0px #ccbb88;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -395,7 +395,7 @@
 
         #shop-header {
             padding: 24px 24px 20px;
-            border-bottom: 4px solid #00ff00;
+            border-bottom: 4px solid #88cc99;
             flex-shrink: 0;
             background: #000000;
         }
@@ -405,8 +405,8 @@
             font-weight: 900;
             margin-bottom: 8px;
             letter-spacing: 0.2em;
-            color: #00ff00;
-            text-shadow: 3px 3px 0px #ff00ff;
+            color: #88cc99;
+            text-shadow: 3px 3px 0px #bb88cc;
             transform: rotate(-1deg);
         }
 
@@ -449,7 +449,7 @@
             padding: 12px;
             background: #0a0a0a;
             border-radius: 0;
-            border: 3px solid #ffff00;
+            border: 3px solid #ccbb88;
             animation: none;
             transform: skewX(-2deg);
         }
@@ -457,21 +457,21 @@
         .breadcrumb-item {
             padding: 8px 14px;
             background: #000000;
-            border: 2px solid #00ff00;
+            border: 2px solid #88cc99;
             border-radius: 0;
             cursor: pointer;
             font-size: 14px;
             font-weight: 900;
-            color: #00ff00;
+            color: #88cc99;
             transition: all 0.1s;
             animation: none;
         }
 
         .breadcrumb-item:hover {
-            background: #00ff00;
+            background: #88cc99;
             color: #000000;
             transform: translate(-2px, -2px);
-            box-shadow: 2px 2px 0px #ff00ff;
+            box-shadow: 2px 2px 0px #bb88cc;
         }
 
         .breadcrumb-separator {
@@ -486,13 +486,13 @@
 
         .category-card {
             background: #000000;
-            border: 4px solid #ff00ff;
+            border: 4px solid #bb88cc;
             border-radius: 0;
             padding: 20px;
             cursor: pointer;
             text-align: left;
             transition: all 0.1s;
-            box-shadow: 6px 6px 0px #00ffff;
+            box-shadow: 6px 6px 0px #88bbcc;
             animation: none;
             position: relative;
             overflow: visible;
@@ -520,10 +520,10 @@
         }
 
         .category-card:hover {
-            background: #ff00ff;
+            background: #bb88cc;
             color: #000000;
             transform: translate(-6px, -6px) rotate(1deg);
-            box-shadow: 12px 12px 0px #00ffff, 18px 18px 0px #ffff00;
+            box-shadow: 12px 12px 0px #88bbcc, 18px 18px 0px #ccbb88;
         }
 
         /* Брутальные вены */
@@ -546,11 +546,11 @@
             font-size: 20px;
             font-weight: 900;
             margin-bottom: 8px;
-            color: #00ff00;
+            color: #88cc99;
             position: relative;
             z-index: 2;
             letter-spacing: 0.15em;
-            text-shadow: 2px 2px 0px #ff00ff;
+            text-shadow: 2px 2px 0px #bb88cc;
         }
 
         .category-card .count {
@@ -564,10 +564,10 @@
 
         .product-card {
             background: #000000;
-            border: 3px solid #00ffff;
+            border: 3px solid #88bbcc;
             border-radius: 0;
             overflow: hidden;
-            box-shadow: 4px 4px 0px #ffff00;
+            box-shadow: 4px 4px 0px #ccbb88;
             transition: all 0.1s;
             animation: none;
             transform: rotate(-1deg);
@@ -583,7 +583,7 @@
             aspect-ratio: 1;
             object-fit: cover;
             background: #0a0a0a;
-            border-bottom: 3px solid #00ffff;
+            border-bottom: 3px solid #88bbcc;
             filter: grayscale(100%) contrast(120%);
         }
 
@@ -595,21 +595,21 @@
             font-size: 14px;
             font-weight: 900;
             margin-bottom: 4px;
-            color: #ffff00;
+            color: #ccbb88;
             letter-spacing: 0.1em;
         }
 
         .product-price {
             font-size: 18px;
             font-weight: 900;
-            color: #00ff00;
+            color: #88cc99;
             text-shadow: 2px 2px 0px #000000;
             letter-spacing: 0.05em;
         }
 
         #shop-footer {
             padding: 16px 24px;
-            border-top: 4px solid #00ff00;
+            border-top: 4px solid #88cc99;
             flex-shrink: 0;
             background: #000000;
         }
@@ -618,21 +618,21 @@
             width: 100%;
             padding: 16px;
             background: #000000;
-            color: #ff00ff;
-            border: 4px solid #ff00ff;
+            color: #bb88cc;
+            border: 4px solid #bb88cc;
             border-radius: 0;
             font-size: 20px;
             font-weight: 900;
             cursor: pointer;
             transition: all 0.1s;
-            box-shadow: 6px 6px 0px #00ffff;
+            box-shadow: 6px 6px 0px #88bbcc;
             animation: none;
             letter-spacing: 0.2em;
         }
 
         .close-btn:active {
             transform: translate(6px, 6px);
-            background: #ff00ff;
+            background: #bb88cc;
             color: #000000;
             box-shadow: none;
         }
@@ -644,54 +644,54 @@
 
         ::-webkit-scrollbar-track {
             background: #000000;
-            border: 2px solid #00ff00;
+            border: 2px solid #88cc99;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #00ff00;
+            background: #88cc99;
             border-radius: 0;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #ff00ff;
+            background: #bb88cc;
         }
 
         /* Брутальные popup */
         .leaflet-popup-content-wrapper {
             background: #000000 !important;
-            border: 5px solid #00ff00 !important;
+            border: 5px solid #88cc99 !important;
             border-radius: 0 !important;
-            box-shadow: 8px 8px 0px #ff00ff !important;
+            box-shadow: 8px 8px 0px #bb88cc !important;
             padding: 0 !important;
             animation: none !important;
         }
 
         .leaflet-popup-tip {
             background: #000000 !important;
-            border: 3px solid #00ff00 !important;
+            border: 3px solid #88cc99 !important;
             box-shadow: none !important;
             animation: none !important;
         }        .leaflet-popup-close-button {
-            color: #00ff00 !important;
+            color: #88cc99 !important;
             font-size: 32px !important;
             font-weight: 900 !important;
-            text-shadow: 2px 2px 0px #ff00ff !important;
+            text-shadow: 2px 2px 0px #bb88cc !important;
         }
 
         .leaflet-popup-close-button:hover {
-            color: #ff00ff !important;
+            color: #bb88cc !important;
         }
 
         /* Брутальные линии между маркерами */
         .web-line {
-            stroke: #ff00ff !important;
+            stroke: #bb88cc !important;
             stroke-width: 3 !important;
             stroke-dasharray: 10, 5 !important;
         }
 
         /* Глитч-линия */
         .pulse-wave {
-            stroke: #00ff00 !important;
+            stroke: #88cc99 !important;
             stroke-width: 4 !important;
             fill: none !important;
             animation: wave-travel 2s linear infinite !important;
@@ -801,7 +801,7 @@
         function createSpores() {
             const sporesContainer = document.getElementById('spores');
             const symbols = ['█', '▓', '▒', '░', '▀', '▄', '▌', '▐', '■', '□', '▪', '▫', '▬', '▭', '▮', '▯'];
-            const colors = ['#00ff00', '#ff00ff', '#00ffff', '#ffff00'];
+            const colors = ['#88cc99', '#bb88cc', '#88bbcc', '#ccbb88'];
             
             for (let i = 0; i < 50; i++) {
                 const spore = document.createElement('div');
