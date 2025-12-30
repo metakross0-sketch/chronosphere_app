@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Магазины</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="//unpkg.com/globe.gl"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -32,40 +31,37 @@
         }
 
         body {
-            font-family: 'Courier New', 'Courier', monospace;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #000000;
             color: #ffffff;
             overflow: hidden;
-            -webkit-font-smoothing: none;
+            -webkit-font-smoothing: antialiased;
             position: relative;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            text-transform: none;
         }
 
-        /* Глитч-линии */
+        /* Sci-Fi сетка */
         body::before {
             content: '';
             position: fixed;
             width: 100%;
             height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent 0px,
-                rgba(136, 204, 153, 0.03) 1px,
-                transparent 2px,
-                transparent 4px
-            );
-            animation: glitch-lines 0.3s infinite;
+            background: 
+                linear-gradient(90deg, rgba(0, 212, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(0deg, rgba(0, 212, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-shift 20s linear infinite;
             z-index: 0;
             pointer-events: none;
         }
 
-        @keyframes glitch-lines {
-            0% { transform: translateY(0px); }
-            100% { transform: translateY(4px); }
+        @keyframes grid-shift {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
         }
 
-        /* Органические частицы */
+        /* Парящие частицы */
         .bio-particles {
             position: fixed;
             width: 100%;
@@ -77,25 +73,31 @@
 
         .bio-particle {
             position: absolute;
-            background: var(--accent);
-            border-radius: 0;
-            border: 2px solid #00ff00;
-            animation: brutal-float 3s linear infinite;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.8), rgba(0, 212, 255, 0));
+            border-radius: 50%;
+            filter: blur(2px);
+            animation: float-up 15s linear infinite;
             mix-blend-mode: screen;
         }
 
-        @keyframes brutal-float {
+        @keyframes float-up {
             0% {
-                transform: translate(0, 0) rotate(0deg);
-                opacity: 1;
+                transform: translate(0, 0) scale(1);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.3;
             }
             100% {
-                transform: translate(var(--float-x), var(--float-y)) rotate(360deg);
+                transform: translate(0, -100vh) scale(0.5);
                 opacity: 0;
             }
         }
 
-        /* Светящиеся споры */
+        /* Светящиеся частицы */
         .spores {
             position: fixed;
             width: 100%;
@@ -108,23 +110,28 @@
 
         .spore {
             position: absolute;
-            font-family: 'Courier New', monospace;
-            color: var(--spore-color);
-            font-size: 12px;
-            font-weight: 900;
-            line-height: 1;
-            animation: brutal-fall 2s linear infinite;
+            width: 4px;
+            height: 4px;
+            background: var(--spore-color);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--spore-color), 0 0 16px var(--spore-color);
+            animation: float-particle 8s linear infinite;
         }
 
-        @keyframes brutal-fall {
+        @keyframes float-particle {
             0% {
-                transform: translate(0, -20px);
+                transform: translate(0, 100vh) scale(0);
                 opacity: 0;
             }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
+            10% { 
+                opacity: 1; 
+                transform: translate(0, 90vh) scale(1);
+            }
+            90% { 
+                opacity: 0.8; 
+            }
             100% {
-                transform: translate(var(--drift-x), 100vh);
+                transform: translate(var(--drift-x), -20px) scale(0.5);
                 opacity: 0;
             }
         }
@@ -154,78 +161,80 @@
         }
 
         #city-selection h1 {
-            font-size: 48px;
-            font-weight: 900;
-            margin-bottom: 24px;
-            text-align: left;
-            color: #88cc99;
-            letter-spacing: 0.2em;
-            text-shadow: 3px 3px 0px #bb88cc, 6px 6px 0px #88bbcc;
-            transform: rotate(-2deg);
+            font-size: 38px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            text-align: center;
+            color: #00d4ff;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.7), 0 0 40px rgba(0, 212, 255, 0.4);
+            transform: none;
             position: relative;
             z-index: 10;
         }
 
         .city-btn {
-            padding: 20px 24px;
-            background: #000000;
-            color: #88cc99;
-            border: 4px solid #88cc99;
-            border-radius: 0;
-            font-size: 20px;
-            font-weight: 900;
+            padding: 16px 28px;
+            background: rgba(0, 20, 40, 0.85);
+            color: #00d4ff;
+            border: 2px solid rgba(0, 212, 255, 0.5);
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.1s;
-            box-shadow: 8px 8px 0px #bb88cc;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3), inset 0 0 10px rgba(0, 212, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             position: relative;
             z-index: 1;
             animation: none;
-            transform: rotate(-1deg);
-            letter-spacing: 0.15em;
+            transform: none;
+            letter-spacing: 0.05em;
         }
 
         @keyframes brutal-glitch {
             0% {
-                transform: translate(0, 0) rotate(-1deg);
-                color: #88cc99;
+                transform: scale(1);
+                color: #00d4ff;
             }
-            33% {
-                transform: translate(-2px, 2px) rotate(1deg);
-                color: #bb88cc;
-            }
-            66% {
-                transform: translate(2px, -2px) rotate(-1deg);
-                color: #88bbcc;
+            50% {
+                transform: scale(1.02);
+                color: #00d4ff;
+                box-shadow: 0 0 35px rgba(0, 212, 255, 0.7);
             }
             100% {
-                transform: translate(0, 0) rotate(-1deg);
-                color: #88cc99;
+                transform: scale(1);
+                color: #00d4ff;
             }
         }
 
         .city-btn:active {
-            transform: translate(8px, 8px) rotate(-1deg);
-            box-shadow: none;
+            transform: scale(0.98);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
         }
 
         .city-btn:hover {
-            background: #88cc99;
-            color: #000000;
-            box-shadow: 8px 8px 0px #ccbb88;
-            animation: brutal-glitch 0.3s infinite;
+            background: rgba(0, 212, 255, 0.15);
+            color: #00d4ff;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6), inset 0 0 15px rgba(0, 212, 255, 0.2);
+            transform: scale(1.05);
         }
 
-        /* Карта */
+        /* Глобус */
         #map-container {
             display: none;
             flex-direction: column;
             height: 100vh;
             position: relative;
+            background: #000000;
         }
 
         #map {
             flex: 1;
             width: 100%;
+            height: 100%;
+            background: #000000;
         }
 
         /* Кнопки на карте */
@@ -233,24 +242,31 @@
             position: absolute;
             z-index: 1000;
             padding: 12px 20px;
-            background: #000000;
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-            border: 3px solid #88cc99;
-            border-radius: 0;
-            box-shadow: 5px 5px 0px #bb88cc;
+            background: rgba(0, 20, 40, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 212, 255, 0.5);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4), inset 0 0 10px rgba(0, 212, 255, 0.1);
             cursor: pointer;
-            font-size: 18px;
-            font-weight: 900;
-            color: #88cc99;
-            transition: all 0.1s;
+            font-size: 16px;
+            font-weight: 600;
+            color: #00d4ff;
+            transition: all 0.3s;
             animation: none;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.05em;
+            text-transform: none;
+        }
+
+        .map-control:hover {
+            background: rgba(0, 212, 255, 0.15);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6), inset 0 0 15px rgba(0, 212, 255, 0.2);
+            transform: scale(1.05);
         }
 
         .map-control:active {
-            transform: translate(5px, 5px);
-            box-shadow: none;
+            transform: scale(0.98);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
         }
 
         #back-to-cities {
@@ -395,26 +411,27 @@
 
         #shop-header {
             padding: 24px 24px 20px;
-            border-bottom: 4px solid #88cc99;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
             flex-shrink: 0;
-            background: #000000;
+            background: rgba(0, 10, 20, 0.95);
+            box-shadow: 0 2px 20px rgba(0, 212, 255, 0.2);
         }
 
         #shop-header h2 {
-            font-size: 32px;
-            font-weight: 900;
+            font-size: 28px;
+            font-weight: 700;
             margin-bottom: 8px;
-            letter-spacing: 0.2em;
-            color: #88cc99;
-            text-shadow: 3px 3px 0px #bb88cc;
-            transform: rotate(-1deg);
+            letter-spacing: 0.03em;
+            color: #00d4ff;
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+            transform: none;
         }
 
         #shop-header .info-text {
             font-size: 14px;
-            color: #ffffff;
+            color: rgba(0, 212, 255, 0.7);
             margin: 4px 0;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.02em;
         }
 
         #shop-category-filter {
@@ -653,75 +670,7 @@
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #bb88cc;
-        }
-
-        /* Брутальные popup */
-        .leaflet-popup-content-wrapper {
-            background: #000000 !important;
-            border: 5px solid #88cc99 !important;
-            border-radius: 0 !important;
-            box-shadow: 8px 8px 0px #bb88cc !important;
-            padding: 0 !important;
-            animation: none !important;
-        }
-
-        .leaflet-popup-tip {
-            background: #000000 !important;
-            border: 3px solid #88cc99 !important;
-            box-shadow: none !important;
-            animation: none !important;
-        }        .leaflet-popup-close-button {
-            color: #88cc99 !important;
-            font-size: 32px !important;
-            font-weight: 900 !important;
-            text-shadow: 2px 2px 0px #bb88cc !important;
-        }
-
-        .leaflet-popup-close-button:hover {
-            color: #bb88cc !important;
-        }
-
-        /* Брутальные линии между маркерами */
-        .web-line {
-            stroke: #bb88cc !important;
-            stroke-width: 3 !important;
-            stroke-dasharray: 10, 5 !important;
-        }
-
-        /* Глитч-линия */
-        .pulse-wave {
-            stroke: #88cc99 !important;
-            stroke-width: 4 !important;
-            fill: none !important;
-            animation: wave-travel 2s linear infinite !important;
-        }
-
-        @keyframes wave-travel {
-            0% {
-                stroke-dashoffset: 1000;
-                stroke-opacity: 0;
-            }
-            10% {
-                stroke-opacity: 1;
-            }
-            90% {
-                stroke-opacity: 1;
-            }
-            100% {
-                stroke-dashoffset: 0;
-                stroke-opacity: 0;
-            }
-        }
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 212, 255, 0.5);
         }
     </style>
 </head>
@@ -734,7 +683,7 @@
     <div id="app">
         <!-- Экран выбора города -->
         <div id="city-selection">
-            <h1>/// МАГАЗИНЫ ///</h1>
+            <h1>◬ SHOPS NETWORK ◬</h1>
             <div id="cities-list"></div>
         </div>
 
@@ -776,49 +725,49 @@
         tg.ready();
 
         let map = null;
+        let globe = null;
         let currentCity = null;
         let selectedShop = null;
+        let globeData = {
+            shops: [],
+            arcs: []
+        };
 
-        // Создание органических частиц
+        // Создание sci-fi частиц
         function createBioParticles() {
             const bioParticles = document.getElementById('bioParticles');
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < 20; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'bio-particle';
-                const size = 20 + Math.random() * 40;
+                const size = 3 + Math.random() * 8;
                 particle.style.width = size + 'px';
                 particle.style.height = size + 'px';
                 particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.setProperty('--float-x', (Math.random() - 0.5) * 300 + 'px');
-                particle.style.setProperty('--float-y', (Math.random() - 0.5) * 300 + 'px');
-                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.top = 100 + Math.random() * 20 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
                 bioParticles.appendChild(particle);
             }
         }
 
-        // Создание брутальных глитч-символов
+        // Создание светящихся точек
         function createSpores() {
             const sporesContainer = document.getElementById('spores');
-            const symbols = ['█', '▓', '▒', '░', '▀', '▄', '▌', '▐', '■', '□', '▪', '▫', '▬', '▭', '▮', '▯'];
-            const colors = ['#88cc99', '#bb88cc', '#88bbcc', '#ccbb88'];
+            const colors = ['rgba(0, 212, 255, 0.8)', 'rgba(0, 180, 255, 0.6)', 'rgba(0, 255, 255, 0.5)', 'rgba(100, 200, 255, 0.7)'];
             
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 40; i++) {
                 const spore = document.createElement('div');
                 spore.className = 'spore';
-                spore.textContent = symbols[Math.floor(Math.random() * symbols.length)];
                 spore.style.left = Math.random() * 100 + '%';
-                spore.style.setProperty('--drift-x', (Math.random() - 0.5) * 200 + 'px');
+                spore.style.setProperty('--drift-x', (Math.random() - 0.5) * 150 + 'px');
                 spore.style.setProperty('--spore-color', colors[i % colors.length]);
-                spore.style.color = colors[i % colors.length];
-                spore.style.fontSize = (8 + Math.random() * 12) + 'px';
-                spore.style.fontWeight = '900';
-                spore.style.animationDelay = Math.random() * 2 + 's';
+                spore.style.animationDelay = Math.random() * 8 + 's';
+                spore.style.animationDuration = (6 + Math.random() * 6) + 's';
                 sporesContainer.appendChild(spore);
             }
         }
 
-        // Инициализация живого интерфейса
+        // Инициализация sci-fi интерфейса
         createBioParticles();
         createSpores();
 
@@ -859,55 +808,89 @@
 
             await loadCategories(city);
 
-            if (!map) {
-                map = L.map('map').setView([55.7558, 37.6173], 13);
-                // Темная карта для bioluminescent стиля
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '© OpenStreetMap © CartoDB',
-                    subdomains: 'abcd',
-                    maxZoom: 19
-                }).addTo(map);
-                
-                // Слушаем изменение zoom для анимации пузырей
-                map.on('zoomend', updateBubblesOnZoom);
+            if (!globe) {
+                // Инициализация 3D глобуса
+                globe = Globe()
+                    (document.getElementById('map'))
+                    .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+                    .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+                    .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+                    .showAtmosphere(true)
+                    .atmosphereColor('#00d4ff')
+                    .atmosphereAltitude(0.25)
+                    .pointOfView({ lat: 55.7558, lng: 37.6173, altitude: 2 })
+                    .pointsData([])
+                    .pointAltitude(0.01)
+                    .pointRadius(0.5)
+                    .pointColor(() => '#00d4ff')
+                    .pointLabel('name')
+                    .arcsData([])
+                    .arcColor(() => 'rgba(0, 212, 255, 0.5)')
+                    .arcDashLength(0.4)
+                    .arcDashGap(0.2)
+                    .arcDashAnimateTime(3000)
+                    .arcStroke(0.5)
+                    .onPointClick(point => {
+                        if (point.shops) {
+                            showShopPopup(point);
+                        }
+                    });
+
+                // Автовращение глобуса
+                globe.controls().autoRotate = true;
+                globe.controls().autoRotateSpeed = 0.3;
             }
 
-        // Функция создания паутины между маркерами
+        // Функция создания паутины с максимум 2 линиями из каждого магазина
         function createWebBetweenMarkers(coordinates) {
-            if (coordinates.length < 2) return;
+            if (coordinates.length < 2) return [];
             
-            const webLines = [];
+            const arcs = [];
+            const connectionCount = {}; // Считаем количество линий для каждой точки
             
-            // Создаем линии между ВСЕМИ маркерами
+            // Инициализируем счетчики
+            coordinates.forEach((_, idx) => {
+                connectionCount[idx] = 0;
+            });
+            
+            // Создаем линии, но не более 2 из каждой точки
             for (let i = 0; i < coordinates.length; i++) {
+                if (connectionCount[i] >= 2) continue; // Уже 2 линии из этой точки
+                
                 for (let j = i + 1; j < coordinates.length; j++) {
-                    // Создаем волнистую линию с 2-3 пиками
-                    const wavyPoints = createWavyLine(coordinates[i], coordinates[j], 3, 0);
+                    if (connectionCount[j] >= 2) continue; // Уже 2 линии из этой точки
                     
-                    // Паутина (волнистая линия)
-                    const webLine = L.polyline(wavyPoints, {
-                        color: 'rgba(255, 140, 50, 0.7)',
-                        weight: 2,
-                        opacity: 1,
-                        className: 'web-line',
-                        smoothFactor: 1
-                    }).addTo(map);
+                    // Проверяем, можем ли добавить линию
+                    if (connectionCount[i] < 2 && connectionCount[j] < 2) {
+                        arcs.push({
+                            startLat: coordinates[i][0],
+                            startLng: coordinates[i][1],
+                            endLat: coordinates[j][0],
+                            endLng: coordinates[j][1]
+                        });
+                        connectionCount[i]++;
+                        connectionCount[j]++;
+                    }
                     
-                    // Сохраняем линию и координаты для анимации
-                    webLines.push({
-                        line: webLine,
-                        start: coordinates[i],
-                        end: coordinates[j],
-                        peaks: 3
-                    });
+                    // Если из текущей точки уже 2 линии, переходим к следующей
+                    if (connectionCount[i] >= 2) break;
                 }
             }
             
-            // Убрать анимацию волн для брутального стиля
-            // Линии будут статичными и ломаными
+            return arcs;
         }
-        
-        // Функция создания ломаной брутальной линии
+
+        // Функция для показа popup магазина
+        function showShopPopup(point) {
+            if (!point.shops || point.shops.length === 0) return;
+            
+            // Здесь можно добавить HTML overlay для отображения информации о магазинах
+            // Пока просто откроем первый магазин
+            const shop = point.shops[0];
+            openShopOverlay(shop.shop_id, shop.name, shop.category || 'Без категории');
+        }
+
+        // Функция создания ломаной брутальной линии (теперь не используется для глобуса)
         function createWavyLine(start, end, peaks, phase = 0) {
             const points = [];
             const segments = 5; // Меньше сегментов для более угловатого вида
@@ -943,11 +926,10 @@
                 const data = await response.json();
 
                 if (data.shops && data.shops.length > 0) {
-                    map.setView([data.shops[0].latitude, data.shops[0].longitude], 13);
-
                     // Группируем магазины по координатам
                     const coordGroups = {};
-                    const allCoordinates = []; // Массив всех координат для паутины
+                    const allCoordinates = [];
+                    const points = [];
                     
                     data.shops.forEach(shop => {
                         const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
@@ -958,160 +940,53 @@
                         coordGroups[key].push(shop);
                     });
 
-                    // Создаем паутину между всеми маркерами
-                    createWebBetweenMarkers(allCoordinates);
-
-                    // Добавляем биопузыри маркеры
+                    // Создаем точки для глобуса
                     Object.values(coordGroups).forEach(group => {
                         const lat = group[0].latitude;
                         const lng = group[0].longitude;
-                        const photoUrl = getPhotoUrl(group[0].photo_url);
+                        const name = group.length > 1 
+                            ? `${group.length} магазинов` 
+                            : group[0].name;
                         
-                        let marker;
-                        if (group.length > 1) {
-                            // Группа магазинов - биопузырь с количеством
-                            const iconHtml = `
-                                <div class="bio-bubble" data-photo="${photoUrl}" style="width: 50px; height: 50px;">
-                                    <img class="bio-bubble-photo" src="${photoUrl}" onerror="this.style.display='none'">
-                                    <span class="bio-bubble-count">${group.length}</span>
-                                </div>
-                            `;
-                            const customIcon = L.divIcon({
-                                html: iconHtml,
-                                className: 'custom-marker',
-                                iconSize: [50, 50],
-                                iconAnchor: [25, 25]
-                            });
-                            marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
-                        } else {
-                            // Один магазин - биопузырь
-                            const iconHtml = `
-                                <div class="bio-bubble" data-photo="${photoUrl}" style="width: 42px; height: 42px;">
-                                    <img class="bio-bubble-photo" src="${photoUrl}" onerror="this.style.display='none'">
-                                </div>
-                            `;
-                            const customIcon = L.divIcon({
-                                html: iconHtml,
-                                className: 'custom-marker',
-                                iconSize: [42, 42],
-                                iconAnchor: [21, 21]
-                            });
-                            marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
-                        }
-                        
-                        // Создаём popup
-                        if (group.length > 1) {
-                            // Несколько магазинов - список
-                            const shopsListHtml = group.map((shop) => {
-                                const photoUrl = getPhotoUrl(shop.photo_url);
-                                const category = shop.category || 'Без категории';
-                                return `
-                                    <div style="
-                                        background: rgba(0, 20, 40, 0.9);
-                                        border: 2px solid rgba(0, 212, 255, 0.5);
-                                        border-radius: 16px;
-                                        padding: 12px;
-                                        margin-bottom: 12px;
-                                        cursor: pointer;
-                                        transition: all 0.3s;
-                                        box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
-                                    " 
-                                    onmouseover="this.style.boxShadow='0 0 30px rgba(0,212,255,0.6)'; this.style.transform='scale(1.02)'" 
-                                    onmouseout="this.style.boxShadow='0 0 15px rgba(0,212,255,0.3)'; this.style.transform='scale(1)'" 
-                                    onclick="window.openShopOverlay('${shop.shop_id}', '${shop.name.replace(/'/g, "\\'")}', '${category.replace(/'/g, "\\'")}')">
-                                        ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(0,212,255,0.3);" onerror="this.style.display='none'">` : ''}
-                                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px; color: #00d4ff;">${shop.name}</div>
-                                        <div style="color: rgba(0,212,255,0.7); font-size: 13px; margin-bottom: 3px;">🏷️ ${category}</div>
-                                        <div style="color: rgba(0,212,255,0.6); font-size: 13px;">ID: ${shop.shop_id}</div>
-                                        <div style="
-                                            background: rgba(0, 212, 255, 0.2);
-                                            color: #00d4ff;
-                                            padding: 10px;
-                                            border: 1px solid rgba(0,212,255,0.5);
-                                            border-radius: 10px;
-                                            text-align: center;
-                                            margin-top: 10px;
-                                            font-size: 15px;
-                                            font-weight: 600;
-                                        ">
-                                            Открыть магазин
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('');
-                            
-                            const popupContent = `
-                                <div style="padding: 16px; width: 300px; max-height: 400px; overflow-y: auto; background: rgba(0,10,20,0.95); border-radius: 16px;">
-                                    <h3 style="margin: 0 0 16px 0; font-size: 18px; text-align: center; font-weight: 700; color: #00d4ff; text-shadow: 0 0 10px rgba(0,212,255,0.6);">
-                                        📍 ${group.length} ${group.length === 2 ? 'магазина' : 'магазинов'}
-                                    </h3>
-                                    ${shopsListHtml}
-                                </div>
-                            `;
-                            marker.bindPopup(popupContent, { maxWidth: 320, className: 'bio-popup' });
-                        } else {
-                            // Один магазин - popup с фото и кнопкой
-                            const shop = group[0];
-                            const photoUrl = getPhotoUrl(shop.photo_url);
-                            const category = shop.category || 'Без категории';
-                            const popupContent = `
-                                <div style="text-align: center; padding: 16px; width: 280px; background: rgba(0,10,20,0.95); border-radius: 16px;">
-                                    ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; display: block; border: 2px solid rgba(0,212,255,0.4);" onerror="this.style.display='none'">` : ''}
-                                    <h3 style="margin: 10px 0; font-size: 19px; font-weight: 700; color: #00d4ff; text-shadow: 0 0 10px rgba(0,212,255,0.6);">${shop.name}</h3>
-                                    <p style="color: rgba(0,212,255,0.7); margin: 6px 0; font-size: 14px;">🏷️ ${category}</p>
-                                    <p style="color: rgba(0,212,255,0.6); margin: 6px 0; font-size: 13px;">ID: ${shop.shop_id}</p>
-                                    <button style="
-                                        padding: 12px 24px; 
-                                        background: rgba(0,212,255,0.2); 
-                                        color: #00d4ff; 
-                                        border: 2px solid rgba(0,212,255,0.6); 
-                                        border-radius: 12px; 
-                                        cursor: pointer; 
-                                        width: 100%; 
-                                        margin-top: 12px;
-                                        font-weight: 600;
-                                        font-size: 16px;
-                                        transition: all 0.3s;
-                                        box-shadow: 0 0 15px rgba(0,212,255,0.4);
-                                    " 
-                                    onmouseover="this.style.background='rgba(0,212,255,0.3)'; this.style.boxShadow='0 0 30px rgba(0,212,255,0.7)'"
-                                    onmouseout="this.style.background='rgba(0,212,255,0.2)'; this.style.boxShadow='0 0 15px rgba(0,212,255,0.4)'"
-                                    onclick="window.openShopOverlay('${shop.shop_id}', '${shop.name.replace(/'/g, "\\'")}', '${category.replace(/'/g, "\\'")}')" >
-                                        Открыть магазин
-                                    </button>
-                                </div>
-                            `;
-                            marker.bindPopup(popupContent, { className: 'bio-popup' });
-                            marker.on('click', () => { selectedShop = shop; });
-                        }
+                        points.push({
+                            lat: lat,
+                            lng: lng,
+                            name: name,
+                            size: group.length > 1 ? 1.5 : 1,
+                            shops: group
+                        });
+                    });
+
+                    // Создаем паутину между магазинами (макс 2 линии из каждого)
+                    const arcs = createWebBetweenMarkers(allCoordinates);
+                    
+                    // Обновляем данные на глобусе
+                    globe
+                        .pointsData(points)
+                        .pointAltitude('size')
+                        .pointRadius(d => d.size * 0.3)
+                        .pointColor(() => '#00d4ff')
+                        .arcsData(arcs)
+                        .arcColor(() => 'rgba(0, 212, 255, 0.5)')
+                        .arcStroke(0.8);
+
+                    // Анимация перелета к городу
+                    const centerLat = data.shops[0].latitude;
+                    const centerLng = data.shops[0].longitude;
+                    
+                    globe.pointOfView({
+                        lat: centerLat,
+                        lng: centerLng,
+                        altitude: 1.5
+                    }, 2000); // 2 секунды анимации
+                    
+                    globeData.shops = points;
+                    globeData.arcs = arcs;
                     });
                 }
             } catch (error) {
                 console.error('Ошибка загрузки магазинов:', error);
             }
-        }
-
-        // Функция увеличения биопузырей при zoom
-        function updateBubblesOnZoom() {
-            const zoom = map.getZoom();
-            const bubbles = document.querySelectorAll('.bio-bubble');
-            
-            bubbles.forEach(bubble => {
-                // При zoom > 14 увеличиваем пузырь и показываем фото
-                if (zoom >= 14) {
-                    bubble.classList.add('bio-bubble-expanded');
-                    const photo = bubble.querySelector('.bio-bubble-photo');
-                    if (photo && photo.src) {
-                        photo.style.opacity = '0.8';
-                    }
-                } else {
-                    bubble.classList.remove('bio-bubble-expanded');
-                    const photo = bubble.querySelector('.bio-bubble-photo');
-                    if (photo) {
-                        photo.style.opacity = '0';
-                    }
-                }
-            });
         }
 
         let currentCatalogData = null;
