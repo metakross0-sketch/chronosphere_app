@@ -825,8 +825,8 @@
                     .atmosphereAltitude(0.25)
                     .pointOfView({ lat: 55.7558, lng: 37.6173, altitude: 2 })
                     .pointsData([])
-                    .pointAltitude(0.01)
-                    .pointRadius(0.5)
+                    .pointAltitude(0.001)
+                    .pointRadius(0.15)
                     .pointColor(() => '#00d4ff')
                     .pointLabel('name')
                     .arcsData([])
@@ -837,7 +837,20 @@
                     .arcStroke(0.5)
                     .onPointClick(point => {
                         if (point.shops) {
-                            showShopPopup(point);
+                            // Отключаем автовращение
+                            globe.controls().autoRotate = false;
+                            
+                            // Приближаемся к точке
+                            globe.pointOfView({
+                                lat: point.lat,
+                                lng: point.lng,
+                                altitude: 0.5
+                            }, 1500);
+                            
+                            // Показываем магазины после приближения
+                            setTimeout(() => {
+                                showShopsInOverlay(point.shops);
+                            }, 1600);
                         }
                     });
 
@@ -904,14 +917,93 @@
             return arcs;
         }
 
-        // Функция для показа popup магазина
-        function showShopPopup(point) {
-            if (!point.shops || point.shops.length === 0) return;
+        // Функция для показа списка магазинов в overlay
+        function showShopsInOverlay(shops) {
+            if (!shops || shops.length === 0) return;
             
-            // Здесь можно добавить HTML overlay для отображения информации о магазинах
-            // Пока просто откроем первый магазин
-            const shop = point.shops[0];
-            openShopOverlay(shop.shop_id, shop.name, shop.category || 'Без категории');
+            if (shops.length === 1) {
+                // Один магазин - сразу открываем
+                const shop = shops[0];
+                openShopOverlay(shop.shop_id, shop.name, shop.category || 'Без категории');
+            } else {
+                // Несколько магазинов - показываем список для выбора
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(0, 10, 20, 0.95);
+                    border: 2px solid rgba(0, 212, 255, 0.5);
+                    border-radius: 16px;
+                    padding: 24px;
+                    max-width: 400px;
+                    max-height: 70vh;
+                    overflow-y: auto;
+                    z-index: 10000;
+                    box-shadow: 0 0 40px rgba(0, 212, 255, 0.4);
+                `;
+                
+                const title = document.createElement('h3');
+                title.textContent = `${shops.length} магазинов`;
+                title.style.cssText = `
+                    color: #00d4ff;
+                    text-align: center;
+                    margin-bottom: 20px;
+                    text-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+                `;
+                overlay.appendChild(title);
+                
+                shops.forEach(shop => {
+                    const shopBtn = document.createElement('div');
+                    shopBtn.style.cssText = `
+                        background: rgba(0, 20, 40, 0.8);
+                        border: 2px solid rgba(0, 212, 255, 0.3);
+                        border-radius: 12px;
+                        padding: 16px;
+                        margin-bottom: 12px;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                    `;
+                    shopBtn.innerHTML = `
+                        <div style="color: #00d4ff; font-weight: 600; font-size: 16px; margin-bottom: 4px;">${shop.name}</div>
+                        <div style="color: rgba(0, 212, 255, 0.7); font-size: 14px;">${shop.category || 'Без категории'}</div>
+                    `;
+                    shopBtn.onmouseover = () => {
+                        shopBtn.style.background = 'rgba(0, 212, 255, 0.2)';
+                        shopBtn.style.borderColor = 'rgba(0, 212, 255, 0.6)';
+                        shopBtn.style.transform = 'scale(1.02)';
+                    };
+                    shopBtn.onmouseout = () => {
+                        shopBtn.style.background = 'rgba(0, 20, 40, 0.8)';
+                        shopBtn.style.borderColor = 'rgba(0, 212, 255, 0.3)';
+                        shopBtn.style.transform = 'scale(1)';
+                    };
+                    shopBtn.onclick = () => {
+                        document.body.removeChild(overlay);
+                        openShopOverlay(shop.shop_id, shop.name, shop.category || 'Без категории');
+                    };
+                    overlay.appendChild(shopBtn);
+                });
+                
+                const closeBtn = document.createElement('button');
+                closeBtn.textContent = 'Закрыть';
+                closeBtn.style.cssText = `
+                    width: 100%;
+                    padding: 12px;
+                    background: rgba(0, 212, 255, 0.2);
+                    color: #00d4ff;
+                    border: 2px solid rgba(0, 212, 255, 0.5);
+                    border-radius: 8px;
+                    margin-top: 12px;
+                    cursor: pointer;
+                    font-weight: 600;
+                `;
+                closeBtn.onclick = () => document.body.removeChild(overlay);
+                overlay.appendChild(closeBtn);
+                
+                document.body.appendChild(overlay);
+            }
         }
 
         // Функция создания ломаной брутальной линии (теперь не используется для глобуса)
@@ -987,8 +1079,8 @@
                     // Обновляем данные на глобусе
                     globe
                         .pointsData(points)
-                        .pointAltitude('size')
-                        .pointRadius(d => d.size * 0.3)
+                        .pointAltitude(0.001)
+                        .pointRadius(d => d.size * 0.1)
                         .pointColor(() => '#00d4ff')
                         .arcsData(arcs)
                         .arcColor(() => 'rgba(0, 212, 255, 0.5)')
