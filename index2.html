@@ -191,6 +191,11 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+        }
+        
+        #pulse-circle * {
+            pointer-events: none;
         }
         
         #pulse-circle:active {
@@ -944,7 +949,7 @@
         
         // Инициализация после загрузки
         window.addEventListener('load', () => {
-            console.log('Window loaded, starting awakening ritual...');
+            console.log('=== Window loaded ===');
             
             // Получаем геолокацию
             if (navigator.geolocation) {
@@ -966,16 +971,47 @@
             }
             
             // Настройка ритуала пробуждения
+            console.log('Setting up pulse circle...');
             const pulseCircle = document.getElementById('pulse-circle');
+            const awakeningRitual = document.getElementById('awakening-ritual');
+            
+            console.log('Pulse circle element:', pulseCircle);
+            console.log('Awakening ritual element:', awakeningRitual);
+            
             if (pulseCircle) {
-                pulseCircle.onclick = startAwakening;
-                pulseCircle.ontouchstart = (e) => {
+                // Используем addEventListener для надежности
+                pulseCircle.addEventListener('click', function(e) {
+                    console.log('=== PULSE CIRCLE CLICK ===');
                     e.preventDefault();
+                    e.stopPropagation();
                     startAwakening();
-                };
-                console.log('Pulse circle handler attached');
+                });
+                
+                pulseCircle.addEventListener('touchstart', function(e) {
+                    console.log('=== PULSE CIRCLE TOUCH ===');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startAwakening();
+                }, { passive: false });
+                
+                console.log('✓ Pulse circle handlers attached');
             } else {
-                console.error('Pulse circle not found!');
+                console.error('✗ Pulse circle not found!');
+            }
+            
+            // Также добавляем обработчик на весь экран ритуала как запасной вариант
+            if (awakeningRitual) {
+                awakeningRitual.addEventListener('click', function(e) {
+                    console.log('=== RITUAL SCREEN CLICK ===');
+                    startAwakening();
+                });
+                
+                awakeningRitual.addEventListener('touchstart', function(e) {
+                    console.log('=== RITUAL SCREEN TOUCH ===');
+                    startAwakening();
+                }, { passive: false });
+                
+                console.log('✓ Awakening ritual handlers attached');
             }
             
             // Загружаем данные в фоне
