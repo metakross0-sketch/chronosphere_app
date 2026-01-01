@@ -155,6 +155,9 @@
             animation: fadeIn 0.4s ease;
             position: relative;
             z-index: 1;
+            width: 100%;
+            height: 100vh;
+            align-items: center;
         }
 
         @keyframes fadeIn {
@@ -166,6 +169,14 @@
             border: 2px solid rgba(0, 212, 255, 0.3);
             border-radius: 8px;
             overflow: hidden;
+        }
+        
+        #cities-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 500px;
         }
 
         #city-selection h1 {
@@ -787,9 +798,14 @@
             console.log('Window loaded, loading cities...');
             console.log('Globe.gl available?', typeof Globe !== 'undefined');
             
-            // Инициализация глобуса
-            initGlobe();
+            // Инициализация глобуса (не блокируем если ошибка)
+            try {
+                initGlobe();
+            } catch (error) {
+                console.error('Globe initialization failed:', error);
+            }
             
+            // Загружаем города независимо от глобуса
             loadCities();
             
             // Добавляем обработчик кнопки назад
@@ -816,30 +832,36 @@
                 return;
             }
             
-            globe = Globe()
-                (globeContainer)
-                .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
-                .backgroundColor('#000000')
-                .pointAltitude(0.001)
-                .pointRadius(d => d.size * 0.1)
-                .pointColor(() => '#00d4ff')
-                .arcColor(() => 'rgba(0, 212, 255, 0.5)')
-                .arcStroke(0.8);
+            console.log('Initializing globe...');
             
-            // Обработчик клика по точкам на глобусе
-            globe.onPointClick((point) => {
-                console.log('Point clicked:', point);
-                if (point && point.shops) {
-                    // Если есть магазины в точке, показываем город
-                    const city = point.shops[0].city;
-                    showCityMap(city);
-                }
-            });
-            
-            // Начальная позиция камеры
-            globe.pointOfView({ lat: 55.7558, lng: 37.6173, altitude: 2.5 });
-            
-            console.log('Globe initialized');
+            try {
+                globe = Globe()
+                    (globeContainer)
+                    .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+                    .backgroundColor('#000000')
+                    .pointAltitude(0.001)
+                    .pointRadius(d => d.size * 0.1)
+                    .pointColor(() => '#00d4ff')
+                    .arcColor(() => 'rgba(0, 212, 255, 0.5)')
+                    .arcStroke(0.8);
+                
+                // Обработчик клика по точкам на глобусе
+                globe.onPointClick((point) => {
+                    console.log('Point clicked:', point);
+                    if (point && point.shops) {
+                        // Если есть магазины в точке, показываем город
+                        const city = point.shops[0].city;
+                        showCityMap(city);
+                    }
+                });
+                
+                // Начальная позиция камеры
+                globe.pointOfView({ lat: 55.7558, lng: 37.6173, altitude: 2.5 });
+                
+                console.log('Globe initialized successfully');
+            } catch (error) {
+                console.error('Error initializing globe:', error);
+            }
         }
         
         function getPhotoUrl(filename) {
@@ -850,13 +872,20 @@
 
         async function loadCities() {
             try {
+                console.log('loadCities started');
                 const response = await fetch(`${API_URL}/api/cities`);
                 const data = await response.json();
+                console.log('Cities data received:', data);
                 
                 const citiesList = document.getElementById('cities-list');
+                if (!citiesList) {
+                    console.error('cities-list element not found!');
+                    return;
+                }
                 citiesList.innerHTML = '';
 
                 if (data.cities && data.cities.length > 0) {
+                    console.log('Creating city buttons for', data.cities.length, 'cities');
                     data.cities.forEach(city => {
                         const btn = document.createElement('button');
                         btn.className = 'city-btn';
@@ -877,9 +906,13 @@
         
         // Загрузка всех магазинов на глобус для отображения точек
         async function loadAllShopsOnGlobe(cities) {
-            if (!globe) return;
+            if (!globe) {
+                console.log('Globe not initialized, skipping globe data load');
+                return;
+            }
             
             try {
+                console.log('Loading shops on globe for cities:', cities);
                 const allPoints = [];
                 const allArcs = [];
                 const coordGroups = {};
@@ -1617,18 +1650,7 @@
             });
         });
         
-        function checkAdmin() {
-            const userId = tg.initDataUnsafe?.user?.id;
-            if (userId === ADMIN_ID) {
-                window.location.href = 'admin.html';
-                return true;
-            }
-            return false;
-        }
-
-        if (!checkAdmin()) {
-            loadCities();
-        }
+        // Удалена проверка на админа - города загружаются автоматически при load
     </script>
 </body>
 </html>
