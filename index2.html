@@ -161,6 +161,12 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        #globe-container {
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
 
         #city-selection h1 {
             font-size: 38px;
@@ -934,20 +940,36 @@
 
             await loadCategories(city);
 
+            // Загружаем магазины для получения координат
+            const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
+            const data = await response.json();
+            
+            // Вычисляем центр города по координатам первого магазина
+            let centerLat = 55.7558; // По умолчанию Москва
+            let centerLng = 37.6173;
+            
+            if (data.shops && data.shops.length > 0) {
+                centerLat = data.shops[0].latitude;
+                centerLng = data.shops[0].longitude;
+            }
+
             // Инициализируем Leaflet карту для города
             if (!map) {
                 console.log('Initializing Leaflet map...');
-                map = L.map('map').setView([55.7558, 37.6173], 13);
+                map = L.map('map').setView([centerLat, centerLng], 13);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                     attribution: '© OpenStreetMap © CartoDB',
                     subdomains: 'abcd',
                     maxZoom: 19
                 }).addTo(map);
+            } else {
+                // Если карта уже создана, просто перемещаем центр
+                map.setView([centerLat, centerLng], 13);
             }
             
-            // Загрузка магазинов для города
+            // Загрузка магазинов для города и добавление маркеров
             console.log('Loading shops for city:', city);
-            loadShopsForCity(city);
+            loadShopsForCityMap(city);
         }
 
         // Функция создания паутины с максимум 2 линиями из каждого магазина
@@ -987,6 +1009,98 @@
             }
             
             return arcs;
+        }
+
+        // Функция загрузки магазинов для города и добавления маркеров на Leaflet карту
+        let mapMarkers = [];
+        
+        async function loadShopsForCityMap(city, categoryFilter = '') {
+            try {
+                console.log('loadShopsForCityMap called for:', city, 'with filter:', categoryFilter);
+                
+                // Очищаем предыдущие маркеры
+                mapMarkers.forEach(marker => map.removeLayer(marker));
+                mapMarkers = [];
+                
+                const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
+                const data = await response.json();
+                
+                console.log('Received shops data for map:', data);
+
+                if (data.shops && data.shops.length > 0) {
+                    // Группируем магазины по координатам
+                    const coordGroups = {};
+                    
+                    data.shops.forEach(shop => {
+                        const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
+                        if (!coordGroups[key]) {
+                            coordGroups[key] = [];
+                        }
+                        coordGroups[key].push(shop);
+                    });
+
+                    // Создаем маркеры на Leaflet карте
+                    Object.values(coordGroups).forEach(group => {
+                        const lat = group[0].latitude;
+                        const lng = group[0].longitude;
+                        
+                        // Создаем кастомную иконку
+                        const customIcon = L.divIcon({
+                            className: 'custom-marker',
+                            html: `<div style="
+                                background: rgba(0, 212, 255, 0.8);
+                                width: 30px;
+                                height: 30px;
+                                border-radius: 50%;
+                                border: 3px solid #00d4ff;
+                                box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                color: #000;
+                                font-weight: bold;
+                                font-size: 14px;
+                            ">${group.length > 1 ? group.length : ''}</div>`,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        });
+                        
+                        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+                        
+                        // Создаем popup с информацией о магазинах
+                        let popupContent = '<div style="color: #00d4ff; font-weight: bold; margin-bottom: 8px;">';
+                        if (group.length > 1) {
+                            popupContent += `${group.length} магазинов:</div>`;
+                            group.forEach(shop => {
+                                popupContent += `<div style="margin: 4px 0; cursor: pointer; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 4px;" onclick="openShopOverlay(${shop.shop_id}, '${shop.name.replace(/'/g, "\\'")}', '${(shop.category || 'Без категории').replace(/'/g, "\\'")}')">`;
+                                popupContent += `<strong>${shop.name}</strong><br>`;
+                                popupContent += `<span style="font-size: 12px; color: #88cc99;">${shop.category || 'Без категории'}</span></div>`;
+                            });
+                        } else {
+                            const shop = group[0];
+                            popupContent += `${shop.name}</div>`;
+                            popupContent += `<div style="font-size: 12px; color: #88cc99; margin-bottom: 8px;">${shop.category || 'Без категории'}</div>`;
+                            popupContent += `<button onclick="openShopOverlay(${shop.shop_id}, '${shop.name.replace(/'/g, "\\'")}', '${(shop.category || 'Без категории').replace(/'/g, "\\'")})" style="
+                                background: rgba(0, 212, 255, 0.2);
+                                color: #00d4ff;
+                                border: 2px solid rgba(0, 212, 255, 0.5);
+                                padding: 6px 12px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-weight: bold;
+                            ">Открыть каталог</button>`;
+                        }
+                        popupContent += '</div>';
+                        
+                        marker.bindPopup(popupContent);
+                        mapMarkers.push(marker);
+                    });
+                    
+                    console.log('Added', mapMarkers.length, 'markers to map');
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки магазинов:', error);
+            }
         }
 
         // Функция для показа списка магазинов в overlay
@@ -1107,10 +1221,17 @@
             return points;
         }
 
-        // Функция загрузки магазинов для города
-        async function loadShopsForCity(city, categoryFilter = '') {
+        // Функция загрузки магазинов для города и добавления маркеров на Leaflet карту
+        let mapMarkers = [];
+        
+        async function loadShopsForCityMap(city, categoryFilter = '') {
             try {
-                console.log('loadShopsForCity called for:', city, 'with filter:', categoryFilter);
+                console.log('loadShopsForCityMap called for:', city, 'with filter:', categoryFilter);
+                
+                // Очищаем предыдущие маркеры
+                mapMarkers.forEach(marker => map.removeLayer(marker));
+                mapMarkers = [];
+                
                 const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
                 const data = await response.json();
                 
@@ -1119,62 +1240,73 @@
                 if (data.shops && data.shops.length > 0) {
                     // Группируем магазины по координатам
                     const coordGroups = {};
-                    const allCoordinates = [];
-                    const points = [];
                     
                     data.shops.forEach(shop => {
                         const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
                         if (!coordGroups[key]) {
                             coordGroups[key] = [];
-                            allCoordinates.push([shop.latitude, shop.longitude]);
                         }
                         coordGroups[key].push(shop);
                     });
 
-                    // Создаем точки для глобуса
+                    // Создаем маркеры на Leaflet карте
                     Object.values(coordGroups).forEach(group => {
                         const lat = group[0].latitude;
                         const lng = group[0].longitude;
-                        const name = group.length > 1 
-                            ? `${group.length} магазинов` 
-                            : group[0].name;
                         
-                        points.push({
-                            lat: lat,
-                            lng: lng,
-                            name: name,
-                            size: group.length > 1 ? 1.5 : 1,
-                            shops: group
+                        // Создаем кастомную иконку
+                        const customIcon = L.divIcon({
+                            className: 'custom-marker',
+                            html: `<div style="
+                                background: rgba(0, 212, 255, 0.8);
+                                width: 30px;
+                                height: 30px;
+                                border-radius: 50%;
+                                border: 3px solid #00d4ff;
+                                box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                color: #000;
+                                font-weight: bold;
+                                font-size: 14px;
+                            ">${group.length > 1 ? group.length : ''}</div>`,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
                         });
-                    });
-
-                    // Создаем паутину между магазинами (макс 2 линии из каждого)
-                    const arcs = createWebBetweenMarkers(allCoordinates);
-                    
-                    // Обновляем данные на глобусе (только если глобус существует)
-                    if (globe) {
-                        globe
-                            .pointsData(points)
-                            .pointAltitude(0.001)
-                            .pointRadius(d => d.size * 0.1)
-                            .pointColor(() => '#00d4ff')
-                            .arcsData(arcs)
-                            .arcColor(() => 'rgba(0, 212, 255, 0.5)')
-                            .arcStroke(0.8);
-
-                        // Анимация перелета к городу
-                        const centerLat = data.shops[0].latitude;
-                        const centerLng = data.shops[0].longitude;
                         
-                        globe.pointOfView({
-                            lat: centerLat,
-                            lng: centerLng,
-                            altitude: 1.5
-                        }, 2000); // 2 секунды анимации
-                    }
+                        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+                        
+                        // Создаем popup с информацией о магазинах
+                        let popupContent = '<div style="color: #00d4ff; font-weight: bold; margin-bottom: 8px;">';
+                        if (group.length > 1) {
+                            popupContent += `${group.length} магазинов:</div>`;
+                            group.forEach(shop => {
+                                popupContent += `<div style="margin: 4px 0; cursor: pointer;" onclick="openShopOverlay(${shop.shop_id}, '${shop.name.replace(/'/g, "\\'")}', '${(shop.category || 'Без категории').replace(/'/g, "\\'")}')">`;
+                                popupContent += `<strong>${shop.name}</strong><br>`;
+                                popupContent += `<span style="font-size: 12px; color: #88cc99;">${shop.category || 'Без категории'}</span></div>`;
+                            });
+                        } else {
+                            const shop = group[0];
+                            popupContent += `${shop.name}</div>`;
+                            popupContent += `<div style="font-size: 12px; color: #88cc99; margin-bottom: 8px;">${shop.category || 'Без категории'}</div>`;
+                            popupContent += `<button onclick="openShopOverlay(${shop.shop_id}, '${shop.name.replace(/'/g, "\\'")}', '${(shop.category || 'Без категории').replace(/'/g, "\\'")}')" style="
+                                background: rgba(0, 212, 255, 0.2);
+                                color: #00d4ff;
+                                border: 2px solid rgba(0, 212, 255, 0.5);
+                                padding: 6px 12px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-weight: bold;
+                            ">Открыть каталог</button>`;
+                        }
+                        popupContent += '</div>';
+                        
+                        marker.bindPopup(popupContent);
+                        mapMarkers.push(marker);
+                    });
                     
-                    globeData.shops = points;
-                    globeData.arcs = arcs;
+                    console.log('Added', mapMarkers.length, 'markers to map');
                 }
             } catch (error) {
                 console.error('Ошибка загрузки магазинов:', error);
