@@ -6,6 +6,8 @@
     <title>Магазины</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/globe.gl"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -686,6 +688,7 @@
         <!-- Экран выбора города -->
         <div id="city-selection">
             <h1>◬ SHOPS NETWORK ◬</h1>
+            <div id="globe-container" style="width: 100%; height: 400px; margin: 20px 0;"></div>
             <div id="cities-list"></div>
         </div>
 
@@ -777,6 +780,10 @@
         window.addEventListener('load', () => {
             console.log('Window loaded, loading cities...');
             console.log('Globe.gl available?', typeof Globe !== 'undefined');
+            
+            // Инициализация глобуса
+            initGlobe();
+            
             loadCities();
             
             // Добавляем обработчик кнопки назад
@@ -796,6 +803,39 @@
             }
         });
 
+        function initGlobe() {
+            const globeContainer = document.getElementById('globe-container');
+            if (!globeContainer) {
+                console.error('Globe container not found');
+                return;
+            }
+            
+            globe = Globe()
+                (globeContainer)
+                .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+                .backgroundColor('#000000')
+                .pointAltitude(0.001)
+                .pointRadius(d => d.size * 0.1)
+                .pointColor(() => '#00d4ff')
+                .arcColor(() => 'rgba(0, 212, 255, 0.5)')
+                .arcStroke(0.8);
+            
+            // Обработчик клика по точкам на глобусе
+            globe.onPointClick((point) => {
+                console.log('Point clicked:', point);
+                if (point && point.shops) {
+                    // Если есть магазины в точке, показываем город
+                    const city = point.shops[0].city;
+                    showCityMap(city);
+                }
+            });
+            
+            // Начальная позиция камеры
+            globe.pointOfView({ lat: 55.7558, lng: 37.6173, altitude: 2.5 });
+            
+            console.log('Globe initialized');
+        }
+        
         function getPhotoUrl(filename) {
             if (!filename) return '';
             if (filename.startsWith('http')) return filename;
@@ -818,11 +858,71 @@
                         btn.onclick = () => showCityMap(city);
                         citiesList.appendChild(btn);
                     });
+                    
+                    // Загружаем все магазины на глобус
+                    loadAllShopsOnGlobe(data.cities);
                 } else {
                     citiesList.innerHTML = '<p style="text-align:center;color:var(--text-secondary)">Магазинов пока нет</p>';
                 }
             } catch (error) {
                 console.error('Ошибка загрузки городов:', error);
+            }
+        }
+        
+        // Загрузка всех магазинов на глобус для отображения точек
+        async function loadAllShopsOnGlobe(cities) {
+            if (!globe) return;
+            
+            try {
+                const allPoints = [];
+                const allArcs = [];
+                const coordGroups = {};
+                
+                // Загружаем магазины для каждого города
+                for (const city of cities) {
+                    const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
+                    const data = await response.json();
+                    
+                    if (data.shops && data.shops.length > 0) {
+                        data.shops.forEach(shop => {
+                            const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
+                            if (!coordGroups[key]) {
+                                coordGroups[key] = [];
+                            }
+                            coordGroups[key].push(shop);
+                        });
+                    }
+                }
+                
+                // Создаем точки для глобуса
+                Object.values(coordGroups).forEach(group => {
+                    const lat = group[0].latitude;
+                    const lng = group[0].longitude;
+                    const name = group.length > 1 
+                        ? `${group.length} магазинов` 
+                        : group[0].name;
+                    
+                    allPoints.push({
+                        lat: lat,
+                        lng: lng,
+                        name: name,
+                        size: group.length > 1 ? 1.5 : 1,
+                        shops: group
+                    });
+                });
+                
+                // Создаем паутину между точками
+                const coordinates = allPoints.map(p => [p.lat, p.lng]);
+                const arcs = createWebBetweenMarkers(coordinates);
+                
+                // Обновляем глобус
+                globe
+                    .pointsData(allPoints)
+                    .arcsData(arcs);
+                    
+                console.log('Globe updated with', allPoints.length, 'points');
+            } catch (error) {
+                console.error('Ошибка загрузки магазинов на глобус:', error);
             }
         }
 
@@ -834,74 +934,15 @@
 
             await loadCategories(city);
 
-            if (!globe) {
-                console.log('Initializing globe...');
-                // Инициализация 3D глобуса
-                try {
-                    globe = Globe()
-                        (document.getElementById('map'))
-                        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
-                    .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
-                    .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
-                    .showAtmosphere(true)
-                    .atmosphereColor('#00d4ff')
-                    .atmosphereAltitude(0.25)
-                    .pointOfView({ lat: 55.7558, lng: 37.6173, altitude: 2 })
-                    .pointsData([])
-                    .pointAltitude(0.001)
-                    .pointRadius(0.15)
-                    .pointColor(() => '#00d4ff')
-                    .pointLabel('name')
-                    .arcsData([])
-                    .arcColor(() => 'rgba(0, 212, 255, 0.5)')
-                    .arcDashLength(0.4)
-                    .arcDashGap(0.2)
-                    .arcDashAnimateTime(3000)
-                    .arcStroke(0.5)
-                    .onPointClick(point => {
-                        if (point.shops) {
-                            // Отключаем автовращение
-                            globe.controls().autoRotate = false;
-                            
-                            // Приближаемся к точке
-                            globe.pointOfView({
-                                lat: point.lat,
-                                lng: point.lng,
-                                altitude: 0.5
-                            }, 1500);
-                            
-                            // Показываем магазины после приближения
-                            setTimeout(() => {
-                                showShopsInOverlay(point.shops);
-                            }, 1600);
-                        }
-                    });
-
-                // Автовращение глобуса
-                globe.controls().autoRotate = true;
-                globe.controls().autoRotateSpeed = 0.3;
-                
-                // Отключить автовращение при взаимодействии
-                globe.controls().addEventListener('start', () => {
-                    globe.controls().autoRotate = false;
-                });
-                
-                // Установить размер глобуса
-                globe.width(window.innerWidth);
-                globe.height(window.innerHeight);
-                
-                // Обработчик изменения размера окна
-                window.addEventListener('resize', () => {
-                    globe.width(window.innerWidth);
-                    globe.height(window.innerHeight);
-                });
-                
-                console.log('Globe initialized successfully');
-                } catch (error) {
-                    console.error('Error initializing globe:', error);
-                    alert('Ошибка инициализации глобуса: ' + error.message);
-                    return;
-                }
+            // Инициализируем Leaflet карту для города
+            if (!map) {
+                console.log('Initializing Leaflet map...');
+                map = L.map('map').setView([55.7558, 37.6173], 13);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap © CartoDB',
+                    subdomains: 'abcd',
+                    maxZoom: 19
+                }).addTo(map);
             }
             
             // Загрузка магазинов для города
@@ -1110,25 +1151,27 @@
                     // Создаем паутину между магазинами (макс 2 линии из каждого)
                     const arcs = createWebBetweenMarkers(allCoordinates);
                     
-                    // Обновляем данные на глобусе
-                    globe
-                        .pointsData(points)
-                        .pointAltitude(0.001)
-                        .pointRadius(d => d.size * 0.1)
-                        .pointColor(() => '#00d4ff')
-                        .arcsData(arcs)
-                        .arcColor(() => 'rgba(0, 212, 255, 0.5)')
-                        .arcStroke(0.8);
+                    // Обновляем данные на глобусе (только если глобус существует)
+                    if (globe) {
+                        globe
+                            .pointsData(points)
+                            .pointAltitude(0.001)
+                            .pointRadius(d => d.size * 0.1)
+                            .pointColor(() => '#00d4ff')
+                            .arcsData(arcs)
+                            .arcColor(() => 'rgba(0, 212, 255, 0.5)')
+                            .arcStroke(0.8);
 
-                    // Анимация перелета к городу
-                    const centerLat = data.shops[0].latitude;
-                    const centerLng = data.shops[0].longitude;
-                    
-                    globe.pointOfView({
-                        lat: centerLat,
-                        lng: centerLng,
-                        altitude: 1.5
-                    }, 2000); // 2 секунды анимации
+                        // Анимация перелета к городу
+                        const centerLat = data.shops[0].latitude;
+                        const centerLng = data.shops[0].longitude;
+                        
+                        globe.pointOfView({
+                            lat: centerLat,
+                            lng: centerLng,
+                            altitude: 1.5
+                        }, 2000); // 2 секунды анимации
+                    }
                     
                     globeData.shops = points;
                     globeData.arcs = arcs;
