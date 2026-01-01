@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Магазины</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/globe.gl"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -148,7 +147,7 @@
         /* Экран выбора города */
         #city-selection {
             padding: 32px 24px;
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 12px;
             overflow-y: auto;
@@ -159,16 +158,94 @@
             height: 100vh;
             align-items: center;
         }
+        
+        /* Экран ритуала пробуждения */
+        #awakening-ritual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            z-index: 10;
+            background: #000000;
+        }
+        
+        #pulse-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 3px solid #00d4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1), transparent);
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.4), inset 0 0 40px rgba(0, 212, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        #pulse-circle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 60px rgba(0, 212, 255, 0.6), inset 0 0 60px rgba(0, 212, 255, 0.3);
+        }
+        
+        #pulse-circle.pulsing {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 40px rgba(0, 212, 255, 0.4), inset 0 0 40px rgba(0, 212, 255, 0.2);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 80px rgba(0, 212, 255, 0.8), inset 0 0 80px rgba(0, 212, 255, 0.4);
+            }
+        }
+        
+        #ritual-text {
+            color: #00d4ff;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.7);
+            animation: fadeInOut 3s ease-in-out infinite;
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        /* Волны энергии */
+        .energy-wave {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 212, 255, 0.8);
+            pointer-events: none;
+        }
+        
+        @keyframes wave-expand {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 3000px;
+                height: 3000px;
+                opacity: 0;
+            }
+        }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-        
-        #globe-container {
-            border: 2px solid rgba(0, 212, 255, 0.3);
-            border-radius: 8px;
-            overflow: hidden;
         }
         
         #cities-list {
@@ -240,7 +317,7 @@
             transform: scale(1.05);
         }
 
-        /* Глобус */
+        /* Карта-организм */
         #map-container {
             display: none;
             flex-direction: column;
@@ -256,6 +333,23 @@
             min-height: 100vh;
             background: #000000;
             position: relative;
+            filter: grayscale(100%) brightness(0.3);
+            transition: filter 2s ease;
+        }
+        
+        #map.awakened {
+            filter: grayscale(0%) brightness(1);
+        }
+        
+        /* Canvas для нервной сети */
+        #neural-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 400;
         }
 
         /* Кнопки на карте */
@@ -313,10 +407,47 @@
 
 
 
-        /* Биопузыри маркеров */
+        /* Маркеры-узлы нервной сети */
         .custom-marker {
             background: none;
             border: none;
+        }
+        
+        .neural-node {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(0, 212, 255, 0.1);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(0, 212, 255, 0.5);
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.5s ease;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+        }
+        
+        .neural-node.activated {
+            background: rgba(0, 212, 255, 0.8);
+            border: 3px solid #00d4ff;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.8), 0 0 60px rgba(0, 212, 255, 0.4);
+            animation: nodeActivate 0.8s ease;
+        }
+        
+        @keyframes nodeActivate {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.5);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .bio-bubble {
@@ -702,15 +833,23 @@
     <div class="spores" id="spores"></div>
     
     <div id="app">
+        <!-- Экран ритуала пробуждения -->
+        <div id="awakening-ritual">
+            <div id="ritual-text">Прикоснитесь, чтобы оживить сеть</div>
+            <div id="pulse-circle" class="pulsing">
+                <span style="color: #00d4ff; font-size: 18px; font-weight: 600;">НАЧАТЬ</span>
+            </div>
+        </div>
+        
         <!-- Экран выбора города -->
         <div id="city-selection">
             <h1>◬ SHOPS NETWORK ◬</h1>
-            <div id="globe-container" style="width: 100%; height: 400px; margin: 20px 0;"></div>
             <div id="cities-list"></div>
         </div>
 
-        <!-- Контейнер карты -->
+        <!-- Контейнер карты-организма -->
         <div id="map-container">
+            <canvas id="neural-canvas"></canvas>
             <button class="map-control" id="back-to-cities">← Города</button>
             <select class="map-control" id="category-filter">
                 <option value="">Все категории</option>
@@ -747,13 +886,13 @@
         tg.ready();
 
         let map = null;
-        let globe = null;
         let currentCity = null;
         let selectedShop = null;
-        let globeData = {
-            shops: [],
-            arcs: []
-        };
+        let neuralCanvas = null;
+        let neuralCtx = null;
+        let allShopsData = [];
+        let mapActivated = false;
+        let userLocation = null;
 
         // Создание sci-fi частиц
         function createBioParticles() {
@@ -793,74 +932,153 @@
         createBioParticles();
         createSpores();
         
-        // Загрузка городов после инициализации
+        // Инициализация после загрузки
         window.addEventListener('load', () => {
-            console.log('Window loaded, loading cities...');
-            console.log('Globe.gl available?', typeof Globe !== 'undefined');
+            console.log('Window loaded, starting awakening ritual...');
             
-            // Инициализация глобуса (не блокируем если ошибка)
-            try {
-                initGlobe();
-            } catch (error) {
-                console.error('Globe initialization failed:', error);
+            // Получаем геолокацию
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        console.log('User location:', userLocation);
+                    },
+                    (error) => {
+                        console.log('Geolocation not available, using default');
+                        userLocation = { lat: 55.7558, lng: 37.6173 };
+                    }
+                );
+            } else {
+                userLocation = { lat: 55.7558, lng: 37.6173 };
             }
             
-            // Загружаем города независимо от глобуса
-            loadCities();
+            // Настройка ритуала пробуждения
+            const pulseCircle = document.getElementById('pulse-circle');
+            pulseCircle.onclick = startAwakening;
+            
+            // Загружаем данные в фоне
+            preloadShopsData();
             
             // Добавляем обработчик кнопки назад
             const backBtn = document.getElementById('back-to-cities');
             if (backBtn) {
                 backBtn.onclick = backToCities;
-                console.log('Back button handler attached');
-            } else {
-                console.error('Back button not found!');
             }
             
             // Добавляем обработчик фильтра категорий
             const categoryFilter = document.getElementById('category-filter');
             if (categoryFilter) {
                 categoryFilter.onchange = filterByCategory;
-                console.log('Category filter handler attached');
             }
         });
 
-        function initGlobe() {
-            const globeContainer = document.getElementById('globe-container');
-            if (!globeContainer) {
-                console.error('Globe container not found');
-                return;
+        // Предзагрузка данных магазинов
+        async function preloadShopsData() {
+            try {
+                const response = await fetch(`${API_URL}/api/cities`);
+                const data = await response.json();
+                
+                if (data.cities && data.cities.length > 0) {
+                    for (const city of data.cities) {
+                        const shopsResponse = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
+                        const shopsData = await shopsResponse.json();
+                        if (shopsData.shops) {
+                            allShopsData = allShopsData.concat(shopsData.shops.map(shop => ({
+                                ...shop,
+                                city: city
+                            })));
+                        }
+                    }
+                    console.log('Preloaded', allShopsData.length, 'shops');
+                }
+            } catch (error) {
+                console.error('Error preloading shops:', error);
+            }
+        }
+        
+        // Ритуал пробуждения
+        function startAwakening() {
+            const ritual = document.getElementById('awakening-ritual');
+            const pulseCircle = document.getElementById('pulse-circle');
+            
+            // Создаем волны
+            createEnergyWaves(pulseCircle);
+            
+            // Через 2 секунды показываем карту всех городов
+            setTimeout(() => {
+                ritual.style.display = 'none';
+                showAllShopsMap();
+            }, 2000);
+        }
+        
+        // Создание волн энергии
+        function createEnergyWaves(source) {
+            const rect = source.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const wave = document.createElement('div');
+                    wave.className = 'energy-wave';
+                    wave.style.left = centerX + 'px';
+                    wave.style.top = centerY + 'px';
+                    wave.style.transform = 'translate(-50%, -50%)';
+                    wave.style.animation = `wave-expand ${2 + i * 0.3}s ease-out forwards`;
+                    document.body.appendChild(wave);
+                    
+                    setTimeout(() => wave.remove(), (2 + i * 0.3) * 1000);
+                }, i * 400);
+            }
+        }
+        
+        // Показ карты со всеми магазинами
+        async function showAllShopsMap() {
+            console.log('Showing all shops map...');
+            document.getElementById('map-container').style.display = 'flex';
+            
+            // Центр карты - локация пользователя или Москва
+            const centerLat = userLocation ? userLocation.lat : 55.7558;
+            const centerLng = userLocation ? userLocation.lng : 37.6173;
+            
+            // Инициализируем карту
+            if (!map) {
+                console.log('Initializing map...');
+                map = L.map('map').setView([centerLat, centerLng], 5);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap © CartoDB',
+                    subdomains: 'abcd',
+                    maxZoom: 19
+                }).addTo(map);
+                
+                // Инициализируем canvas для нервной сети
+                neuralCanvas = document.getElementById('neural-canvas');
+                neuralCtx = neuralCanvas.getContext('2d');
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+                map.on('move', drawNeuralNetwork);
+                map.on('zoom', drawNeuralNetwork);
             }
             
-            console.log('Initializing globe...');
+            // Добавляем все магазины
+            await loadAllShopsOnMap();
             
-            try {
-                globe = Globe()
-                    (globeContainer)
-                    .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
-                    .backgroundColor('#000000')
-                    .pointAltitude(0.001)
-                    .pointRadius(d => d.size * 0.1)
-                    .pointColor(() => '#00d4ff')
-                    .arcColor(() => 'rgba(0, 212, 255, 0.5)')
-                    .arcStroke(0.8);
-                
-                // Обработчик клика по точкам на глобусе
-                globe.onPointClick((point) => {
-                    console.log('Point clicked:', point);
-                    if (point && point.shops) {
-                        // Если есть магазины в точке, показываем город
-                        const city = point.shops[0].city;
-                        showCityMap(city);
-                    }
-                });
-                
-                // Начальная позиция камеры
-                globe.pointOfView({ lat: 55.7558, lng: 37.6173, altitude: 2.5 });
-                
-                console.log('Globe initialized successfully');
-            } catch (error) {
-                console.error('Error initializing globe:', error);
+            // Активируем карту с задержкой
+            setTimeout(() => {
+                document.getElementById('map').classList.add('awakened');
+                activateNodesWithWave();
+            }, 500);
+        }
+        
+        // Изменение размера canvas
+        function resizeCanvas() {
+            if (neuralCanvas && map) {
+                neuralCanvas.width = neuralCanvas.offsetWidth;
+                neuralCanvas.height = neuralCanvas.offsetHeight;
+                drawNeuralNetwork();
             }
         }
         
@@ -870,178 +1088,182 @@
             return `https://metakross0-sketch.github.io/chronosphere_app/images/${filename}`;
         }
 
-        async function loadCities() {
+        // Загрузка всех магазинов на карту
+        let mapMarkers = [];
+        
+        async function loadAllShopsOnMap() {
             try {
-                console.log('loadCities started');
-                const response = await fetch(`${API_URL}/api/cities`);
-                const data = await response.json();
-                console.log('Cities data received:', data);
-                
-                const citiesList = document.getElementById('cities-list');
-                if (!citiesList) {
-                    console.error('cities-list element not found!');
-                    return;
+                if (allShopsData.length === 0) {
+                    await preloadShopsData();
                 }
-                citiesList.innerHTML = '';
-
-                if (data.cities && data.cities.length > 0) {
-                    console.log('Creating city buttons for', data.cities.length, 'cities');
-                    data.cities.forEach(city => {
-                        const btn = document.createElement('button');
-                        btn.className = 'city-btn';
-                        btn.textContent = city;
-                        btn.onclick = () => showCityMap(city);
-                        citiesList.appendChild(btn);
+                
+                // Очищаем предыдущие маркеры
+                mapMarkers.forEach(marker => map.removeLayer(marker));
+                mapMarkers = [];
+                
+                // Группируем магазины по координатам
+                const coordGroups = {};
+                allShopsData.forEach(shop => {
+                    const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
+                    if (!coordGroups[key]) {
+                        coordGroups[key] = [];
+                    }
+                    coordGroups[key].push(shop);
+                });
+                
+                // Создаем неактивные маркеры
+                Object.values(coordGroups).forEach((group, index) => {
+                    const lat = group[0].latitude;
+                    const lng = group[0].longitude;
+                    
+                    const customIcon = L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div class="neural-node" data-index="${index}">${group.length > 1 ? group.length : ''}</div>`,
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
                     });
                     
-                    // Загружаем все магазины на глобус
-                    loadAllShopsOnGlobe(data.cities);
-                } else {
-                    citiesList.innerHTML = '<p style="text-align:center;color:var(--text-secondary)">Магазинов пока нет</p>';
-                }
+                    const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+                    
+                    // Popup с информацией
+                    let popupContent = '<div style="color: #00d4ff; font-weight: bold; margin-bottom: 8px;">';
+                    if (group.length > 1) {
+                        popupContent += `${group.length} магазинов:</div>`;
+                        group.forEach(shop => {
+                            popupContent += `<div style="margin: 4px 0; cursor: pointer; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 4px;" onclick="showCityMap('${shop.city}')">` ;
+                            popupContent += `<strong>${shop.name}</strong><br>`;
+                            popupContent += `<span style="font-size: 12px; color: #88cc99;">${shop.city} - ${shop.category || 'Без категории'}</span></div>`;
+                        });
+                    } else {
+                        const shop = group[0];
+                        popupContent += `${shop.name}</div>`;
+                        popupContent += `<div style="font-size: 12px; color: #88cc99; margin-bottom: 8px;">${shop.city} - ${shop.category || 'Без категории'}</div>`;
+                        popupContent += `<button onclick="showCityMap('${shop.city}')" style="
+                            background: rgba(0, 212, 255, 0.2);
+                            color: #00d4ff;
+                            border: 2px solid rgba(0, 212, 255, 0.5);
+                            padding: 6px 12px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-weight: bold;
+                        ">Перейти в ${shop.city}</button>`;
+                    }
+                    popupContent += '</div>';
+                    
+                    marker.bindPopup(popupContent);
+                    marker.groupData = group;
+                    mapMarkers.push(marker);
+                });
+                
+                console.log('Added', mapMarkers.length, 'markers to map');
+                drawNeuralNetwork();
             } catch (error) {
-                console.error('Ошибка загрузки городов:', error);
+                console.error('Error loading shops on map:', error);
             }
         }
         
-        // Загрузка всех магазинов на глобус для отображения точек
-        async function loadAllShopsOnGlobe(cities) {
-            if (!globe) {
-                console.log('Globe not initialized, skipping globe data load');
-                return;
-            }
+        // Активация узлов волной
+        function activateNodesWithWave() {
+            const nodes = document.querySelectorAll('.neural-node');
+            const centerLat = userLocation ? userLocation.lat : 55.7558;
+            const centerLng = userLocation ? userLocation.lng : 37.6173;
             
-            try {
-                console.log('Loading shops on globe for cities:', cities);
-                const allPoints = [];
-                const allArcs = [];
-                const coordGroups = {};
-                
-                // Загружаем магазины для каждого города
-                for (const city of cities) {
-                    const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
-                    const data = await response.json();
-                    
-                    if (data.shops && data.shops.length > 0) {
-                        data.shops.forEach(shop => {
-                            const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
-                            if (!coordGroups[key]) {
-                                coordGroups[key] = [];
-                            }
-                            coordGroups[key].push(shop);
-                        });
+            // Вычисляем расстояния от центра
+            const nodesWithDistance = [];
+            mapMarkers.forEach((marker, index) => {
+                const latlng = marker.getLatLng();
+                const distance = Math.sqrt(
+                    Math.pow(latlng.lat - centerLat, 2) + 
+                    Math.pow(latlng.lng - centerLng, 2)
+                );
+                nodesWithDistance.push({ node: nodes[index], distance, marker });
+            });
+            
+            // Сортируем по расстоянию
+            nodesWithDistance.sort((a, b) => a.distance - b.distance);
+            
+            // Активируем последовательно
+            nodesWithDistance.forEach((item, index) => {
+                setTimeout(() => {
+                    if (item.node) {
+                        item.node.classList.add('activated');
+                        drawNeuralNetwork();
                     }
-                }
+                }, index * 100);
+            });
+        }
+        
+        // Рисование нервной сети
+        function drawNeuralNetwork() {
+            if (!neuralCtx || !map || mapMarkers.length === 0) return;
+            
+            neuralCtx.clearRect(0, 0, neuralCanvas.width, neuralCanvas.height);
+            
+            // Рисуем связи между ближайшими узлами
+            const activatedMarkers = mapMarkers.filter((marker, index) => {
+                const node = document.querySelectorAll('.neural-node')[index];
+                return node && node.classList.contains('activated');
+            });
+            
+            if (activatedMarkers.length < 2) return;
+            
+            neuralCtx.strokeStyle = 'rgba(0, 212, 255, 0.3)';
+            neuralCtx.lineWidth = 2;
+            neuralCtx.shadowBlur = 10;
+            neuralCtx.shadowColor = 'rgba(0, 212, 255, 0.5)';
+            
+            // Соединяем каждый узел с 2-3 ближайшими
+            activatedMarkers.forEach(marker1 => {
+                const pos1 = map.latLngToContainerPoint(marker1.getLatLng());
                 
-                // Создаем точки для глобуса
-                Object.values(coordGroups).forEach(group => {
-                    const lat = group[0].latitude;
-                    const lng = group[0].longitude;
-                    const name = group.length > 1 
-                        ? `${group.length} магазинов` 
-                        : group[0].name;
-                    
-                    allPoints.push({
-                        lat: lat,
-                        lng: lng,
-                        name: name,
-                        size: group.length > 1 ? 1.5 : 1,
-                        shops: group
-                    });
+                // Находим ближайшие узлы
+                const distances = activatedMarkers
+                    .filter(m => m !== marker1)
+                    .map(marker2 => ({
+                        marker: marker2,
+                        dist: Math.sqrt(
+                            Math.pow(pos1.x - map.latLngToContainerPoint(marker2.getLatLng()).x, 2) +
+                            Math.pow(pos1.y - map.latLngToContainerPoint(marker2.getLatLng()).y, 2)
+                        )
+                    }))
+                    .sort((a, b) => a.dist - b.dist)
+                    .slice(0, 2);
+                
+                distances.forEach(({ marker: marker2 }) => {
+                    const pos2 = map.latLngToContainerPoint(marker2.getLatLng());
+                    neuralCtx.beginPath();
+                    neuralCtx.moveTo(pos1.x, pos1.y);
+                    neuralCtx.lineTo(pos2.x, pos2.y);
+                    neuralCtx.stroke();
                 });
-                
-                // Создаем паутину между точками
-                const coordinates = allPoints.map(p => [p.lat, p.lng]);
-                const arcs = createWebBetweenMarkers(coordinates);
-                
-                // Обновляем глобус
-                globe
-                    .pointsData(allPoints)
-                    .arcsData(arcs);
-                    
-                console.log('Globe updated with', allPoints.length, 'points');
-            } catch (error) {
-                console.error('Ошибка загрузки магазинов на глобус:', error);
-            }
+            });
         }
 
         async function showCityMap(city) {
             console.log('showCityMap called with city:', city);
             currentCity = city;
-            document.getElementById('city-selection').style.display = 'none';
-            document.getElementById('map-container').style.display = 'flex';
-
-            await loadCategories(city);
-
-            // Загружаем магазины для получения координат
+            
+            // Перезапускаем карту для конкретного города
             const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
             const data = await response.json();
             
-            // Вычисляем центр города по координатам первого магазина
-            let centerLat = 55.7558; // По умолчанию Москва
-            let centerLng = 37.6173;
-            
             if (data.shops && data.shops.length > 0) {
-                centerLat = data.shops[0].latitude;
-                centerLng = data.shops[0].longitude;
-            }
-
-            // Инициализируем Leaflet карту для города
-            if (!map) {
-                console.log('Initializing Leaflet map...');
-                map = L.map('map').setView([centerLat, centerLng], 13);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '© OpenStreetMap © CartoDB',
-                    subdomains: 'abcd',
-                    maxZoom: 19
-                }).addTo(map);
-            } else {
-                // Если карта уже создана, просто перемещаем центр
-                map.setView([centerLat, centerLng], 13);
-            }
-            
-            // Загрузка магазинов для города и добавление маркеров
-            console.log('Loading shops for city:', city);
-            loadShopsForCityMap(city);
-        }
-
-        // Функция создания паутины с максимум 2 линиями из каждого магазина
-        function createWebBetweenMarkers(coordinates) {
-            if (coordinates.length < 2) return [];
-            
-            const arcs = [];
-            const connectionCount = {}; // Считаем количество линий для каждой точки
-            
-            // Инициализируем счетчики
-            coordinates.forEach((_, idx) => {
-                connectionCount[idx] = 0;
-            });
-            
-            // Создаем линии, но не более 2 из каждой точки
-            for (let i = 0; i < coordinates.length; i++) {
-                if (connectionCount[i] >= 2) continue; // Уже 2 линии из этой точки
+                const centerLat = data.shops[0].latitude;
+                const centerLng = data.shops[0].longitude;
                 
-                for (let j = i + 1; j < coordinates.length; j++) {
-                    if (connectionCount[j] >= 2) continue; // Уже 2 линии из этой точки
-                    
-                    // Проверяем, можем ли добавить линию
-                    if (connectionCount[i] < 2 && connectionCount[j] < 2) {
-                        arcs.push({
-                            startLat: coordinates[i][0],
-                            startLng: coordinates[i][1],
-                            endLat: coordinates[j][0],
-                            endLng: coordinates[j][1]
-                        });
-                        connectionCount[i]++;
-                        connectionCount[j]++;
-                    }
-                    
-                    // Если из текущей точки уже 2 линии, переходим к следующей
-                    if (connectionCount[i] >= 2) break;
-                }
+                map.setView([centerLat, centerLng], 13);
+                await loadCategories(city);
+                loadShopsForCityMap(city);
             }
-            
-            return arcs;
+        }
+        
+        function backToCities() {
+            // Возвращаемся к общей карте
+            const centerLat = userLocation ? userLocation.lat : 55.7558;
+            const centerLng = userLocation ? userLocation.lng : 37.6173;
+            map.setView([centerLat, centerLng], 5);
+            currentCity = null;
+            loadAllShopsOnMap();
         }
 
         // Функция загрузки магазинов для города и добавления маркеров на Leaflet карту
@@ -1252,98 +1474,6 @@
             }
             
             return points;
-        }
-
-        // Функция загрузки магазинов для города и добавления маркеров на Leaflet карту
-        let mapMarkers = [];
-        
-        async function loadShopsForCityMap(city, categoryFilter = '') {
-            try {
-                console.log('loadShopsForCityMap called for:', city, 'with filter:', categoryFilter);
-                
-                // Очищаем предыдущие маркеры
-                mapMarkers.forEach(marker => map.removeLayer(marker));
-                mapMarkers = [];
-                
-                const response = await fetch(`${API_URL}/api/shops/${encodeURIComponent(city)}`);
-                const data = await response.json();
-                
-                console.log('Received shops data:', data);
-
-                if (data.shops && data.shops.length > 0) {
-                    // Группируем магазины по координатам
-                    const coordGroups = {};
-                    
-                    data.shops.forEach(shop => {
-                        const key = `${shop.latitude.toFixed(5)}_${shop.longitude.toFixed(5)}`;
-                        if (!coordGroups[key]) {
-                            coordGroups[key] = [];
-                        }
-                        coordGroups[key].push(shop);
-                    });
-
-                    // Создаем маркеры на Leaflet карте
-                    Object.values(coordGroups).forEach(group => {
-                        const lat = group[0].latitude;
-                        const lng = group[0].longitude;
-                        
-                        // Создаем кастомную иконку
-                        const customIcon = L.divIcon({
-                            className: 'custom-marker',
-                            html: `<div style="
-                                background: rgba(0, 212, 255, 0.8);
-                                width: 30px;
-                                height: 30px;
-                                border-radius: 50%;
-                                border: 3px solid #00d4ff;
-                                box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                color: #000;
-                                font-weight: bold;
-                                font-size: 14px;
-                            ">${group.length > 1 ? group.length : ''}</div>`,
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
-                        });
-                        
-                        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
-                        
-                        // Создаем popup с информацией о магазинах
-                        let popupContent = '<div style="color: #00d4ff; font-weight: bold; margin-bottom: 8px;">';
-                        if (group.length > 1) {
-                            popupContent += `${group.length} магазинов:</div>`;
-                            group.forEach(shop => {
-                                popupContent += `<div style="margin: 4px 0; cursor: pointer;" onclick="openShopOverlay(${shop.shop_id}, '${shop.name.replace(/'/g, "\\'")}', '${(shop.category || 'Без категории').replace(/'/g, "\\'")}')">`;
-                                popupContent += `<strong>${shop.name}</strong><br>`;
-                                popupContent += `<span style="font-size: 12px; color: #88cc99;">${shop.category || 'Без категории'}</span></div>`;
-                            });
-                        } else {
-                            const shop = group[0];
-                            popupContent += `${shop.name}</div>`;
-                            popupContent += `<div style="font-size: 12px; color: #88cc99; margin-bottom: 8px;">${shop.category || 'Без категории'}</div>`;
-                            popupContent += `<button onclick="openShopOverlay(${shop.shop_id}, '${shop.name.replace(/'/g, "\\'")}', '${(shop.category || 'Без категории').replace(/'/g, "\\'")}')" style="
-                                background: rgba(0, 212, 255, 0.2);
-                                color: #00d4ff;
-                                border: 2px solid rgba(0, 212, 255, 0.5);
-                                padding: 6px 12px;
-                                border-radius: 4px;
-                                cursor: pointer;
-                                font-weight: bold;
-                            ">Открыть каталог</button>`;
-                        }
-                        popupContent += '</div>';
-                        
-                        marker.bindPopup(popupContent);
-                        mapMarkers.push(marker);
-                    });
-                    
-                    console.log('Added', mapMarkers.length, 'markers to map');
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки магазинов:', error);
-            }
         }
 
         let currentCatalogData = null;
@@ -1626,10 +1756,11 @@
         function filterByCategory() {
             const selectedCategory = document.getElementById('category-filter').value;
             console.log('Filtering by category:', selectedCategory);
-            // TODO: Реализовать фильтрацию точек на глобусе по категории
-            // Пока просто перезагружаем магазины
             if (currentCity) {
-                loadShopsForCity(currentCity, selectedCategory);
+                loadShopsForCityMap(currentCity, selectedCategory);
+            } else {
+                // Фильтруем на общей карте
+                loadAllShopsOnMap();
             }
         }
         
