@@ -167,8 +167,10 @@
             justify-content: center;
             height: 100vh;
             width: 100vw;
-            position: relative;
-            z-index: 10;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
             background: #000000;
         }
         
@@ -182,9 +184,17 @@
             justify-content: center;
             cursor: pointer;
             position: relative;
+            z-index: 101;
             background: radial-gradient(circle, rgba(0, 212, 255, 0.1), transparent);
             box-shadow: 0 0 40px rgba(0, 212, 255, 0.4), inset 0 0 40px rgba(0, 212, 255, 0.2);
             transition: all 0.3s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        #pulse-circle:active {
+            transform: scale(0.95);
         }
         
         #pulse-circle:hover {
@@ -957,7 +967,16 @@
             
             // Настройка ритуала пробуждения
             const pulseCircle = document.getElementById('pulse-circle');
-            pulseCircle.onclick = startAwakening;
+            if (pulseCircle) {
+                pulseCircle.onclick = startAwakening;
+                pulseCircle.ontouchstart = (e) => {
+                    e.preventDefault();
+                    startAwakening();
+                };
+                console.log('Pulse circle handler attached');
+            } else {
+                console.error('Pulse circle not found!');
+            }
             
             // Загружаем данные в фоне
             preloadShopsData();
@@ -1001,14 +1020,23 @@
         
         // Ритуал пробуждения
         function startAwakening() {
+            console.log('startAwakening called');
             const ritual = document.getElementById('awakening-ritual');
             const pulseCircle = document.getElementById('pulse-circle');
+            
+            if (!ritual || !pulseCircle) {
+                console.error('Ritual elements not found!');
+                return;
+            }
+            
+            console.log('Creating energy waves...');
             
             // Создаем волны
             createEnergyWaves(pulseCircle);
             
             // Через 2 секунды показываем карту всех городов
             setTimeout(() => {
+                console.log('Hiding ritual, showing map...');
                 ritual.style.display = 'none';
                 showAllShopsMap();
             }, 2000);
