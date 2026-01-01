@@ -1330,9 +1330,7 @@
             loadAllShopsOnMap();
         }
 
-        // Функция загрузки магазинов для города и добавления маркеров на Leaflet карту
-        let mapMarkers = [];
-        
+        // Функция загрузки магазинов для города и добавления маркеров на Leaflet карту        
         async function loadShopsForCityMap(city, categoryFilter = '') {
             try {
                 console.log('loadShopsForCityMap called for:', city, 'with filter:', categoryFilter);
